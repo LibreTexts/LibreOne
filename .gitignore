@@ -1,0 +1,15 @@
+# Environment, config, keys, and secrets
+.env
+
+# Output
+dist/
+
+# Dependencies
+node_modules/
+.npm/
+
+# Editors
+.vscode/
+
+# macOS Metadata
+.DS_Store

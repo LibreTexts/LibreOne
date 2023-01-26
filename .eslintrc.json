@@ -1,0 +1,24 @@
+{
+  "root": true,
+  "env": {
+    "node": true
+  },
+  "parser": "vue-eslint-parser",
+  "parserOptions": {
+    "parser": "@typescript-eslint/parser"
+  },
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "plugin:vue/vue3-strongly-recommended",
+    "eslint:recommended",
+    "@vue/typescript/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "vue/no-multiple-template-root": "off",
+    "vue/script-indent": [1, 2, {
+      "baseIndent": 1,
+      "switchCase": 1
+    }]
+  }
+}

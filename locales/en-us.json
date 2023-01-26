@@ -1,0 +1,109 @@
+{
+  "common": {
+    "brand": "LibreOne",
+    "tagline": "One account, everything LibreTexts.",
+    "email": "Email",
+    "email_placeholder": "you{'@'}organization.edu",
+    "password": "Password",
+    "or": "or",
+    "privpolicy": "Privacy Policy",
+    "tos": "Terms of Service",
+    "hide": "Hide",
+    "show": "Show",
+    "unknownerror": "Sorry, we encountered an unknown error.",
+    "signin": "Sign in",
+    "logout": "Log Out",
+    "continue": "Continue",
+    "updating": "Updating"
+  },
+  "welcome": {
+    "getstarted": "Get Started"
+  },
+  "profile": {
+    "firstname": "First Name",
+    "lastname": "Last Name"
+  },
+  "register": {
+    "infoline": "LibreOne allows you to access all LibreTexts applications with just one login.",
+    "header": "Register for a LibreOne Account",
+    "usegoogle": "Continue with Google",
+    "usemicrosoft": "Continue with Microsoft",
+    "create": "Create account",
+    "ordelegated": "Or, register with:",
+    "legalnotice": "By registering with LibreTexts, you agree to our {privpolicy} and {tos}.",
+    "register": "Register",
+    "registering": "Registering...",
+    "existingaccount": "Already have an account?",
+    "accountexists": "Oops, an account with that email already exists. Please {signin} or {resetpassword}.",
+    "forgotpassword": "Forgot your password?",
+    "resetpassword": "Reset password",
+    "resetpassword_friendly": "Reset your password",
+    "verify_header": "Verify Your Email",
+    "verify_message": "We just sent a six-digit verification code to {email}. Please enter the code here to finish registering.",
+    "verify_code": "Verification Code",
+    "verify_invalid": "Invalid code, please check your input.",
+    "verify_thanks": "Thanks for helping to keep our community safe!"
+  },
+  "complete_registration_name": {
+    "header": "First things first.",
+    "tagline": "What should we call you?",
+    "updatelater": "You can always update this information later."
+  },
+  "complete_registration_role": {
+    "header": "Nice to meet you, {name}.",
+    "tagline": "What kind of user are you?",
+    "changelater": "(Don't worry, you can change this later.)",
+    "student_user": "I'm a Student or other Reader",
+    "instructor_user": "I'm an Instructor",
+    "instructor_info": "If you're a Teaching/Research Assistant or otherwise working with an instructor, you can also use the Instructor option."
+  },
+  "complete_registration_org": {
+    "header": "One last thing.",
+    "tagline": "What institution/organization are you part of?",
+    "tagline_note": "This will help us to better tailor your LibreTexts experience.",
+    "search_label": "Search for an Institution",
+    "results": "Results",
+    "results_live": "Results will update as you type.",
+    "results_found": "{num} found",
+    "select": "Select",
+    "add": "Add",
+    "add_institution": "Add \"{query}\" as new institution"
+  },
+  "registration_complete": {
+    "header": "Registration Complete!",
+    "tagline": "Thanks for sticking with us. Now, let's get you on your way.",
+    "redirecting": "Just a moment...",
+    "instructor_guide": "You can now use Conductor to complete your Instructor Profile. This will allow LibreTexts to verify your status as an instructor and give you advanced access to our services."
+  },
+  "password": {
+    "strength": "Strength",
+    "short": "Too short",
+    "veryweak": "Very weak",
+    "weak": "Weak",
+    "good": "Good",
+    "strong": "Strong"
+  },
+  "passwordrecovery": {
+    "backtosource": "Back to {source}",
+    "forgottagline": "No worries, just enter your email to receive a reset link.",
+    "sendlink": "Send Reset Link",
+    "sending": "Sending...",
+    "checkemail": "Check your Email",
+    "sentmessage": "Great! A reset link will be sent to {email} if it's registered for a LibreOne account.",
+    "completeheader": "Complete Password Reset",
+    "completetagline": "Set your new password now.",
+    "newpassword": "New Password",
+    "setpassword": "Set Password",
+    "submitting": "Submitting...",
+    "expiredmessage": "Your reset token appears to have expired. Please {startreset}",
+    "restart": "Restart the password reset process.",
+    "completedheader": "Password Reset Complete",
+    "completedtagline": "Nice! You can now log in to LibreTexts services using the password you just set.",
+    "redirecting": "We're redirecting you to the login screen."
+  },
+  "dashboard": {
+    "header": "Account Management Dashboard",
+    "property": "Property",
+    "value": "Value"
+  }
+}

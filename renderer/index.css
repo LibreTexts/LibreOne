@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply font-sans;
+  @apply h-screen;
+  @apply w-screen;
+  @apply overflow-x-hidden;
+  @apply overflow-y-scroll;
+}
+
+#app {
+  @apply h-full;
+  @apply w-full;
+}

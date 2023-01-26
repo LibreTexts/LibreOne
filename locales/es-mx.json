@@ -1,0 +1,109 @@
+{
+  "common": {
+    "brand": "LibreOne",
+    "tagline": "Una cuenta, todo LibreTexts.",
+    "email": "Correo electrónico",
+    "email_placeholder": "tu{'@'}organization.edu.mx",
+    "password": "Contraseña",
+    "or": "o",
+    "privpolicy": "Política de Privacidad",
+    "tos": "Términos de Servicio",
+    "hide": "Ocultar",
+    "show": "Mostrar",
+    "unknownerror": "Lo sentimos, encontramos un error desconocido.",
+    "signin": "Iniciar sesión",
+    "logout": "Descerrar sesión",
+    "continue": "Continuar",
+    "updating": "Actualizando"
+  },
+  "welcome": {
+    "getstarted": "Comenzar"
+  },
+  "profile": {
+    "firstname": "Nombre",
+    "lastname": "Apellido"
+  },
+  "register": {
+    "infoline": "LibreOne le permite acceder a todas las aplicaciones de LibreTexts con un solo inicio de sesión.",
+    "header": "Regístrese para obtener una cuenta LibreOne",
+    "usegoogle": "Continuar con Google",
+    "usemicrosoft": "Continuar con Microsoft",
+    "create": "Crear cuenta",
+    "ordelegated": "O bien, regístrese con:",
+    "legalnotice": "Al registrarse en LibreTexts, acepta nuestras {privpolicy} y {tos}.",
+    "register": "Registrar",
+    "registering": "Registrando...",
+    "existingaccount": "¿Ya tienes una cuenta?",
+    "accountexists": "Uy, ya existe una cuenta con ese correo electrónico. Por favor {signin} o {resetpassword}.",
+    "forgotpassword": "¿Olvidaste tu contraseña?",
+    "resetpassword": "Restablecer contraseña",
+    "resetpassword_friendly": "Restablecer su contraseña",
+    "verify_header": "Verifica tu correo electrónico",
+    "verify_message": "Acabamos de enviar un código de verificación de seis dígitos a {email}. Por favor ingrese el código aquí para terminar de registrarse.",
+    "verify_code": "Código de Verificación",
+    "verify_invalid": "Código no válido, por favor revise su entrada.",
+    "verify_thanks": "¡Gracias por ayudar a mantener a nuestra comunidad segura!"
+  },
+  "complete_registration_name": {
+    "header": "Primero lo primero.",
+    "tagline": "¿Cómo debemos llamarte?",
+    "updatelater": "Siempre podrás actualizar esta información más tarde."
+  },
+  "complete_registration_role": {
+    "header": "Encantado de conocerte, {name}.",
+    "tagline": "¿Qué tipo de usuario eres?",
+    "changelater": "(No te preocupes, puedes cambiar esto más tarde.)",
+    "student_user": "Soy Estudiante u otro Lector",
+    "instructor_user": "Soy Instructor",
+    "instructor_info": "Si eres Asistente de Docencia e Investigación o trabajas de alguna otra manera con un instructor, también puedes usar la opción Instructor."
+  },
+  "complete_registration_org": {
+    "header": "Una última cosa.",
+    "tagline": "¿De qué institución/organización forma parte?",
+    "tagline_note": "Esto nos ayudará a adaptar mejor tu experiencia en LibreTexts.",
+    "search_label": "Buscar una institución",
+    "results": "Resultados",
+    "results_live": "Los resultados se actualizarán a medida que escriba.",
+    "results_found": "{num} encontrado",
+    "select": "Seleccionar",
+    "add": "Agregar",
+    "add_institution": "Agregar \"{query}\" como nueva institución"
+  },
+  "registration_complete": {
+    "header": "¡Registro completo!",
+    "tagline": "Gracias por pegarse con nosotros. Ahora, vamos a ponerte en tu camino.",
+    "redirecting": "Sólo un momento...",
+    "instructor_guide": "Ahora puedes usar Conductor para completar tu Perfil de Instructor. Esto permitirá a LibreTexts verificar tu estatus como instructor y darte acceso avanzado a nuestros servicios."
+  },
+  "password": {
+    "strength": "Fuerza",
+    "short": "Demasiado corto",
+    "veryweak": "Muy débil",
+    "weak": "Débil",
+    "good": "Bueno",
+    "strong": "Fuerte"
+  },
+  "passwordrecovery": {
+    "backtosource": "Volver a {source}",
+    "forgottagline": "No te preocupes, solo ingresa tu correo electrónico para recibir un enlace de reinicio.",
+    "sendlink": "Enviar enlace de reinicio",
+    "sending": "Enviando...",
+    "checkemail": "Revisa tu correo electrónico",
+    "sentmessage": "¡Genial! Se enviará un enlace de reinicio a {email} si está registrado para una cuenta de LibreOne.",
+    "completeheader": "Restablecimiento completo de contraseña",
+    "completetagline": "Establezca su nueva contraseña ahora.",
+    "newpassword": "Nueva Contraseña",
+    "setpassword": "Establecer contraseña",
+    "submitting": "Enviando...",
+    "expiredmessage": "Tu token de reinicio parece haber caducado. Por favor {startreset}",
+    "restart": "Reinicie el proceso de restablecimiento de contraseña.",
+    "completedheader": "Restablecimiento de contraseña completo",
+    "completedtagline": "¡Bonito! Ahora puedes iniciar sesión en los servicios de LibreTextos usando la contraseña que acabas de establecer.",
+    "redirecting": "Te estamos redirigiendo a la pantalla de inicio de sesión."
+  },
+  "dashboard": {
+    "header": "Panel de Administración de Cuenta",
+    "property": "Propiedad",
+    "value": "Valor"
+  }
+}
