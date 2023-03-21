@@ -25,6 +25,7 @@ import type {
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
+const COOKIE_DOMAIN = SESSION_DOMAIN.replace('https://', '');
 
 const CAS_PROTO = process.env.CAS_PROTO || 'https';
 const CAS_BASE = `${CAS_PROTO}://${process.env.CAS_DOMAIN}`;
@@ -110,6 +111,8 @@ export async function register(req: Request, res: Response): Promise<Response> {
       uuid: uuidv4(),
       email: props.email,
       password: hashed,
+      first_name: 'LibreTexts',
+      last_name: 'User',
       active: false,
       enabled: false,
       legacy: false,
@@ -205,7 +208,7 @@ export async function verifyRegistrationEmail(req: Request, res: Response): Prom
 
   const prodCookieConfig: CookieOptions = {
     sameSite: 'strict',
-    domain: SESSION_DOMAIN,
+    domain: COOKIE_DOMAIN,
     secure: true,
   };
   res.cookie('cas_state', state, {
@@ -242,7 +245,7 @@ export async function initLogin(req: Request, res: Response): Promise<void> {
 
   const prodCookieConfig: CookieOptions = {
     sameSite: 'strict',
-    domain: SESSION_DOMAIN,
+    domain: COOKIE_DOMAIN,
     secure: true,
   };
   res.cookie('cas_state', state, {
@@ -302,7 +305,7 @@ export async function completeLogin(req: Request, res: Response): Promise<Respon
 
   const prodCookieConfig: CookieOptions = {
     secure: true,
-    domain: SESSION_DOMAIN,
+    domain: COOKIE_DOMAIN,
     sameSite: 'strict',
   };
   res.cookie('one_access', access, {
@@ -340,7 +343,7 @@ export async function completeLogin(req: Request, res: Response): Promise<Respon
 export function logout(_req: Request, res: Response): void {
   const prodCookieConfig: CookieOptions = {
     secure: true,
-    domain: SESSION_DOMAIN,
+    domain: COOKIE_DOMAIN,
     sameSite: 'strict',
   };
   res.clearCookie('one_access', {
