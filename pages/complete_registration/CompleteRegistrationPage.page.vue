@@ -16,11 +16,13 @@
           enter-active-class="motion-safe:transition-transform motion-safe:ease-out motion-safe:duration-500"
           leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
         >
-          <component
-            :is="stage"
-            v-bind="componentProps"
-            v-on="componentEvents"
-          />
+          <div :key="stage">
+            <component
+              :is="stage"
+              v-bind="componentProps"
+              v-on="componentEvents"
+            />
+          </div>
         </Transition>
       </div>
     </div>
