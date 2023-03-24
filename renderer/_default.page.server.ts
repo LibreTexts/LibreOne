@@ -1,5 +1,5 @@
-import { renderToString } from '@vue/server-renderer'
-import { escapeInject, dangerouslySkipEscape } from 'vite-plugin-ssr'
+import { renderToNodeStream } from '@vue/server-renderer'
+import { escapeInject } from 'vite-plugin-ssr'
 import { createApp } from './app'
 import faviconURL from './favicon.ico';
 import type { PageContextServer } from './types'
@@ -36,7 +36,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
  */
 export async function render(pageContext: PageContextServer) {
   const app = createApp(pageContext);
-  const appHtml = await renderToString(app);
+  const stream = renderToNodeStream(app);
 
   const { documentProps } = pageContext.exports;
   const title = (documentProps && documentProps.title) || 'LibreOne';
@@ -59,13 +59,15 @@ export async function render(pageContext: PageContextServer) {
         <title>${title}</title>
       </head>
       <body>
-        <div id="app">${dangerouslySkipEscape(appHtml)}</div>
+        <div id="app">${stream}</div>
       </body>
     </html>
   `;
 
   return {
     documentHtml,
-    pageContext: {},
+    pageContext: {
+      enableEagerStreaming: true,
+    },
   };
 }
