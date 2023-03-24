@@ -1,3 +1,4 @@
+import { buildLocalizedServerRedirectURL } from '@renderer/helpers';
 import type { PageContextServer } from '@renderer/types';
 
 /**
@@ -20,8 +21,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   }
 
   // Missing token props
-  const localePart = pageContext.locale === 'en-us' ? null : pageContext.locale;
-  const invalidRedirectURI = `${localePart ? `/${localePart}` : ''}/passwordrecovery?${origParams.toString()}`;
+  const invalidRedirectURI = buildLocalizedServerRedirectURL(pageContext, `/passwordrecovery${origParams.toString()}`);
   return {
     pageContext: {
       redirectTo: token ? undefined : invalidRedirectURI,

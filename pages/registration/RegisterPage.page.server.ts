@@ -1,3 +1,4 @@
+import { buildLocalizedServerRedirectURL } from '@renderer/helpers';
 import type { PageContextServer } from '@renderer/types';
 
 /**
@@ -10,9 +11,10 @@ import type { PageContextServer } from '@renderer/types';
 export async function onBeforeRender(pageContext: PageContextServer) {
   // Redirect if already authenticated
   if (pageContext.isAuthenticated && pageContext.user) {
+    const redirectTo = buildLocalizedServerRedirectURL(pageContext, '/dashboard');
     return {
       pageContext: {
-        redirectTo: '/dashboard',
+        redirectTo,
       },
     };
   }
