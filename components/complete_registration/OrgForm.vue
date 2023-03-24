@@ -129,8 +129,8 @@
   });
 
   /**
-   * Submits the Organization selection to the server, then redirects to the
-   * Registration Completed page.
+   * Submits the Organization selection to the server, then redirects to the SSO
+   * session initiation URL.
    *
    * @param data - Organization information to submit.
    */
@@ -138,7 +138,10 @@
     loading.value = true;
     try {
       await axios.patch(`/users/${props.uuid}`, data);
-      window.location.assign('/registration-complete');
+      const finishResult = await axios.post('/auth/complete-registration');
+      if (finishResult.data.data?.initSessionURL) {
+        window.location.assign(finishResult.data.data.initSessionURL);
+      }
     } catch (e) {
       loading.value = false;
     }

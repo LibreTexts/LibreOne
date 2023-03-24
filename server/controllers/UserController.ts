@@ -21,15 +21,7 @@ const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0
  * @returns The located User, or null if not found.
  */
 export async function getUserInternal(uuid: string): Promise<Record<string, string> | null> {
-  const user = await User.findOne({
-    where: {
-      [Op.and]: [
-        { uuid },
-        { active: true },
-        { enabled: true },
-      ],
-    },
-  });
+  const user = await User.findOne({ where: { uuid }});
   return user?.get() || null;
 }
 

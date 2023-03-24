@@ -1,7 +1,7 @@
 import express from 'express';
 import * as AuthController from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
-import { validate } from '../middleware';
+import { validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const authRouter = express.Router();
@@ -14,6 +14,11 @@ authRouter.route('/register').post(
 authRouter.route('/verify-email').post(
   validate(AuthValidator.verifyEmailSchema, 'body'),
   catchInternal(AuthController.verifyRegistrationEmail),
+);
+
+authRouter.route('/complete-registration').post(
+  verifyAPIAuthentication,
+  catchInternal(AuthController.completeRegistration),
 );
 
 authRouter.route('/login').get(

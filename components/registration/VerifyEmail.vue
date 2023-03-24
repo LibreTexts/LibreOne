@@ -101,8 +101,7 @@
   }
 
   /**
-   * Submits the data to the server if all fields are valid and redirects to the SSO
-   * session initiation URL.
+   * Submits the data to the server if all fields are valid and redirects to the onboarding URL.
    *
    * @param e - Form submission event.
    */
@@ -114,14 +113,12 @@
     }
     loading.value = true;
     try {
-      const result = await axios.post('/auth/verify-email', {
+      await axios.post('/auth/verify-email', {
         email: props.email,
         code: code.value,
       });
       loading.value = false;
-      if (result.data.data?.initSessionURL) {
-        window.location.assign(result.data.data.initSessionURL);
-      }
+      window.location.assign('/complete-registration');
     } catch (e) {
       console.log(e);
       loading.value = false;

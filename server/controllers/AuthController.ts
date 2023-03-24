@@ -88,6 +88,42 @@ export async function verifyClientAuthentication(req: Request): Promise<TokenAut
 }
 
 /**
+ * Creates a JWT for a local session, then attaches necessary cookies to the provided
+ * API response object.
+ *
+ * @param res - The response object to attach the session cookies to.
+ * @param uuid - The User UUID to initialize the session for.
+ */
+async function createAndAttachLocalSession(res: Response, uuid: string): Promise<void> {
+  const sessionJWT = await new SignJWT({ uuid })
+    .setSubject(uuid)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setIssuer(SESSION_DOMAIN)
+    .setAudience(SESSION_DOMAIN)
+    .setExpirationTime('24h')
+    .sign(SESSION_SECRET);
+  const splitJWT = sessionJWT.split('.');
+  const access = `${splitJWT[0]}.${splitJWT[1]}`;
+  const signed = splitJWT[2];
+
+  const prodCookieConfig: CookieOptions = {
+    secure: true,
+    domain: COOKIE_DOMAIN,
+    sameSite: 'strict',
+  };
+  res.cookie('one_access', access, {
+    path: '/',
+    ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+  });
+  res.cookie('one_signed', signed, {
+    path: '/',
+    httpOnly: true,
+    ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+  });
+}
+
+/**
  * Creates a user in a sandboxed state, then sends an email verification code.
  *
  * @param req - Incoming API request.
@@ -162,8 +198,8 @@ export async function register(req: Request, res: Response): Promise<Response> {
 }
 
 /**
- * Validates a provided email verification code, then generates a JWT to initiate a CAS session
- * as the new user.
+ * Validates a provided email verification code, then creates a local session as the new user
+ * in order to complete onboarding.
  *
  * @param req - Incoming API request.
  * @param res - Outgoing API response.
@@ -185,10 +221,38 @@ export async function verifyRegistrationEmail(req: Request, res: Response): Prom
   }
 
   foundUser.email_verify_code = null;
+  await foundUser.save();
+
+  // create a local session
+  await createAndAttachLocalSession(res, foundUser.uuid);
+
+  return res.send({
+    data: {
+      uuid: foundUser.uuid,
+    },
+  });
+}
+
+/**
+ * Activates a new user after onboarding has been completed, then generates a JWT to use
+ * to create a new SSO session.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function completeRegistration(req: Request, res: Response): Promise<Response | void> {
+  const { userUUID } = req;
+  const foundUser = await User.findOne({ where: { uuid: userUUID }});
+  if (!foundUser || foundUser.active || foundUser.enabled) {
+    return errors.badRequest(res);
+  }
+
   foundUser.active = true;
   foundUser.enabled = true;
   await foundUser.save();
 
+  // create SSO session tokens
   const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
   const casEncryptSecret = new TextEncoder().encode(process.env.CAS_JWT_ENCRYPT_SECRET);
   const casJWT = await new SignJWT({ sub: foundUser.uuid })
@@ -201,9 +265,8 @@ export async function verifyRegistrationEmail(req: Request, res: Response): Prom
   const casJWE = await new CompactEncrypt(new TextEncoder().encode(casJWT))
     .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
     .encrypt(casEncryptSecret);
-
   const state = JSON.stringify({
-    redirectURI: `${SESSION_DOMAIN}/complete-registration`,
+    redirectURI: `${SESSION_DOMAIN}/registration-complete`,
   });
 
   const prodCookieConfig: CookieOptions = {
@@ -289,34 +352,9 @@ export async function completeLogin(req: Request, res: Response): Promise<Respon
     return errors.unauthorized(res);
   }
 
+  // create local session
   const uuid = validData.serviceResponse.authenticationSuccess.user;
-  const sessionJWT = await new SignJWT({ uuid })
-    .setSubject(uuid)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setIssuer(SESSION_DOMAIN)
-    .setAudience(SESSION_DOMAIN)
-    .setExpirationTime('24h')
-    .sign(SESSION_SECRET);
-  
-  const splitJWT = sessionJWT.split('.');
-  const access = `${splitJWT[0]}.${splitJWT[1]}`;
-  const signed = splitJWT[2];
-
-  const prodCookieConfig: CookieOptions = {
-    secure: true,
-    domain: COOKIE_DOMAIN,
-    sameSite: 'strict',
-  };
-  res.cookie('one_access', access, {
-    path: '/',
-    ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
-  });
-  res.cookie('one_signed', signed, {
-    path: '/',
-    httpOnly: true,
-    ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
-  });
+  await createAndAttachLocalSession(res, uuid);
 
   let redirectURI = '/dashboard';
   if (req.cookies.cas_state) {
