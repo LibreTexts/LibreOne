@@ -186,6 +186,12 @@ export async function updateUser(req: Request, res: Response): Promise<Response>
       updateObj.organization_id = newOrg.id;
     }
   }
+  if (props.verify_status) {
+    if (!req.isAPIUser) {
+      return errors.forbidden(res);
+    }
+    updateObj.verify_status = props.verify_status;
+  }
 
   await foundUser.update(updateObj);
   return res.send({

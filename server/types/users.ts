@@ -14,6 +14,7 @@ export type UpdateUserBody = {
   user_type?: string;
   organization_id?: number;
   add_organization_name?: string;
+  verify_status?: string;
 };
 
 export type ResolvePrincipalAttributesQuery = {

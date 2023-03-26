@@ -16,4 +16,5 @@ export const updateUserSchema = joi.object({
   user_type: joi.string().valid('student', 'instructor'),
   organization_id: joi.number().integer(),
   add_organization_name: joi.string().max(100),
+  verify_status: joi.string().trim(),
 });
