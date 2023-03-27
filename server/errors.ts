@@ -106,6 +106,22 @@ function conflict(res: Response, detail?: string): Response {
 }
 
 /**
+ * Completes an API request with a standard 413 Content Too Large response.
+ *
+ * @param res - The response to hydrate.
+ * @param detail - A custom detailed error message.
+ * @returns The fulfilled API response.
+ */
+function contentTooLarge(res: Response, detail?: string): Response {
+  return sendErrorResponse(res, {
+    status: '413',
+    code: 'content_too_large',
+    title: 'Content Too Large',
+    detail: detail || 'Sorry, the provided file or payload is too large.',
+  });
+}
+
+/**
  * Completes an API request with a standard 500 Internal Server Error response.
  *
  * @param res - The response to hydrate.
@@ -127,5 +143,6 @@ export default {
   forbidden,
   notFound,
   conflict,
+  contentTooLarge,
   internalServerError,
 }

@@ -1,6 +1,9 @@
 
-import { Request, Response, } from 'express';
+import { NextFunction, Request, Response, } from 'express';
 import { Op } from 'sequelize';
+import multer from 'multer';
+import sharp from 'sharp';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Organization, System, User } from '../models';
 import errors from '../errors';
 import type {
@@ -12,6 +15,31 @@ import { checkUserResourcePermission } from '../helpers';
 
 const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
+
+const avatarUploadStorage = multer.memoryStorage();
+
+export function avatarUploadHandler(req: Request, res: Response, next: NextFunction) {
+  const avatarUploadConfig = multer({
+    storage: avatarUploadStorage,
+    fileFilter: (_req, file, callback) => {
+      const validFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      return callback(null, validFileTypes.includes(file.mimetype));
+    },
+    limits: {
+      files: 1,
+      fileSize: 5242880,
+    },
+  }).single('avatarFile');
+  return avatarUploadConfig(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return errors.contentTooLarge(res);
+      }
+      return errors.badRequest(res);
+    }
+    return next();
+  });
+}
 
 /**
  * Retrieves an active user from the database.
@@ -196,5 +224,79 @@ export async function updateUser(req: Request, res: Response): Promise<Response>
   await foundUser.update(updateObj);
   return res.send({
     data: foundUser,
+  });
+}
+
+export async function updateUserAvatar(req: Request, res: Response): Promise<Response> {
+  if (
+    !process.env.AWS_AVATARS_DOMAIN
+    || !process.env.AWS_AVATARS_ACCESS_KEY
+    || !process.env.AWS_AVATARS_SECRET_KEY
+    || !process.env.AWS_AVATARS_BUCKET
+    || !process.env.AWS_AVATARS_REGION
+  ) {
+    console.error('Required environment variables for avatar uploads are missing.');
+    return errors.internalServerError(res);
+  }
+
+  const { uuid } = req.params as UserUUIDParams;
+  const authorized = checkUserResourcePermission(req, uuid);
+  if (!authorized) {
+    return errors.forbidden(res);
+  }
+
+  const foundUser = await User.findOne({ where: { uuid }});
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  const avatarFile = req.file;
+  if (!avatarFile) {
+    return errors.badRequest(res);
+  }
+
+  const fileExtension = avatarFile.mimetype?.split('/')[1];
+  const fileKey = `avatars/${uuid}.${fileExtension}`;
+  let avatarVersion = 1;
+  if (foundUser.avatar?.includes(process.env.AWS_AVATARS_DOMAIN)) {
+    const avatarSplit = foundUser.avatar.split('?v=');
+    if (avatarSplit?.length > 1) {
+      const currAvatarVersion = Number.parseInt(avatarSplit[1]);
+      if (!Number.isNaN(currAvatarVersion)) {
+        avatarVersion = currAvatarVersion + 1;
+      }
+    }
+  }
+  const normalized = await sharp(avatarFile.buffer).resize({
+    width: 500,
+    height: 500,
+  }).toBuffer();
+
+  const storageClient = new S3Client({
+    credentials: {
+      accessKeyId: process.env.AWS_AVATARS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_AVATARS_SECRET_KEY,
+    },
+    region: process.env.AWS_AVATARS_REGION,
+  });
+  const uploadCommand = new PutObjectCommand({
+    Bucket: process.env.AWS_AVATARS_BUCKET,
+    Key: fileKey,
+    Body: normalized,
+    ContentType: avatarFile.mimetype,
+  });
+  const uploadRes = await storageClient.send(uploadCommand);
+  if (uploadRes.$metadata?.httpStatusCode !== 200) {
+    throw new Error(`Avatar upload failed ${uuid}`);
+  }
+
+  const avatarURL = `https://${process.env.AWS_AVATARS_DOMAIN}/${fileKey}?v=${avatarVersion}`;
+  await foundUser.update({ avatar: avatarURL });
+
+  return res.send({
+    data: {
+      uuid: foundUser.uuid,
+      avatar: avatarURL,
+    },
   });
 }

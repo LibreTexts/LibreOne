@@ -30,6 +30,13 @@ usersRouter.route('/:uuid')
     catchInternal(UserController.updateUser),
   );
 
+usersRouter.route('/:uuid/avatar').post(
+  verifyAPIAuthentication,
+  validate(UserValidator.uuidParamSchema, 'params'),
+  UserController.avatarUploadHandler,
+  catchInternal(UserController.updateUserAvatar),
+);
+
 export {
   usersRouter
 }
