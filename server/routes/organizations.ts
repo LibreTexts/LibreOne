@@ -16,6 +16,7 @@ organizationsRouter.route('/')
 
 organizationsRouter.route('/:orgID')
   .get(
+    validate(OrganizationValidator.orgIDParamSchema, 'params'),
     catchInternal(OrganizationController.getOrganization)
   ).put(
     verifyAPIAuthentication,
