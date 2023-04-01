@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Domain, Organization, OrganizationAlias, sequelize, System } from '../models';
+import { Domain, Organization, OrganizationAlias, OrganizationDomain, sequelize, System } from '../models';
 import errors from '../errors';
 import type { GetAllOrganizationsQuery, OrganizationIDParams } from '../types/organizations';
 
@@ -103,8 +103,22 @@ export async function updateOrganization(req: Request, res: Response): Promise<R
 }
 
 /**
- * @todo Implement
+ * Deletes a specified Organization and its associated aliases and Domain associations.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
  */
 export async function deleteOrganization(req: Request, res: Response): Promise<Response> {
-  return res.status(200);
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const foundOrg = await Organization.findByPk(orgID);
+  if (!foundOrg) {
+    return errors.notFound(res);
+  }
+
+  await OrganizationDomain.destroy({ where: { organization_id: foundOrg.id }});
+  await OrganizationAlias.destroy({ where: { organization_id: foundOrg.id }});
+  await foundOrg.destroy();
+
+  return res.send({});
 }

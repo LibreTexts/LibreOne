@@ -23,6 +23,7 @@ organizationsRouter.route('/:orgID')
     ensureActorIsAPIUser,
     catchInternal(OrganizationController.updateOrganization)
   ).delete(
+    validate(OrganizationValidator.orgIDParamSchema, 'params'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     catchInternal(OrganizationController.deleteOrganization)
