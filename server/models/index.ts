@@ -9,14 +9,17 @@ import { Service } from './Service';
 import { System } from './System';
 import { User } from './User';
 
+const env = (process.env.NODE_ENV || 'test').toUpperCase();
+
 const sequelize = new Sequelize(
-  process.env.DB ?? 'database',
-  process.env.DB_USER ?? 'username',
-  process.env.DB_PASS ?? 'password',
+  process.env[`${env}_DB`] ?? 'database',
+  process.env[`${env}_DB_USER`] ?? 'username',
+  process.env[`${env}_DB_PASS`] ?? 'password',
   {
-    host: process.env.DB_HOST ?? 'localhost',
+    host: process.env[`${env}_DB_HOST`] ?? 'localhost',
     port: Number(process.env.DB_PORT) ?? 3306,
     dialect: 'mysql',
+    logging: env === 'DEVELOPMENT' ? console.log : false,
   },
 );
 

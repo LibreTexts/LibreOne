@@ -19,6 +19,7 @@
     "vue/script-indent": [1, 2, {
       "baseIndent": 1,
       "switchCase": 1
-    }]
+    }],
+    "@typescript-eslint/ban-ts-comment": "off"
   }
 }

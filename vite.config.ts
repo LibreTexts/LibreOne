@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import ssr from 'vite-plugin-ssr/plugin';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import { UserConfig } from 'vite';
+// @ts-ignore
 import postcss from './postcss.config';
 
 const config: UserConfig = {

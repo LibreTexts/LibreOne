@@ -1,0 +1,13 @@
+{
+  "loader": "tsx",
+  "require": "source-map-support/register",
+  "extensions": ["ts"],
+  "spec": [
+    "server/tests/**/*.spec.*"
+  ],
+  "watch-files": [
+    "server"
+  ],
+  "recursive": true,
+  "exit": true
+}
