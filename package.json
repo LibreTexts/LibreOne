@@ -11,7 +11,8 @@
     "client:build": "npm run clean && vite build",
     "server:prod": "NODE_ENV=production tsx ./server",
     "prepare": "husky install",
-    "test": "NODE_ENV=test mocha"
+    "test": "NODE_ENV=test mocha",
+    "coverage": "c8 npm run test"
   },
   "author": "",
   "license": "ISC",
@@ -83,6 +84,7 @@
     "@typescript-eslint/parser": "^5.40.1",
     "@vue/eslint-config-typescript": "^11.0.2",
     "autoprefixer": "^10.4.13",
+    "c8": "^7.13.0",
     "chai": "^4.3.7",
     "eslint": "^8.26.0",
     "eslint-plugin-vue": "^9.8.0",

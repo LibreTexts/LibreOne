@@ -1,0 +1,9 @@
+{
+  "all": "true",
+  "extension": [".ts"],
+  "include": "server",
+  "reporter": [
+    "text-summary",
+    "json"
+  ]
+}
