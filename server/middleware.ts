@@ -6,8 +6,10 @@ import {
 } from './controllers/AuthController';
 import { verifyAPIUserAuth } from './controllers/APIUserController';
 import errors from './errors';
+import { APIUserPermission } from './types/apiusers';
 
 type MiddlewareResult = Response | void;
+type Middleware = (request: Request, response: Response, next: NextFunction) => MiddlewareResult;
 type AsyncMiddlewareResult = Promise<MiddlewareResult>;
 type AsyncMiddleware = (request: Request, response: Response, next: NextFunction) => AsyncMiddlewareResult;
 
@@ -54,11 +56,12 @@ export async function verifyBasicAuthorization(req: Request, res: Response, next
     if (authParts.length < 2) {
       return errors.badRequest(res);
     }
-    const authorized = await verifyAPIUserAuth(authParts[0], authParts[1], req.ip);
-    if (!authorized) {
+    const { isAuthorized, permissions } = await verifyAPIUserAuth(authParts[0], authParts[1], req.ip);
+    if (!isAuthorized) {
       return errors.unauthorized(res, undefined, 'LibreOne API');
     }
     req.isAPIUser = true;
+    req.apiUserPermissions = permissions;
     return next();
   } catch (e) {
     return errors.internalServerError(res);
@@ -93,7 +96,7 @@ export async function verifyAPIAuthentication(req: Request, res: Response, next:
  */
 export function validate(schema: Joi.Schema, part: 'body' | 'query' | 'params'): AsyncMiddleware {
   if (!schema) {
-    throw (new Error(`Schema not provided!`));
+    throw (new Error('Schema not provided!'));
   }
   
   return async function(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
@@ -124,4 +127,24 @@ export function ensureActorIsAPIUser(req: Request, res: Response, next: NextFunc
     return errors.forbidden(res);
   }
   return next();
+}
+
+/**
+ * Asserts that the current API User has all of the permissions requested.
+ *
+ * @param requestedPermissions - Permissions needed to successfully fulfill a request.
+ * @returns The permissions assertion middleware.
+ */
+export function ensureAPIUserHasPermission(requestedPermissions: APIUserPermission[]): Middleware {
+  if (!requestedPermissions) {
+    throw (new Error('Requested permissions not provided!'));
+  }
+
+  return function(req: Request, res: Response, next: NextFunction): MiddlewareResult {
+    const hasAllRequested = requestedPermissions.every((perm) => req.apiUserPermissions?.includes(perm));
+    if (!hasAllRequested) {
+      return errors.forbidden(res);
+    }
+    return next();
+  }
 }

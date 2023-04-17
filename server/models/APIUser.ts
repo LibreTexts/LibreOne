@@ -1,4 +1,5 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
+import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 
 @Table({
   timestamps: true,
@@ -8,6 +9,7 @@ export class APIUser extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    unique: true,
   })
   username: string;
 
@@ -22,4 +24,7 @@ export class APIUser extends Model {
 
   @Column(DataType.STRING)
   ip_address: string;
+
+  @HasOne(() => APIUserPermissionConfig)
+  permissions?: APIUserPermissionConfig;
 }

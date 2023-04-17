@@ -1,7 +1,12 @@
-declare namespace Express {
-  export interface Request {
-    isAPIUser?: boolean;
-    isAuthenticated?: boolean;
-    userUUID?: string;
+import { APIUserPermission } from './apiusers';
+
+declare global {
+  namespace Express {
+    export interface Request {
+      isAPIUser?: boolean;
+      apiUserPermissions?: APIUserPermission[];
+      isAuthenticated?: boolean;
+      userUUID?: string;
+    }
   }
 }

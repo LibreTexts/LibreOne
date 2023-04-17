@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import { APIUser } from './APIUser';
+import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Domain } from './Domain';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
@@ -25,6 +26,7 @@ const sequelize = new Sequelize(
 
 sequelize.addModels([
   APIUser,
+  APIUserPermissionConfig,
   Domain,
   Organization,
   OrganizationAlias,
@@ -42,7 +44,7 @@ sequelize.addModels([
  */
 export async function connectDatabase(): Promise<boolean> {
   try {
-    await sequelize.sync();
+    await sequelize.sync({ alter: process.env.NODE_ENV === 'test' });
     console.log('[DB] Established database connection.');
   } catch (e) {
     console.error('[DB] Error establishing connection:', e);
@@ -54,6 +56,7 @@ export async function connectDatabase(): Promise<boolean> {
 export {
   sequelize,
   APIUser,
+  APIUserPermissionConfig,
   Domain,
   Organization,
   OrganizationAlias,
