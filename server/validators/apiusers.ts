@@ -4,6 +4,10 @@ import { passwordStrengthOptions } from '../../passwordstrength';
 import { API_USERS_PERMISSIONS } from '@server/controllers/APIUserController';
 import { isAPIUserPermission } from '@server/types/apiusers';
 
+export const idParamSchema = joi.object({
+  id: joi.number().integer().required(),
+});
+
 export const createAPIUserSchema = joi.object({
   username: joi.string().min(5).max(50).trim().required(),
   password: joi.string().custom((password, helper) => {
@@ -31,4 +35,9 @@ export const createAPIUserSchema = joi.object({
 
     return Array.from(new Set(permissions));
   }).default([]),
+});
+
+export const getAllAPIUsersSchema = joi.object({
+  offset: joi.number().integer().default(0),
+  limit: joi.number().integer().default(50),
 });

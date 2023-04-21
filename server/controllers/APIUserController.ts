@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
 import { APIUser, APIUserPermissionConfig, sequelize } from '../models';
-import { APIUserAuthCheckOutput, APIUserPermission, CreateAPIUserBody, isAPIUserPermission } from '@server/types/apiusers';
+import {
+  APIUserAuthCheckOutput,
+  APIUserIDParams,
+  APIUserPermission,
+  CreateAPIUserBody,
+  isAPIUserPermission,
+} from '../types/apiusers';
 import bcrypt from 'bcryptjs';
 import { CreationAttributes } from 'sequelize';
+import errors from '../errors';
 
 export const API_USERS_PERMISSIONS = [
   'api_users:read',
@@ -66,7 +73,7 @@ export function mapAPIUserPermissionsToConfig(permissions: APIUserPermission[]):
  */
 export async function verifyAPIUserAuth(username: string, password: string, ip_address: string): Promise<APIUserAuthCheckOutput> {
   try {
-    const foundUser = await APIUser.findOne({
+    const foundUser = await APIUser.unscoped().findOne({
       where: { username },
       include: [APIUserPermissionConfig],
     });
@@ -103,7 +110,6 @@ export async function createAPIUser(req: Request, res: Response) {
   const newUser = await APIUser.create({
     username: props.username,
     password: hashed,
-    permissions: mapAPIUserPermissionsToConfig(props.permissions),
   });
   await APIUserPermissionConfig.create({
     api_user_id: newUser.id,
@@ -114,5 +120,64 @@ export async function createAPIUser(req: Request, res: Response) {
     data: {
       username: newUser.get('username'),
     },
+  });
+}
+
+/**
+ * Retrieves a single API User. The current API User should have 'api_users:read' permission.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getAPIUser(req: Request, res: Response) {
+  const { id } = req.params as APIUserIDParams;
+  const foundUser = await APIUser.findByPk(Number(id), {
+    include: [APIUserPermissionConfig],
+  });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  const permissions = foundUser.get('permissions');
+  return res.send({
+    data: {
+      ...foundUser.get(),
+      permissions: permissions ? parseAPIUserPermissions(permissions) : [],
+    },
+  });
+}
+
+/**
+ * Retrieves all API Users (with pagination). The current API User should have 'api_users:read' permission.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getAllAPIUsers(req: Request, res: Response): Promise<Response> {
+  const offset = Number(req.query.offset);
+  const limit = Number(req.query.limit);
+  const { count, rows } = await APIUser.findAndCountAll({
+    offset,
+    limit,
+    include: [APIUserPermissionConfig],
+  });
+
+  const results = rows.map((user) => {
+    const permissions = user.get('permissions');
+    return {
+      ...user.get(),
+      permissions: permissions ? parseAPIUserPermissions(permissions) : [],
+    };
+  });
+
+  return res.send({
+    meta: {
+      offset,
+      limit,
+      total: count,
+    },
+    data: results,
   });
 }

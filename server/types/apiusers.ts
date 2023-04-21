@@ -6,6 +6,10 @@ export function isAPIUserPermission(str: string): str is APIUserPermission {
   return API_USERS_PERMISSIONS.includes(str as APIUserPermission);
 }
 
+export type APIUserIDParams = {
+  id: string;
+};
+
 export type APIUserAuthCheckOutput = {
   isAuthorized: boolean;
   permissions: APIUserPermission[];

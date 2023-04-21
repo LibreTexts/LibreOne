@@ -1,6 +1,11 @@
-import { Column, DataType, HasOne, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, DefaultScope, HasOne, Model, Table } from 'sequelize-typescript';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 
+@DefaultScope(() => ({
+  attributes: {
+    exclude: ['password'],
+  },
+}))
 @Table({
   timestamps: true,
   tableName: 'api_users',

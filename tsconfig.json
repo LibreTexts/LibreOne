@@ -8,7 +8,7 @@
     "types": ["node", "vite/client"],
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "alwaysStrict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": false,

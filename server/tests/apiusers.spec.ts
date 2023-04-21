@@ -1,20 +1,25 @@
+import _ from 'lodash';
 import { after, describe, it } from 'mocha';
 import { expect } from 'chai';
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { server } from '..';
 import { APIUser, APIUserPermissionConfig } from '../models';
-import { parseAPIUserPermissions } from '../controllers/APIUserController';
+import { mapAPIUserPermissionsToConfig, parseAPIUserPermissions } from '../controllers/APIUserController';
+import { APIUserPermission } from '../types/apiusers';
+import { Op } from 'sequelize';
 
 describe('API Users', async () => {
-  const mainAPIUserPassword = 'test-password';
   let mainAPIUser: APIUser;
+  let mainAPIUserUsername: string;
+  const mainAPIUserPassword = 'test-password';
   before(async () => {
     const hashedUserPass = await bcrypt.hash(mainAPIUserPassword, 10);
     mainAPIUser = await APIUser.create({
       username: 'apiuser1',
       password: hashedUserPass,
     });
+    mainAPIUserUsername = mainAPIUser.get('username');
     await APIUserPermissionConfig.create({
       api_user_id: mainAPIUser.id,
       api_users_read: true,
@@ -51,11 +56,11 @@ describe('API Users', async () => {
       const response = await request(server)
         .post('/api/v1/api-users/')
         .send({ username: 'test1', password: 'test1password' })
-        .auth(mainAPIUser.get('username'), mainAPIUserPassword);
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
       expect(response.status).to.equal(201);
       expect(response.body?.data?.username).to.be.a('string');
       const username = response.body.data.username;
-      const newUser = await APIUser.findOne({
+      const newUser = await APIUser.unscoped().findOne({
         where: { username },
         include: [APIUserPermissionConfig],
       });
@@ -66,6 +71,7 @@ describe('API Users', async () => {
       expect(userRecord.permissions?.get('api_user_id')).to.equal(userRecord?.id);
       const computedPerms = parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
       expect(computedPerms).to.have.length(0);
+
       await APIUser.destroy({ where: { id: newUser?.id }});
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
@@ -78,11 +84,11 @@ describe('API Users', async () => {
           password: 'test2password',
           permissions: ['organizations:write', 'systems:write', 'users:read'],
         })
-        .auth(mainAPIUser.get('username'), mainAPIUserPassword);
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
       expect(response.status).to.equal(201);
       expect(response.body?.data?.username).to.be.a('string');
       const username = response.body.data.username;
-      const newUser = await APIUser.findOne({
+      const newUser = await APIUser.unscoped().findOne({
         where: { username },
         include: [APIUserPermissionConfig],
       });
@@ -94,6 +100,7 @@ describe('API Users', async () => {
       const computedPerms = parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
       expect(computedPerms).to.have.length(3);
       expect(computedPerms).to.deep.equal(permissionsInput)
+
       await APIUser.destroy({ where: { id: newUser?.id }});
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
@@ -111,7 +118,92 @@ describe('API Users', async () => {
         })
         .auth(username, password);
       expect(response.status).to.equal(403);
+
       await APIUser.destroy({ where: { id: testUser?.id }});
+    });
+  });
+
+  describe('READ', () => {
+    it('should retrieve a single API User', async () => {
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const newUser = await APIUser.create({
+        username: 'test4',
+        password: (await bcrypt.hash('test4password', 10)),
+        permissions: mapAPIUserPermissionsToConfig(permissionsInput),
+      });
+      await APIUserPermissionConfig.create({
+        api_user_id: newUser.id,
+        ...mapAPIUserPermissionsToConfig(permissionsInput),
+      });
+
+      const response = await request(server)
+        .get(`/api/v1/api-users/${newUser.id}`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(_.pick(response.body?.data, 'username', 'permissions')).to.deep.equal({
+        username: 'test4',
+        permissions: permissionsInput
+      });
+
+      await APIUser.destroy({ where: { id: newUser?.id }});
+      await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
+    });
+    it('should retrieve all API Users', async () => {
+      const permissionsInput1: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput2: APIUserPermission[] = ['api_users:read', 'services:read', 'users:read'];
+      const [newUser1, newUser2] = await Promise.all([
+        APIUser.create({
+          username: 'test5',
+          password: (await bcrypt.hash('test5password', 10)),
+          permissions: mapAPIUserPermissionsToConfig(permissionsInput1),
+        }),
+        APIUser.create({
+          username: 'test6',
+          password: (await bcrypt.hash('test6password', 10)),
+          permissions: mapAPIUserPermissionsToConfig(permissionsInput2),
+        }),
+      ])
+      await Promise.all([
+        APIUserPermissionConfig.create({
+          api_user_id: newUser1.id,
+          ...mapAPIUserPermissionsToConfig(permissionsInput1),
+        }),
+        APIUserPermissionConfig.create({
+          api_user_id: newUser2.id,
+          ...mapAPIUserPermissionsToConfig(permissionsInput2),
+        }),
+      ]);
+
+      const response = await request(server)
+        .get('/api/v1/api-users/')
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('array');
+      const results = response.body?.data
+        .filter((user) => user.id !== mainAPIUser.get('id'))
+        .map((user) => ({
+          username: user.username,
+          permissions: user.permissions,
+        }));
+      expect(results).to.be.length(2);
+      expect(results).to.deep.equal([
+        {
+          username: newUser1.get('username'),
+          permissions: permissionsInput1,
+        }, {
+          username: newUser2.get('username'),
+          permissions: permissionsInput2,
+        },
+      ]);
+
+      await APIUser.destroy({ where: { id: { [Op.in]: [newUser1.id, newUser2.id] } } });
+      await APIUserPermissionConfig.destroy({
+        where: {
+          api_user_id: {
+            [Op.in]: [newUser1.id, newUser2.id],
+          }
+        },
+      });
     });
   });
 });

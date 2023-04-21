@@ -6,12 +6,28 @@ import { catchInternal } from '../helpers';
 
 const apiUsersRouter = express.Router();
 
-apiUsersRouter.route('/').post(
+
+apiUsersRouter.route('/')
+  .get(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['api_users:read']),
+    validate(APIUserValidator.getAllAPIUsersSchema, 'query'),
+    catchInternal(APIUserController.getAllAPIUsers),
+  ).post(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['api_users:write']),
+    validate(APIUserValidator.createAPIUserSchema, 'body'),
+    catchInternal(APIUserController.createAPIUser),
+  );
+
+apiUsersRouter.route('/:id').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
-  ensureAPIUserHasPermission(['api_users:write']),
-  validate(APIUserValidator.createAPIUserSchema, 'body'),
-  catchInternal(APIUserController.createAPIUser),
+  ensureAPIUserHasPermission(['api_users:read']),
+  validate(APIUserValidator.idParamSchema, 'params'),
+  catchInternal(APIUserController.getAPIUser),
 );
 
 export {
