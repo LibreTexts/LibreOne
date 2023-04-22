@@ -333,4 +333,29 @@ describe('API Users', async () => {
       await updatedConfig?.destroy();
     });
   });
+
+  describe('DELETE', () => {
+    it('should delete API User and Permission Config', async () => {
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const user1 = await APIUser.create({
+        username: 'test12',
+        password: (await bcrypt.hash('test12password', 10)),
+      });
+      const config1 = await APIUserPermissionConfig.create({
+        api_user_id: user1.id,
+        ...mapAPIUserPermissionsToConfig(permissionsInput),
+      });
+
+      const response = await request(server)
+        .delete(`/api/v1/api-users/${user1.id}`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.deep.equal({});
+
+      const foundUser = await APIUser.findByPk(user1.id);
+      const foundConfig = await APIUserPermissionConfig.findByPk(config1.id);
+      expect(foundUser).to.not.exist;
+      expect(foundConfig).to.not.exist;
+    });
+  });
 });

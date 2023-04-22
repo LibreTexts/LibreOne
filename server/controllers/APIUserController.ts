@@ -232,3 +232,26 @@ export async function updateAPIUser(req: Request, res: Response): Promise<Respon
     data: { username: foundUser.get('username') },
   });
 }
+
+/**
+ * Deletes an API User record. The current API User should have 'api_users:write' permission.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function deleteAPIUser(req: Request, res: Response): Promise<Response> {
+  const { id } = req.params as APIUserIDParams;
+
+  const foundUser = await APIUser.findByPk(Number(id), {
+    include: [APIUserPermissionConfig],
+  });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  await foundUser.get('permissions')?.destroy();
+  await foundUser.destroy();
+
+  return res.send({ data: {} });
+}
