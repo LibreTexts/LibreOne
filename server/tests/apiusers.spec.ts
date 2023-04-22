@@ -101,7 +101,7 @@ describe('API Users', async () => {
       expect(computedPerms).to.have.length(3);
       expect(computedPerms).to.deep.equal(permissionsInput)
 
-      await APIUser.destroy({ where: { id: newUser?.id }});
+      await newUser?.destroy();
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
     it('should not create API User if current user does not have permission', async () => {
@@ -129,7 +129,6 @@ describe('API Users', async () => {
       const newUser = await APIUser.create({
         username: 'test4',
         password: (await bcrypt.hash('test4password', 10)),
-        permissions: mapAPIUserPermissionsToConfig(permissionsInput),
       });
       await APIUserPermissionConfig.create({
         api_user_id: newUser.id,
@@ -145,7 +144,7 @@ describe('API Users', async () => {
         permissions: permissionsInput
       });
 
-      await APIUser.destroy({ where: { id: newUser?.id }});
+      await newUser.destroy();
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
     it('should retrieve all API Users', async () => {
@@ -155,12 +154,10 @@ describe('API Users', async () => {
         APIUser.create({
           username: 'test5',
           password: (await bcrypt.hash('test5password', 10)),
-          permissions: mapAPIUserPermissionsToConfig(permissionsInput1),
         }),
         APIUser.create({
           username: 'test6',
           password: (await bcrypt.hash('test6password', 10)),
-          permissions: mapAPIUserPermissionsToConfig(permissionsInput2),
         }),
       ])
       await Promise.all([
@@ -204,6 +201,136 @@ describe('API Users', async () => {
           }
         },
       });
+    });
+  });
+
+  describe('UPDATE', () => {
+    it('should validate id parameter', async () => {
+      const response = await request(server)
+        .patch(`/api/v1/api-users/abcd`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+    });
+    it('should update API User username', async () => {
+      const user1 = await APIUser.create({
+        username: 'test7',
+        password: (await bcrypt.hash('test7password', 10)),
+      });
+
+      const updateUserName = 'test7+1'
+      const response = await request(server)
+        .patch(`/api/v1/api-users/${user1.id}`)
+        .send({ username: updateUserName })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.deep.equal({ username: updateUserName });
+
+      const updatedUser = await APIUser.findByPk(Number(user1.id));
+      expect(updatedUser).to.exist;
+      expect(updatedUser?.get('username')).to.equal(updateUserName);
+
+      await updatedUser?.destroy();
+    });
+    it('should error if username already taken', async () => {
+      const user1 = await APIUser.create({
+        username: 'test8',
+        password: (await bcrypt.hash('test8password', 10)),
+      });
+      const user2 = await APIUser.create({
+        username: 'test8+1',
+        password: (await bcrypt.hash('test8+1password', 10)),
+      });
+
+      const updateUserName = 'test8+1'
+      const response = await request(server)
+        .patch(`/api/v1/api-users/${user1.id}`)
+        .send({ username: updateUserName })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+
+      await user1.destroy();
+      await user2.destroy();
+    });
+    it('should update API User password', async () => {
+      const user1 = await APIUser.create({
+        username: 'test9',
+        password: (await bcrypt.hash('test8password', 10)),
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/api-users/${user1.id}`)
+        .send({ password: 'test9password+1' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const updatedUser = await APIUser.unscoped().findByPk(Number(user1.id));
+      expect(updatedUser).to.exist;
+      expect(updatedUser?.get('password')).to.not.equal(user1.get('password'));
+
+      await updatedUser?.destroy();
+    });
+    it('should update API User permissions', async () => {
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const newPermissionsInput: APIUserPermission[] = ['organizations:write', 'domains:write'];
+      const newUser = await APIUser.create({
+        username: 'test10',
+        password: (await bcrypt.hash('test10password', 10)),
+      });
+      const newConfig = await APIUserPermissionConfig.create({
+        api_user_id: newUser.id,
+        ...mapAPIUserPermissionsToConfig(permissionsInput),
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/api-users/${newUser.id}`)
+        .send({ permissions: newPermissionsInput })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const updatedConfig = await APIUserPermissionConfig.findByPk(newConfig.id);
+      expect(updatedConfig).to.exist;
+      const permissions = parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
+      expect(permissions).to.have.members([...newPermissionsInput]);
+
+      await newUser.destroy();
+      await updatedConfig?.destroy();
+    });
+    it('should remove API User permissions if empty array given', async () => {
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const newUser = await APIUser.create({
+        username: 'test11',
+        password: (await bcrypt.hash('test11password', 10)),
+      });
+      const newConfig = await APIUserPermissionConfig.create({
+        api_user_id: newUser.id,
+        ...mapAPIUserPermissionsToConfig(permissionsInput),
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/api-users/${newUser.id}`)
+        .send({ permissions: [] })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const updatedConfig = await APIUserPermissionConfig.findByPk(newConfig.id);
+      expect(updatedConfig).to.exist;
+      const permissions = parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
+      expect(permissions).to.deep.equal([]);
+
+      await newUser.destroy();
+      await updatedConfig?.destroy();
     });
   });
 });

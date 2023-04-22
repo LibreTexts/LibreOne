@@ -20,3 +20,9 @@ export type CreateAPIUserBody = {
   password: string;
   permissions: APIUserPermission[];
 };
+
+export type UpdateAPIUserBody = {
+  username?: string;
+  password?: string;
+  permissions?: APIUserPermission[];
+};

@@ -22,13 +22,21 @@ apiUsersRouter.route('/')
     catchInternal(APIUserController.createAPIUser),
   );
 
-apiUsersRouter.route('/:id').get(
-  verifyAPIAuthentication,
-  ensureActorIsAPIUser,
-  ensureAPIUserHasPermission(['api_users:read']),
-  validate(APIUserValidator.idParamSchema, 'params'),
-  catchInternal(APIUserController.getAPIUser),
-);
+apiUsersRouter.route('/:id')
+  .all(
+    validate(APIUserValidator.idParamSchema, 'params'),
+  ).get(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['api_users:read']),
+    catchInternal(APIUserController.getAPIUser),
+  ).patch(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['api_users:write']),
+    validate(APIUserValidator.updateAPIUserSchema, 'body'),
+    catchInternal(APIUserController.updateAPIUser),
+  );
 
 export {
   apiUsersRouter

@@ -5,10 +5,11 @@ import {
   APIUserIDParams,
   APIUserPermission,
   CreateAPIUserBody,
+  UpdateAPIUserBody,
   isAPIUserPermission,
 } from '../types/apiusers';
 import bcrypt from 'bcryptjs';
-import { CreationAttributes } from 'sequelize';
+import { CreationAttributes, UniqueConstraintError } from 'sequelize';
 import errors from '../errors';
 
 export const API_USERS_PERMISSIONS = [
@@ -179,5 +180,55 @@ export async function getAllAPIUsers(req: Request, res: Response): Promise<Respo
       total: count,
     },
     data: results,
+  });
+}
+
+/**
+ * Updates an API User record. The current API User should have 'api_users:write' permission.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function updateAPIUser(req: Request, res: Response): Promise<Response> {
+  const { id } = req.params as APIUserIDParams;
+  const props = req.body as UpdateAPIUserBody;
+
+  const foundUser = await APIUser.findByPk(Number(id), {
+    include: [APIUserPermissionConfig],
+  });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  foundUser.update({
+    ...(props.username && { username: props.username }),
+    ...(props.password && { password: (await bcrypt.hash(props.password, 10)) }),
+  });
+
+  const permissions = foundUser.get('permissions');
+  if (permissions && Array.isArray(props.permissions)) {
+    const configFields = mapAPIUserPermissionsToConfig([...API_USERS_PERMISSIONS]);
+    permissions.update({
+      ...(Object.keys(configFields).reduce((acc, key) => {
+        acc[key] = null;
+        return acc;
+      }, {})),
+      ...(mapAPIUserPermissionsToConfig(props.permissions)),
+    });
+  }
+  
+  try {
+    await foundUser.save();
+    await permissions?.save();
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      return errors.badRequest(res, 'Username already exists.');
+    }
+    throw err;
+  }
+
+  return res.send({
+    data: { username: foundUser.get('username') },
   });
 }
