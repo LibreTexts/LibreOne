@@ -16,19 +16,19 @@ export class APIUser extends Model {
     allowNull: false,
     unique: true,
   })
-  username: string;
+  declare username: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  password: string;
+  declare password: string;
 
   @Column(DataType.DATE)
-  last_used: Date;
+  declare last_used: Date;
 
   @Column(DataType.STRING)
-  ip_address: string;
+  declare ip_address: string;
 
   @HasOne(() => APIUserPermissionConfig)
   permissions?: APIUserPermissionConfig;

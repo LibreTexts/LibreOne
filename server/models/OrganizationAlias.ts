@@ -11,14 +11,14 @@ export class OrganizationAlias extends Model {
     allowNull: false,
     unique: true,
   })
-  alias: string;
+  declare alias: string;
 
   @ForeignKey(() => Organization)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  organization_id: number;
+  declare organization_id: number;
 
   @BelongsTo(() => Organization)
   organization: ReturnType<() => Organization>; // avoid circular reference errors

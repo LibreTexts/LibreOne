@@ -12,7 +12,7 @@ export class Domain extends Model {
     allowNull: false,
     unique: true,
   })
-  domain: string;
+  declare domain: string;
 
   @BelongsToMany(() => Organization, () => OrganizationDomain)
   organizations?: Array<Organization & { OrganizationDomain: OrganizationDomain }>;

@@ -12,12 +12,12 @@ export class OrganizationDomain extends Model {
     type: DataType.INTEGER,
     allowNull: false,
   })
-  organization_id: number;
+  declare organization_id: number;
 
   @ForeignKey(() => Domain)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  domain_id: number;
+  declare domain_id: number;
 }

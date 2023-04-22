@@ -19,14 +19,14 @@ export class ResetPasswordToken extends Model {
     type: DataType.STRING(64),
     allowNull: false,
   })
-  token: string;
+  declare token: string;
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  uuid: string;
+  declare uuid: string;
 
   @BelongsTo(() => User)
   user?: User;
@@ -35,5 +35,5 @@ export class ResetPasswordToken extends Model {
     type: DataType.BIGINT,
     allowNull: false,
   })
-  expires_at: number;
+  declare expires_at: number;
 }

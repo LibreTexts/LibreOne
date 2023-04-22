@@ -12,44 +12,44 @@ export class APIUserPermissionConfig extends Model {
     type: DataType.INTEGER,
     allowNull: false,
   })
-  api_user_id: number;
+  declare api_user_id: number;
 
   @BelongsTo(() => APIUser)
   api_user?: APIUser;
 
   @Column(DataType.BOOLEAN)
-  api_users_read: boolean;
+  declare api_users_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  api_users_write: boolean;
+  declare api_users_write: boolean;
 
   @Column(DataType.BOOLEAN)
-  domains_read: boolean;
+  declare domains_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  domains_write: boolean;
+  declare domains_write: boolean;
 
   @Column(DataType.BOOLEAN)
-  organizations_read: boolean;
+  declare organizations_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  organizations_write: boolean;
+  declare organizations_write: boolean;
 
   @Column(DataType.BOOLEAN)
-  services_read: boolean;
+  declare services_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  services_write: boolean;
+  declare services_write: boolean;
 
   @Column(DataType.BOOLEAN)
-  systems_read: boolean;
+  declare systems_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  systems_write: boolean;
+  declare systems_write: boolean;
 
   @Column(DataType.BOOLEAN)
-  users_read: boolean;
+  declare users_read: boolean;
 
   @Column(DataType.BOOLEAN)
-  users_write: boolean;
+  declare users_write: boolean;
 }

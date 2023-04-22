@@ -25,35 +25,35 @@ export class User extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  uuid: string;
+  declare uuid: string;
 
   @Column({
     type: DataType.STRING,
   })
-  first_name: string;
+  declare first_name: string;
 
   @Column({
     type: DataType.STRING,
   })
-  last_name: string;
+  declare last_name: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
     unique: true,
   })
-  email: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING,
   })
-  password?: string;
+  declare password?: string;
 
   @ForeignKey(() => Organization)
   @Column({
     type: DataType.INTEGER,
   })
-  organization_id?: number;
+  declare organization_id?: number;
 
   @BelongsTo(() => Organization)
   organization?: Organization;
@@ -61,52 +61,52 @@ export class User extends Model {
   @Column({
     type: DataType.ENUM('student', 'instructor')
   })
-  user_type?: string;
+  declare user_type?: string;
 
   @Column({
     type: DataType.BOOLEAN,
   })
-  active: boolean;
+  declare active: boolean;
 
   @Column({
     type: DataType.BOOLEAN,
   })
-  enabled: boolean;
+  declare enabled: boolean;
 
   @Column({
     type: DataType.BOOLEAN,
   })
-  legacy: boolean;
+  declare legacy: boolean;
 
   @Column({
     type: DataType.DATE,
   })
-  last_access: Date;
+  declare last_access: Date;
 
   @Column({
     type: DataType.STRING,
   })
-  ip_address: string;
+  declare ip_address: string;
 
   @Column({
     type: DataType.STRING,
   })
-  avatar: string;
+  declare avatar: string;
 
   /** TODO: Should this data be brought up this far? */
   @Column({
     type: DataType.STRING,
   })
-  bio_url: string;
+  declare bio_url: string;
 
   @Column({
     type: DataType.ENUM('not_attempted', 'pending', 'needs_review', 'denied', 'verified')
   })
-  verify_status: string;
+  declare verify_status: string;
 
   @Column(DataType.INTEGER)
-  email_verify_code?: number | null;
+  declare email_verify_code?: number | null;
 
   @Column(DataType.DATE)
-  last_password_change: Date;
+  declare last_password_change: Date;
 }

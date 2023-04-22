@@ -10,13 +10,13 @@ export class System extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  name: string;
+  declare name: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  logo: string;
+  declare logo: string;
 
   @HasMany(() => Organization)
   organizations: Organization[];

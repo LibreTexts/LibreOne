@@ -23,18 +23,18 @@ export class Organization extends Model {
     allowNull: false,
     unique: true,
   })
-  name: string;
+  declare name: string;
 
   @Column({
     type: DataType.STRING,
   })
-  logo?: string;
+  declare logo?: string;
 
   @ForeignKey(() => System)
   @Column({
     type: DataType.INTEGER,
   })
-  system_id?: number;
+  declare system_id?: number;
 
   @BelongsTo(() => System)
   system?: System;
