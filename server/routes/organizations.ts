@@ -1,7 +1,7 @@
 import express from 'express';
 import * as OrganizationController from '../controllers/OrganizationController';
 import * as OrganizationValidator from '../validators/organizations';
-import { ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
+import { ensureAPIUserHasPermission, ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const organizationsRouter = express.Router();
@@ -11,6 +11,10 @@ organizationsRouter.route('/')
     validate(OrganizationValidator.getAllOrganizationsSchema, 'query'),
     catchInternal(OrganizationController.getAllOrganizations)
   ).post(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['organizations:write', 'domains:read', 'domains:write']),
+    validate(OrganizationValidator.createOrganizationSchema, 'body'),
     catchInternal(OrganizationController.createOrganization)
   );
 

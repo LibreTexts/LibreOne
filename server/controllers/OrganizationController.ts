@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { ForeignKeyConstraintError, Op, UniqueConstraintError } from 'sequelize';
 import { Domain, Organization, OrganizationAlias, OrganizationDomain, sequelize, System } from '../models';
 import errors from '../errors';
-import type { GetAllOrganizationsQuery, OrganizationIDParams } from '../types/organizations';
+import type { CreateOrganizationBody, GetAllOrganizationsQuery, OrganizationIDParams } from '../types/organizations';
 
 const simplifyAliases = (aliases: { alias: string }[]) => aliases
   .map((aliasObj) => aliasObj.alias)
@@ -12,10 +12,73 @@ const simplifyDomains = (domains: { domain: string }[]) => domains
   .filter((domain) => !!domain);
 
 /**
- * @todo Implement
+ * Creates a new Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
  */
 export async function createOrganization(req: Request, res: Response): Promise<Response> {
-  return res.status(201);
+  const props = req.body as CreateOrganizationBody;
+  try {
+    const newOrgId = await sequelize.transaction(async (transaction) => {
+      const newOrganization = await Organization.create({
+        name: props.name,
+        logo: props.logo,
+        system_id: props.system_id || null,
+      }, { transaction });
+  
+      await OrganizationAlias.bulkCreate(props.aliases.map((alias) => ({
+        alias,
+        organization_id: newOrganization.id,
+      })), { validate: true, transaction });
+  
+      const existingDomainObjs = (await Domain.findAll({
+        where: {
+          domain: {
+            [Op.in]: props.domains,
+          },
+        },
+      }));
+      const existingDomains = existingDomainObjs.map((d) => d.get('domain'));
+      const domainsToCreate = props.domains.filter((d) => !existingDomains.includes(d));
+      const createdDomains = await Domain.bulkCreate(domainsToCreate.map((domain) => ({
+        domain,
+      })), { validate: true, transaction });
+      await OrganizationDomain.bulkCreate([...existingDomainObjs, ...createdDomains].map((domainObj) => ({
+        organization_id: newOrganization.id,
+        domain_id: domainObj.id,
+      })), { validate: true, transaction });
+  
+      return newOrganization.id;
+    });
+
+    const organization = await Organization.findByPk(newOrgId, {
+      include: [
+        { model: OrganizationAlias, attributes: ['alias'] },
+        { model: Domain, attributes: ['domain'] },
+      ],
+    });
+    if (!organization) {
+      throw new Error('Could not find newly created Organization');
+    }
+
+    return res.status(201).send({
+      data: {
+        ...organization.get(),
+        aliases: (organization.get('aliases') || []).map((a) => a.get('alias')),
+        domains: (organization.get('domains') || []).map((d) => d.get('domain')),
+      },
+    });
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      return errors.conflict(res, 'An Organization with that name already exists.');
+    }
+    if (err instanceof ForeignKeyConstraintError) {
+      return errors.badRequest(res, 'Referenced System does not exist.');
+    }
+    throw err;
+  }
 }
 
 /**
