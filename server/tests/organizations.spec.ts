@@ -70,12 +70,12 @@ describe('Organizations', async () => {
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
       expect(response.status).to.equal(201);
-      expect(_.pick(response.body?.data, ['name', 'logo', 'aliases', 'domains'])).to.deep.equal({
+      expect(_.pick(response.body?.data, ['name', 'logo'])).to.deep.equal({
         name: 'Test Organization',
         logo: '',
-        aliases,
-        domains,
       });
+      expect(response.body.data.aliases).to.have.members(aliases);
+      expect(response.body.data.domains).to.have.members(domains);
     });
     it('should error on creation with existing name', async () => {
       await Organization.create({ name: 'Test Organization' });
