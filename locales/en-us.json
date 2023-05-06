@@ -14,14 +14,12 @@
     "signin": "Sign in",
     "logout": "Log Out",
     "continue": "Continue",
-    "updating": "Updating"
+    "updating": "Updating",
+    "edit": "Edit",
+    "save": "Save"
   },
   "welcome": {
     "getstarted": "Get Started"
-  },
-  "profile": {
-    "firstname": "First Name",
-    "lastname": "Last Name"
   },
   "register": {
     "infoline": "LibreOne allows you to access all LibreTexts applications with just one login.",
@@ -101,9 +99,20 @@
     "completedtagline": "Nice! You can now log in to LibreTexts services using the password you just set.",
     "redirecting": "We're redirecting you to the login screen."
   },
-  "dashboard": {
-    "header": "Account Management Dashboard",
-    "property": "Property",
-    "value": "Value"
+  "profile": {
+    "header": "Profile Management",
+    "infoline": "Manage your LibreOne Account details here. Changes to your account here will be reflected across all LibreTexts services.",
+    "profile": "Profile",
+    "security": "Security",
+    "firstname": "First Name",
+    "lastname": "Last Name",
+    "personalinfo": "Personal Information"
+  },
+  "security": {
+    "header": "Account Security Management",
+    "infoline": "Manage your security settings here. Changes to your account here will be reflected across all LibreTexts services.",
+    "security": "Security",
+    "lastchanged": "Last Password Change",
+    "never": "Never"
   }
 }
