@@ -25,11 +25,13 @@ organizationsRouter.route('/:orgID')
   ).put(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['organizations:write']),
     catchInternal(OrganizationController.updateOrganization)
   ).delete(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['organizations:write']),
     catchInternal(OrganizationController.deleteOrganization)
   );
 
