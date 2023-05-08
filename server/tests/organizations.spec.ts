@@ -296,6 +296,18 @@ describe('Organizations', async () => {
   });
 
   describe('DELETE', () => {
+    it('should delete an organization', async () => {
+      const org = await Organization.create({ name: 'LibreTexts' });
+
+      const response = await request(server)
+        .delete(`/api/v1/organizations/${org.id}`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(response.body).to.deep.equal({});
+
+      const foundOrg = await Organization.findByPk(org.id);
+      expect(foundOrg).to.not.exist;
+    });
     it('should delete an alias of an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
       const alias1 = await OrganizationAlias.create({
