@@ -11,6 +11,7 @@ import type {
   OrganizationAliasIDParams,
   OrganizationDomainIDParams,
   OrganizationIDParams,
+  UpdateOrganizationBody,
 } from '../types/organizations';
 
 const simplifyAliases = (aliases: { alias: string }[]) => aliases
@@ -329,10 +330,57 @@ export async function getAllOrganizationDomains(req: Request, res: Response): Pr
 }
 
 /**
- * @todo Implement
+ * Updates an existing Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
  */
 export async function updateOrganization(req: Request, res: Response): Promise<Response> {
-  return res.status(200);
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const props = req.body as UpdateOrganizationBody;
+  const foundOrg = await Organization.findByPk(orgID);
+  if (!foundOrg) {
+    return errors.notFound(res);
+  }
+
+  const updateObj: Record<string, string | number> = {};
+  const allowedKeys = ['name', 'logo', 'system_id'];
+  Object.entries(props).forEach(([key, value]) => {
+    if (allowedKeys.includes(key)) {
+      updateObj[key] = value;
+    }
+  });
+
+  try {
+    await foundOrg.update(updateObj);
+
+    const organization = await Organization.findByPk(foundOrg.id, {
+      include: [
+        { model: OrganizationAlias, attributes: ['alias'] },
+        { model: Domain, attributes: ['domain'] },
+      ],
+    });
+    if (!organization) {
+      throw new Error('Could not find updated Organization');
+    }
+
+    return res.send({
+      data: {
+        ...organization.get(),
+        aliases: (organization.get('aliases') || []).map((a) => a.get('alias')),
+        domains: (organization.get('domains') || []).map((d) => d.get('domain')),
+      },
+    });
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      return errors.conflict(res, 'An Organization with that name already exists.');
+    }
+    if (err instanceof ForeignKeyConstraintError) {
+      return errors.badRequest(res, 'Referenced System does not exist.');
+    }
+    throw err;
+  }
 }
 
 /**

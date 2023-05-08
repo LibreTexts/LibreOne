@@ -31,3 +31,9 @@ export type GetAllOrganizationsQuery = {
   limit: number;
   query?: string;
 };
+
+export type UpdateOrganizationBody = {
+  name?: string;
+  logo?: string;
+  system_id?: number;
+};

@@ -22,7 +22,8 @@ organizationsRouter.route('/:orgID')
   .get(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
     catchInternal(OrganizationController.getOrganization)
-  ).put(
+  ).patch(
+    validate(OrganizationValidator.updateOrganizationSchema, 'body'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),

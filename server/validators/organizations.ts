@@ -3,6 +3,10 @@ import joi from 'joi';
 const orgIDValidator = joi.number().integer().required();
 const orgAliasValidator = joi.string().min(2).max(100);
 const orgDomainValidator = joi.string().domain();
+const orgLogoValidator = joi.string().uri();
+const orgNameValidator = joi.string().min(2).max(100);
+const orgSystemIDValidator = joi.number().integer().min(1);
+
 
 export const orgIDParamSchema = joi.object({
   orgID: orgIDValidator,
@@ -19,9 +23,9 @@ export const orgDomainIDParamsSchema = joi.object({
 });
 
 export const createOrganizationSchema = joi.object({
-  name: joi.string().min(2).max(100).required(),
-  logo: joi.string().uri().default(''),
-  system_id: joi.number().integer().min(1),
+  name: orgNameValidator.required(),
+  logo: orgLogoValidator.default(''),
+  system_id: orgSystemIDValidator,
   aliases: joi.array().items(orgAliasValidator).default([]),
   domains: joi.array().items(orgDomainValidator).default([]),
 });
@@ -38,4 +42,10 @@ export const getAllOrganizationsSchema = joi.object({
   offset: joi.number().integer().min(0).default(0),
   limit: joi.number().integer().min(1).default(100),
   query: joi.string().max(100),
+});
+
+export const updateOrganizationSchema = joi.object({
+  name: orgNameValidator,
+  logo: orgLogoValidator,
+  system_id: orgSystemIDValidator,
 });

@@ -295,6 +295,65 @@ describe('Organizations', async () => {
     });
   });
 
+  describe('UPDATE', () => {
+    it('should update an organization and return info', async () => {
+      const org = await Organization.create({ name: 'Test Organization' });
+      const alias1 = await OrganizationAlias.create({
+        organization_id: org.id,
+        alias: 'Libre1',
+      });
+      const d1 = await Domain.create({ domain: 'libretexts.org' });
+      await OrganizationDomain.create({ organization_id: org.id, domain_id: d1.id });
+
+      const response = await request(server)
+        .patch(`/api/v1/organizations/${org.id}`)
+        .send({ name: 'Test1', logo: 'https://libretexts.org' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(_.pick(response.body?.data, ['id', 'name', 'logo'])).to.deep.equal({
+        id: org.id,
+        name: 'Test1',
+        logo: 'https://libretexts.org',
+      });
+      expect(response.body.data.aliases).to.have.deep.members([alias1.alias]);
+      expect(response.body.data.domains).to.have.deep.members([d1.domain]);
+    });
+    it('should error on update to existing name', async () => {
+      const org1 = await Organization.create({ name: 'Test Organization' });
+      const org2 = await Organization.create({ name: 'Test Organization2' });
+
+      const response = await request(server)
+        .patch(`/api/v1/organizations/${org1.id}`)
+        .send({ name: org2.name })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(409);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '409',
+        code: 'resource_conflict',
+      });
+    });
+    it('should error if referenced system does not exist', async () => {
+      const org = await Organization.create({ name: 'Test Organization' });
+
+      const response = await request(server)
+        .patch(`/api/v1/organizations/${org.id}`)
+        .send({ system_id: 1 })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+    });
+  });
+
   describe('DELETE', () => {
     it('should delete an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
