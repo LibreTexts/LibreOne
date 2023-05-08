@@ -1,8 +1,17 @@
+import _ from 'lodash';
 import { Request, Response } from 'express';
 import { ForeignKeyConstraintError, Op, UniqueConstraintError } from 'sequelize';
 import { Domain, Organization, OrganizationAlias, OrganizationDomain, sequelize, System } from '../models';
 import errors from '../errors';
-import type { CreateOrganizationBody, GetAllOrganizationsQuery, OrganizationIDParams } from '../types/organizations';
+import type {
+  CreateOrganizationAliasBody,
+  CreateOrganizationBody,
+  CreateOrganizationDomainBody,
+  GetAllOrganizationsQuery,
+  OrganizationAliasIDParams,
+  OrganizationDomainIDParams,
+  OrganizationIDParams,
+} from '../types/organizations';
 
 const simplifyAliases = (aliases: { alias: string }[]) => aliases
   .map((aliasObj) => aliasObj.alias)
@@ -82,6 +91,73 @@ export async function createOrganization(req: Request, res: Response): Promise<R
 }
 
 /**
+ * Creates a new Organization Alias.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function createOrganizationAlias(req: Request, res: Response): Promise<Response> {
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const props = req.body as CreateOrganizationAliasBody;
+
+  const foundOrg = await Organization.findByPk(orgID);
+  if (!foundOrg) {
+    return errors.notFound(res);
+  }
+
+  let newAlias: OrganizationAlias;
+  try {
+    newAlias = await OrganizationAlias.create({
+      alias: props.alias,
+      organization_id: orgID,
+    });
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      return errors.conflict(res, 'An Organization with that name already exists.');
+    }
+    throw err;
+  }
+
+  return res.status(201).send({
+    data: newAlias.get(),
+  });
+}
+
+/**
+ * Creates a new Organization Domain.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function createOrganizationDomain(req: Request, res: Response): Promise<Response> {
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const props = req.body as CreateOrganizationDomainBody;
+
+  const foundOrg = await Organization.findByPk(orgID);
+  if (!foundOrg) {
+    return errors.notFound(res);
+  }
+
+  const [domainToUse] = await Domain.findOrCreate({
+    where: { domain: props.domain },
+  });
+  const newOrgDomain = await OrganizationDomain.create({
+    organization_id: orgID,
+    domain_id: domainToUse.id,
+  });
+
+  return res.status(201).send({
+    data: {
+      id: domainToUse.get('id'),
+      ..._.omit(newOrgDomain.get(), ['domain_id']),
+      domain: props.domain,
+    },
+  });
+}
+
+/**
  * Retrieves information about a specified organization.
  *
  * @param req - Incoming API request.
@@ -108,6 +184,55 @@ export async function getOrganization(req: Request, res: Response): Promise<Resp
   };
 
   return res.send({ data: result });
+}
+
+/**
+ * Retrieves information about a specified Organization Alias.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getOrganizationAlias(req: Request, res: Response): Promise<Response> {
+  const { aliasID } = (req.params as unknown) as OrganizationAliasIDParams;
+  const foundAlias = await OrganizationAlias.findByPk(aliasID);
+  if (!foundAlias) {
+    return errors.notFound(res);
+  }
+
+  return res.send({
+    data: foundAlias.get(),
+  });
+}
+
+/**
+ * Retrieves information about a specified Organization Domain.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getOrganizationDomain(req: Request, res: Response): Promise<Response> {
+  const { orgID, domainID } = (req.params as unknown) as OrganizationDomainIDParams;
+  const foundDomain = await Domain.findByPk(domainID, {
+    include: [
+      {
+        model: Organization,
+        through: { attributes: [] },
+        where: { id: orgID },
+        attributes: [],
+      },
+    ]
+  });
+  if (!foundDomain) {
+    return errors.notFound(res);
+  }
+
+  return res.send({
+    data: {
+      domain: foundDomain.get(),
+    },
+  });
 }
 
 /**
@@ -159,6 +284,51 @@ export async function getAllOrganizations(req: Request, res: Response): Promise<
 }
 
 /**
+ * Retrieves a list of all the aliases associated with a single Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getAllOrganizationAliases(req: Request, res: Response): Promise<Response> {
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const foundAliases = await OrganizationAlias.findAll({ where: { organization_id: orgID } });
+
+  return res.send({
+    data: {
+      aliases: foundAliases.map((a) => a.get()),
+    },
+  });
+}
+
+/**
+ * Retrieves a list of all known Domains associated with a single Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getAllOrganizationDomains(req: Request, res: Response): Promise<Response> {
+  const { orgID } = (req.params as unknown) as OrganizationIDParams;
+  const foundDomains = await Domain.findAll({
+    include: [
+      {
+        model: Organization,
+        through: { attributes: [] },
+        where: { id: orgID },
+        attributes: [],
+      },
+    ]
+  });
+
+  return res.send({
+    data: {
+      domains: foundDomains.map((d) => d.get()) || [],
+    },
+  });
+}
+
+/**
  * @todo Implement
  */
 export async function updateOrganization(req: Request, res: Response): Promise<Response> {
@@ -182,6 +352,51 @@ export async function deleteOrganization(req: Request, res: Response): Promise<R
   await OrganizationDomain.destroy({ where: { organization_id: foundOrg.id }});
   await OrganizationAlias.destroy({ where: { organization_id: foundOrg.id }});
   await foundOrg.destroy();
+
+  return res.send({});
+}
+
+/**
+ * Deletes a specified Organization Alias.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function deleteOrganizationAlias(req: Request, res: Response): Promise<Response> {
+  const { aliasID } = (req.params as unknown) as OrganizationAliasIDParams;
+
+  const foundAlias = await OrganizationAlias.findByPk(aliasID);
+  if (!foundAlias) {
+    return errors.notFound(res);
+  }
+
+  await foundAlias.destroy();
+
+  return res.send({});
+}
+
+/**
+ * Deletes a specified Organization Domain.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function deleteOrganizationDomain(req: Request, res: Response): Promise<Response> {
+  const { orgID, domainID } = (req.params as unknown) as OrganizationDomainIDParams;
+
+  const foundOrgDomain = await OrganizationDomain.findOne({
+    where: {
+      organization_id: orgID,
+      domain_id: domainID,
+    },
+  });
+  if (!foundOrgDomain) {
+    return errors.notFound(res);
+  }
+
+  await foundOrgDomain.destroy();
 
   return res.send({});
 }
