@@ -1,5 +1,13 @@
 
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { APIUser } from './APIUser';
 
 @Table({
@@ -8,10 +16,8 @@ import { APIUser } from './APIUser';
 })
 export class APIUserPermissionConfig extends Model {
   @ForeignKey(() => APIUser)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare api_user_id: number;
 
   @BelongsTo(() => APIUser)

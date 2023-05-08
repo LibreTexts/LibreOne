@@ -1,4 +1,13 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Index,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { Organization } from './Organization';
 
 @Table({
@@ -6,18 +15,14 @@ import { Organization } from './Organization';
   tableName: 'organization_aliases',
 })
 export class OrganizationAlias extends Model {
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    unique: true,
-  })
+  @Index({ name: 'alias', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare alias: string;
 
   @ForeignKey(() => Organization)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare organization_id: number;
 
   @BelongsTo(() => Organization)

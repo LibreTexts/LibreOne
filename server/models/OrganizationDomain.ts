@@ -1,4 +1,4 @@
-import { Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import { AllowNull, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
 import { Domain } from './Domain';
 import { Organization } from './Organization';
 
@@ -8,16 +8,12 @@ import { Organization } from './Organization';
 })
 export class OrganizationDomain extends Model {
   @ForeignKey(() => Organization)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare organization_id: number;
 
   @ForeignKey(() => Domain)
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare domain_id: number;
 }

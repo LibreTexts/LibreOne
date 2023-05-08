@@ -1,4 +1,5 @@
 import {
+  AllowNull,
   BelongsTo,
   Column,
   DataType,
@@ -15,25 +16,19 @@ import { User } from './User';
 })
 export class ResetPasswordToken extends Model {
   @PrimaryKey
-  @Column({
-    type: DataType.STRING(64),
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING(64))
   declare token: string;
 
   @ForeignKey(() => User)
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare uuid: string;
 
   @BelongsTo(() => User)
   user?: User;
 
-  @Column({
-    type: DataType.BIGINT,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.BIGINT)
   declare expires_at: number;
 }

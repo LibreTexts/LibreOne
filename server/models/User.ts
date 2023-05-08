@@ -1,9 +1,11 @@
 import {
+  AllowNull,
   BelongsTo,
   Column,
   DataType,
   DefaultScope,
   ForeignKey,
+  Index,
   Model,
   PrimaryKey,
   Table,
@@ -21,87 +23,57 @@ import { Organization } from './Organization';
 })
 export class User extends Model {
   @PrimaryKey
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare uuid: string;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare first_name: string;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare last_name: string;
 
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    unique: true,
-  })
+  @Index({ name: 'email', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare email: string;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare password?: string;
 
   @ForeignKey(() => Organization)
-  @Column({
-    type: DataType.INTEGER,
-  })
+  @Column(DataType.INTEGER)
   declare organization_id?: number;
 
   @BelongsTo(() => Organization)
   organization?: Organization;
 
-  @Column({
-    type: DataType.ENUM('student', 'instructor')
-  })
+  @Column(DataType.ENUM('student', 'instructor'))
   declare user_type?: string;
 
-  @Column({
-    type: DataType.BOOLEAN,
-  })
+  @Column(DataType.BOOLEAN)
   declare active: boolean;
 
-  @Column({
-    type: DataType.BOOLEAN,
-  })
+  @Column(DataType.BOOLEAN)
   declare enabled: boolean;
 
-  @Column({
-    type: DataType.BOOLEAN,
-  })
+  @Column(DataType.BOOLEAN)
   declare legacy: boolean;
 
-  @Column({
-    type: DataType.DATE,
-  })
+  @Column(DataType.DATE)
   declare last_access: Date;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare ip_address: string;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare avatar: string;
 
   /** TODO: Should this data be brought up this far? */
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare bio_url: string;
 
-  @Column({
-    type: DataType.ENUM('not_attempted', 'pending', 'needs_review', 'denied', 'verified')
-  })
+  @Column(DataType.ENUM('not_attempted', 'pending', 'needs_review', 'denied', 'verified'))
   declare verify_status: string;
 
   @Column(DataType.INTEGER)

@@ -1,4 +1,13 @@
-import { Column, DataType, DefaultScope, HasOne, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  Column,
+  DataType,
+  DefaultScope,
+  HasOne,
+  Index,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 
 @DefaultScope(() => ({
@@ -11,17 +20,13 @@ import { APIUserPermissionConfig } from './APIUserPermissionConfig';
   tableName: 'api_users',
 })
 export class APIUser extends Model {
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    unique: true,
-  })
+  @Index({ name: 'username', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare username: string;
 
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare password: string;
 
   @Column(DataType.DATE)

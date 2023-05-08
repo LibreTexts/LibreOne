@@ -1,4 +1,4 @@
-import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import { AllowNull, Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 import { Organization } from './Organization';
 
 @Table({
@@ -6,16 +6,12 @@ import { Organization } from './Organization';
   tableName: 'systems',
 })
 export class System extends Model {
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare name: string;
 
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare logo: string;
 
   @HasMany(() => Organization)

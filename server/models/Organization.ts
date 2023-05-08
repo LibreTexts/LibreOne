@@ -4,9 +4,11 @@ import {
   Column,
   DataType,
   ForeignKey,
+  Index,
   HasMany,
   Model,
   Table,
+  AllowNull,
 } from 'sequelize-typescript';
 import { Domain } from './Domain';
 import { OrganizationAlias } from './OrganizationAlias';
@@ -18,22 +20,16 @@ import { System } from './System';
   tableName: 'organizations',
 })
 export class Organization extends Model {
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    unique: true,
-  })
+  @Index({ name: 'name', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare name: string;
 
-  @Column({
-    type: DataType.STRING,
-  })
+  @Column(DataType.STRING)
   declare logo?: string;
 
   @ForeignKey(() => System)
-  @Column({
-    type: DataType.INTEGER,
-  })
+  @Column(DataType.INTEGER)
   declare system_id?: number;
 
   @BelongsTo(() => System)

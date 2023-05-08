@@ -1,4 +1,12 @@
-import { BelongsToMany, Column, DataType, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  BelongsToMany,
+  Column,
+  DataType,
+  Index,
+  Model,
+  Table,
+} from 'sequelize-typescript';
 import { Organization } from './Organization';
 import { OrganizationDomain } from './OrganizationDomain';
 
@@ -7,11 +15,9 @@ import { OrganizationDomain } from './OrganizationDomain';
   tableName: 'domains',
 })
 export class Domain extends Model {
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    unique: true,
-  })
+  @Index({ name: 'domain', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare domain: string;
 
   @BelongsToMany(() => Organization, () => OrganizationDomain)

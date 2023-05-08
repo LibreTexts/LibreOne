@@ -1,37 +1,27 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { AllowNull, Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
   timestamps: false,
   tableName: 'Registered_Services',
 })
 export class Service extends Model {
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.TEXT)
   declare body: string;
 
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare evaluation_Order: number;
 
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
   declare evaluation_Priority: number;
 
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.TEXT)
   declare name: string;
 
-  @Column({
-    type: DataType.TEXT,
-    allowNull: false,
-  })
+  @AllowNull(false)
+  @Column(DataType.TEXT)
   declare service_Id: string;
 }
