@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { server } from '..';
 import {
+  Alias,
   APIUser,
   APIUserPermissionConfig,
   Domain,
@@ -53,6 +54,7 @@ describe('Organizations', async () => {
   });
   afterEach(async () => {
     await Organization.destroy({ where: {} });
+    await Alias.destroy({ where: {} });
     await Domain.destroy({ where: {} });
   });
 
@@ -134,14 +136,15 @@ describe('Organizations', async () => {
         alias: 'Libre',
       });
 
-      const foundAlias = await OrganizationAlias.findByPk(response.body.data.id);
+      const foundAlias = await Alias.findByPk(response.body.data.id);
       expect(foundAlias).to.exist;
     });
     it('should error when alias already exists', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
+      const alias1 = await Alias.create({ alias: 'Libre' })
       await OrganizationAlias.create({
         organization_id: org.id,
-        alias: 'Libre',
+        alias_id: alias1.id,
       });
 
       const response = await request(server)
@@ -156,7 +159,7 @@ describe('Organizations', async () => {
         code: 'resource_conflict',
       });
     });
-    it('should create an domain for existing organization', async () => {
+    it('should create a domain for existing organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
 
       const response = await request(server)
@@ -208,8 +211,9 @@ describe('Organizations', async () => {
     });
     it('should get organization (with aliases and domains)', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const alias1 = await OrganizationAlias.create({ organization_id: org.id, alias: 'LT' });
+      const alias1 = await Alias.create({ alias: 'LT' });
       const domain1 = await Domain.create({ domain: 'libretexts.org' });
+      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id });
       await OrganizationDomain.create({ organization_id: org.id, domain_id: domain1.id });
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}`);
@@ -249,13 +253,17 @@ describe('Organizations', async () => {
         { name: 'Org1' },
         { name: 'Org2' },
       ]);
-      const [alias1, alias2] = await OrganizationAlias.bulkCreate([
-        { organization_id: org1.id, alias: 'O1' },
-        { organization_id: org2.id, alias: 'O2' },
+      const [alias1, alias2] = await Alias.bulkCreate([
+        { alias: 'O1' },
+        { alias: 'O2' },
       ]);
       const [domain1, domain2] = await Domain.bulkCreate([
         { domain: 'org1.com' },
         { domain: 'org2.com' },
+      ]);
+      await OrganizationAlias.bulkCreate([
+        { organization_id: org1.id, alias_id: alias1.id },
+        { organization_id: org2.id, alias_id: alias2.id },
       ]);
       await OrganizationDomain.bulkCreate([
         { organization_id: org1.id, domain_id: domain1.id },
@@ -282,32 +290,33 @@ describe('Organizations', async () => {
     });
     it('should retrieve an alias of an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const alias1 = await OrganizationAlias.create({
+      const alias1 = await Alias.create({
         organization_id: org.id,
         alias: 'Libre1',
       });
+      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id });
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}/aliases/${alias1.id}`);
       expect(response.status).to.equal(200);
       expect(_.omit(response.body?.data, ['createdAt', 'updatedAt'])).to.have.deep.equal({
         id: alias1.id,
-        organization_id: org.id,
         alias: 'Libre1',
       });
     });
     it('should retrieve all aliases of an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const [alias1, alias2] = await OrganizationAlias.bulkCreate([
-        { organization_id: org.id, alias: 'Libre1' },
-        { organization_id: org.id, alias: 'Libre2' },
+      const [alias1, alias2] = await Alias.bulkCreate([{ alias: 'Libre1' }, { alias: 'Libre2' }]);
+      await OrganizationAlias.bulkCreate([
+        { organization_id: org.id, alias_id: alias1.id },
+        { organization_id: org.id, alias_id: alias2.id },
       ]);
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}/aliases`);
       expect(response.status).to.equal(200);
       const aliases = response.body.data.aliases.map((a) => _.pick(a, ['id', 'alias', 'organization_id']));
       expect(aliases).to.have.deep.members([
-        { id: alias1.id, organization_id: org.id, alias: 'Libre1' },
-        { id: alias2.id, organization_id: org.id, alias: 'Libre2' },
+        { id: alias1.id, alias: 'Libre1' },
+        { id: alias2.id, alias: 'Libre2' },
       ]);
     });
     it('should retrieve a domain of an organization', async () => {
@@ -360,11 +369,9 @@ describe('Organizations', async () => {
   describe('UPDATE', () => {
     it('should update an organization and return info', async () => {
       const org = await Organization.create({ name: 'Test Organization' });
-      const alias1 = await OrganizationAlias.create({
-        organization_id: org.id,
-        alias: 'Libre1',
-      });
+      const alias1 = await Alias.create({ alias: 'Libre1' });
       const d1 = await Domain.create({ domain: 'libretexts.org' });
+      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id })
       await OrganizationDomain.create({ organization_id: org.id, domain_id: d1.id });
 
       const response = await request(server)
@@ -435,10 +442,8 @@ describe('Organizations', async () => {
     });
     it('should delete an alias of an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const alias1 = await OrganizationAlias.create({
-        organization_id: org.id,
-        alias: 'Libre1',
-      });
+      const alias1 = await Alias.create({ alias: 'Libre1' });
+      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id });
 
       const response = await request(server)
         .delete(`/api/v1/organizations/${org.id}/aliases/${alias1.id}`)

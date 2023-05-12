@@ -5,11 +5,11 @@ import {
   DataType,
   ForeignKey,
   Index,
-  HasMany,
   Model,
   Table,
   AllowNull,
 } from 'sequelize-typescript';
+import { Alias } from './Alias';
 import { Domain } from './Domain';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
@@ -35,11 +35,11 @@ export class Organization extends Model {
   @BelongsTo(() => System)
   system?: System;
 
+  @BelongsToMany(() => Alias, () => OrganizationAlias)
+  aliases?: Array<Alias & { OrganizationAlias: OrganizationAlias }>;
+
   @BelongsToMany(() => Domain, () => OrganizationDomain)
   domains?: Array<Domain & { OrganizationDomain: OrganizationDomain }>;
-
-  @HasMany(() => OrganizationAlias)
-  aliases?: OrganizationAlias[];
 
   // TODO: Commons?
 }

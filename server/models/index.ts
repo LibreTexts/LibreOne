@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
+import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Domain } from './Domain';
@@ -25,6 +26,7 @@ const sequelize = new Sequelize(
 );
 
 sequelize.addModels([
+  Alias,
   APIUser,
   APIUserPermissionConfig,
   Domain,
@@ -55,6 +57,7 @@ export async function connectDatabase(): Promise<boolean> {
 
 export {
   sequelize,
+  Alias,
   APIUser,
   APIUserPermissionConfig,
   Domain,
