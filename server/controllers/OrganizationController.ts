@@ -164,21 +164,28 @@ export async function createOrganizationDomain(req: Request, res: Response): Pro
     return errors.notFound(res);
   }
 
-  const [domainToUse] = await Domain.findOrCreate({
-    where: { domain: props.domain },
-  });
-  const newOrgDomain = await OrganizationDomain.create({
-    organization_id: orgID,
-    domain_id: domainToUse.id,
-  });
+  try {
+    const [domainToUse] = await Domain.findOrCreate({
+      where: { domain: props.domain },
+    });
+    const newOrgDomain = await OrganizationDomain.create({
+      organization_id: orgID,
+      domain_id: domainToUse.id,
+    });
 
-  return res.status(201).send({
-    data: {
-      id: domainToUse.get('id'),
-      ..._.omit(newOrgDomain.get(), ['domain_id']),
-      domain: props.domain,
-    },
-  });
+    return res.status(201).send({
+      data: {
+        id: domainToUse.get('id'),
+        ..._.omit(newOrgDomain.get(), ['domain_id']),
+        domain: props.domain,
+      },
+    });
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      return errors.conflict(res, 'That domain already exists.');
+    }
+    throw err;
+  }
 }
 
 /**

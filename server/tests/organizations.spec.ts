@@ -180,6 +180,26 @@ describe('Organizations', async () => {
       });
       expect(foundDomain).to.exist;
     });
+    it('should error when domain already exists', async () => {
+      const org = await Organization.create({ name: 'LibreTexts' });
+      const domain1 = await Domain.create({ domain: 'libretexts.org' })
+      await OrganizationDomain.create({
+        organization_id: org.id,
+        domain_id: domain1.id,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/organizations/${org.id}/domains`)
+        .send({ domain: 'libretexts.org' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(409);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '409',
+        code: 'resource_conflict',
+      });
+    });
     it('should validate provided aliases and domains on creation', async () => {
       const aliases = [1, 2];
       const domains = ['hello', 'hi.comm'];
