@@ -14,13 +14,6 @@ import type {
   UpdateOrganizationBody,
 } from '../types/organizations';
 
-const simplifyAliases = (aliases: { alias: string }[]) => aliases
-  .map((aliasObj) => aliasObj.alias)
-  .filter((alias) => !!alias);
-const simplifyDomains = (domains: { domain: string }[]) => domains
-  .map((domainObj) => domainObj.domain)
-  .filter((domain) => !!domain);
-
 /**
  * Creates a new Organization.
  *
@@ -65,8 +58,8 @@ export async function createOrganization(req: Request, res: Response): Promise<R
 
     const organization = await Organization.findByPk(newOrgId, {
       include: [
-        { model: OrganizationAlias, attributes: ['alias'] },
-        { model: Domain, attributes: ['domain'] },
+        { model: OrganizationAlias },
+        { model: Domain },
       ],
     });
     if (!organization) {
@@ -76,8 +69,8 @@ export async function createOrganization(req: Request, res: Response): Promise<R
     return res.status(201).send({
       data: {
         ...organization.get(),
-        aliases: (organization.get('aliases') || []).map((a) => a.get('alias')),
-        domains: (organization.get('domains') || []).map((d) => d.get('domain')),
+        aliases: (organization.get('aliases') || []).map((a) => a.get()),
+        domains: (organization.get('domains') || []).map((d) => d.get()),
       },
     });
   } catch (err) {
@@ -170,8 +163,8 @@ export async function getOrganization(req: Request, res: Response): Promise<Resp
   const foundOrg = await Organization.findByPk(orgID, {
     include: [
       { model: System, attributes: ['id', 'name', 'logo'] },
-      { model: OrganizationAlias, attributes: ['alias'] },
-      { model: Domain, attributes: ['domain'] },
+      { model: OrganizationAlias, attributes: { exclude: ['organization_id'] } },
+      { model: Domain, through: { attributes: [] } },
     ],
   });
   if (!foundOrg) {
@@ -180,8 +173,8 @@ export async function getOrganization(req: Request, res: Response): Promise<Resp
 
   const result = {
     ...foundOrg.get(), // convert to POJO
-    aliases: foundOrg.aliases ? simplifyAliases(foundOrg.aliases) : [],
-    domains: foundOrg.domains ? simplifyDomains(foundOrg.domains) : [],
+    aliases: (foundOrg.get('aliases') || []).map((a) => a.get()),
+    domains: (foundOrg.get('domains') || []).map((d) => d.get()),
   };
 
   return res.send({ data: result });
@@ -262,16 +255,16 @@ export async function getAllOrganizations(req: Request, res: Response): Promise<
     attributes: ['id', 'name', 'logo'],
     include: [
       { model: System, attributes: ['id', 'name', 'logo'] },
-      { model: OrganizationAlias, attributes: ['alias'] },
-      { model: Domain, attributes: ['domain'] },
+      { model: OrganizationAlias, attributes: { exclude: ['organization_id'] } },
+      { model: Domain, through: { attributes: [] } },
     ],
     subQuery: false,
   });
 
   const results = rows.map((row) => ({
     ...row.get(), // convert to POJO
-    aliases: row.aliases ? simplifyAliases(row.aliases) : [],
-    domains: row.domains ? simplifyDomains(row.domains) : [],
+    aliases: (row.get('aliases') || []).map((a) => a.get()),
+    domains: (row.get('domains') || []).map((d) => d.get()),
   }));
 
   return res.send({
@@ -357,8 +350,8 @@ export async function updateOrganization(req: Request, res: Response): Promise<R
 
     const organization = await Organization.findByPk(foundOrg.id, {
       include: [
-        { model: OrganizationAlias, attributes: ['alias'] },
-        { model: Domain, attributes: ['domain'] },
+        { model: OrganizationAlias },
+        { model: Domain },
       ],
     });
     if (!organization) {
@@ -368,8 +361,8 @@ export async function updateOrganization(req: Request, res: Response): Promise<R
     return res.send({
       data: {
         ...organization.get(),
-        aliases: (organization.get('aliases') || []).map((a) => a.get('alias')),
-        domains: (organization.get('domains') || []).map((d) => d.get('domain')),
+        aliases: (organization.get('aliases') || []).map((a) => a.get()),
+        domains: (organization.get('domains') || []).map((d) => d.get()),
       },
     });
   } catch (err) {

@@ -26,6 +26,8 @@ describe('Organizations', async () => {
     system: null,
     ...override,
   });
+  const mapAliases = (aliases) => aliases.map((a) => _.pick(a, ['id', 'alias']));
+  const mapDomains = (domains) => domains.map((d) => _.pick(d, ['id', 'domain']));
 
   before(async () => {
     const hashedUserPass = await bcrypt.hash(mainAPIUserPassword, 10);
@@ -82,8 +84,12 @@ describe('Organizations', async () => {
         name: 'Test Organization',
         logo: '',
       });
-      expect(response.body.data.aliases).to.have.deep.members(aliases);
-      expect(response.body.data.domains).to.have.deep.members(domains);
+      expect(response.body.data.aliases).to.exist;
+      expect(response.body.data.domains).to.exist;
+      const resAliases = response.body.data.aliases.map((a) => a.alias);
+      const resDomains = response.body.data.domains.map((a) => a.domain);
+      expect(resAliases).to.have.deep.members(aliases);
+      expect(resDomains).to.have.deep.members(domains);
     });
     it('should error on creation with existing name', async () => {
       await Organization.create({ name: 'Test Organization' });
@@ -200,6 +206,26 @@ describe('Organizations', async () => {
         system_id: null,
       });
     });
+    it('should get organization (with aliases and domains)', async () => {
+      const org = await Organization.create({ name: 'LibreTexts' });
+      const alias1 = await OrganizationAlias.create({ organization_id: org.id, alias: 'LT' });
+      const domain1 = await Domain.create({ domain: 'libretexts.org' });
+      await OrganizationDomain.create({ organization_id: org.id, domain_id: domain1.id });
+
+      const response = await request(server).get(`/api/v1/organizations/${org.id}`);
+      expect(response.status).to.equal(200);
+      expect(_.omit(response.body?.data, [...omitFields, 'aliases', 'domains'])).to.deep.equal({
+        ..._.omit(org.get(), omitFields),
+        ..._.omit(defaultFields(), ['aliases', 'domains']),
+        system_id: null,
+      });
+      expect(mapAliases(response.body.data.aliases)).to.have.deep.members([
+        { id: alias1.id, alias: alias1.alias },
+      ]);
+      expect(mapDomains(response.body.data.domains)).to.have.deep.members([
+        { id: domain1.id, domain: domain1.domain },
+      ]);
+    });
     it('should get all organizations', async () => {
       const [org1, org2] = await Organization.bulkCreate([
         { name: 'Org1' },
@@ -217,6 +243,42 @@ describe('Organizations', async () => {
         ..._.omit(org2.get(), omitFields),
         ...defaultFields(),
       });
+    });
+    it('should get all organizations (with aliases and domains)', async () => {
+      const [org1, org2] = await Organization.bulkCreate([
+        { name: 'Org1' },
+        { name: 'Org2' },
+      ]);
+      const [alias1, alias2] = await OrganizationAlias.bulkCreate([
+        { organization_id: org1.id, alias: 'O1' },
+        { organization_id: org2.id, alias: 'O2' },
+      ]);
+      const [domain1, domain2] = await Domain.bulkCreate([
+        { domain: 'org1.com' },
+        { domain: 'org2.com' },
+      ]);
+      await OrganizationDomain.bulkCreate([
+        { organization_id: org1.id, domain_id: domain1.id },
+        { organization_id: org2.id, domain_id: domain2.id },
+      ]);
+
+      const response = await request(server).get('/api/v1/organizations');
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.have.length(2);
+
+      const [out1, out2] = response.body.data;
+      expect(_.omit(out1, [...omitFields, 'aliases', 'domains'])).to.deep.equal({
+        ..._.omit(org1.get(), omitFields),
+        ..._.omit(defaultFields(), ['aliases', 'domains']),
+      });
+      expect(_.omit(out2, [...omitFields, 'aliases', 'domains'])).to.deep.equal({
+        ..._.omit(org2.get(), omitFields),
+        ..._.omit(defaultFields(), ['aliases', 'domains']),
+      });
+      expect(mapAliases(out1.aliases)).to.have.deep.members([{ id: alias1.id, alias: alias1.alias }]);
+      expect(mapAliases(out2.aliases)).to.have.deep.members([{ id: alias2.id, alias: alias2.alias }]);
+      expect(mapDomains(out1.domains)).to.have.deep.members([{ id: domain1.id, domain: domain1.domain }]);
+      expect(mapDomains(out2.domains)).to.have.deep.members([{ id: domain2.id, domain: domain2.domain }]);
     });
     it('should retrieve an alias of an organization', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
@@ -316,8 +378,12 @@ describe('Organizations', async () => {
         name: 'Test1',
         logo: 'https://libretexts.org',
       });
-      expect(response.body.data.aliases).to.have.deep.members([alias1.alias]);
-      expect(response.body.data.domains).to.have.deep.members([d1.domain]);
+      expect(response.body.data.aliases).to.exist;
+      expect(response.body.data.domains).to.exist;
+      const aliases = response.body.data.aliases.map((a) => a.alias);
+      const domains = response.body.data.domains.map((d) => d.domain);
+      expect(aliases).to.have.deep.members([alias1.alias]);
+      expect(domains).to.have.deep.members([d1.domain]);
     });
     it('should error on update to existing name', async () => {
       const org1 = await Organization.create({ name: 'Test Organization' });
