@@ -53,7 +53,7 @@ export function checkAuthCookies(req: Request): boolean {
 export async function extractUserFromToken(req: Request): Promise<TokenAuthenticationVerificationResult> {
   let expired = false;
   let isAuthenticated = false;
-  let userUUID = null;
+  let userUUID: string | null = null;
   try {
     const authToken = `${req.cookies.one_access}.${req.cookies.one_signed}`;
     const { payload } = await jwtVerify(authToken, SESSION_SECRET, {
@@ -88,14 +88,13 @@ export async function verifyClientAuthentication(req: Request): Promise<TokenAut
 }
 
 /**
- * Creates a JWT for a local session, then attaches necessary cookies to the provided
- * API response object.
+ * Creates a JWT for a local session.
  *
- * @param res - The response object to attach the session cookies to.
  * @param uuid - The User UUID to initialize the session for.
+ * @returns The generated JWT.
  */
-async function createAndAttachLocalSession(res: Response, uuid: string): Promise<void> {
-  const sessionJWT = await new SignJWT({ uuid })
+export async function createSessionJWT(uuid: string): Promise<string> {
+  return await new SignJWT({ uuid })
     .setSubject(uuid)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -103,9 +102,31 @@ async function createAndAttachLocalSession(res: Response, uuid: string): Promise
     .setAudience(SESSION_DOMAIN)
     .setExpirationTime('24h')
     .sign(SESSION_SECRET);
+}
+
+/**
+ * Splits a JWT for a local session into the "access" and "signed" components.
+ *
+ * @param sessionJWT - JWT to split into components.
+ * @returns The access and signed components.
+ */
+export function splitSessionJWT(sessionJWT: string): [string, string] {
   const splitJWT = sessionJWT.split('.');
-  const access = `${splitJWT[0]}.${splitJWT[1]}`;
+  const access = splitJWT.slice(0, 2).join('.');
   const signed = splitJWT[2];
+  return [access, signed];
+}
+
+/**
+ * Attaches necessary cookies to the provided API response object
+ * in order to create a local session.
+ *
+ * @param res - The response object to attach the session cookies to.
+ * @param uuid - The User UUID to initialize the session for.
+ */
+async function createAndAttachLocalSession(res: Response, uuid: string): Promise<void> {
+  const sessionJWT = await createSessionJWT(uuid);
+  const [access, signed] = splitSessionJWT(sessionJWT);
 
   const prodCookieConfig: CookieOptions = {
     secure: true,

@@ -17,8 +17,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.299.0",
-    "@aws-sdk/client-sesv2": "^3.234.0",
+    "@aws-sdk/client-s3": "^3.335.0",
+    "@aws-sdk/client-sesv2": "^3.335.0",
     "@fortawesome/fontawesome-svg-core": "^6.2.1",
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/vue-fontawesome": "^3.0.2",
@@ -60,6 +60,7 @@
     "vue-i18n": "^9.2.2"
   },
   "devDependencies": {
+    "@aws-sdk/types": "^3.329.0",
     "@commitlint/cli": "^17.4.2",
     "@commitlint/config-conventional": "^17.4.2",
     "@intlify/unplugin-vue-i18n": "^0.8.1",
@@ -84,6 +85,7 @@
     "@typescript-eslint/parser": "^5.40.1",
     "@vue/eslint-config-typescript": "^11.0.2",
     "autoprefixer": "^10.4.13",
+    "aws-sdk-client-mock": "^2.1.1",
     "c8": "^7.13.0",
     "chai": "^4.3.7",
     "eslint": "^8.26.0",

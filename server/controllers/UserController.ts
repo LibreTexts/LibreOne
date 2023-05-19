@@ -13,7 +13,7 @@ import type {
 } from '../types/users';
 import { checkUserResourcePermission } from '../helpers';
 
-const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
+export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
 
 const avatarUploadStorage = multer.memoryStorage();
@@ -163,7 +163,7 @@ export async function resolvePrincipalAttributes(req: Request, res: Response): P
     email: foundUser.email,
     first_name: foundUser.first_name,
     last_name: foundUser.last_name,
-    organization: foundUser.organization || null,
+    organization: foundUser.get('organization') || null,
     user_type: foundUser.user_type || null,
     bio_url: foundUser.bio_url || '',
     verify_status: foundUser.verify_status,
@@ -204,15 +204,10 @@ export async function updateUser(req: Request, res: Response): Promise<Response>
       updateObj.organization_id = foundOrg.id;
     }
   } else if (props.add_organization_name) {
-    const foundOrg = await Organization.findOne({ where: { name: props.add_organization_name } });
-    if (foundOrg) {
-      updateObj.organization_id = foundOrg.id;
-    } else {
-      const newOrg = await Organization.create({
-        name: props.add_organization_name,
-      });
-      updateObj.organization_id = newOrg.id;
-    }
+    const [foundOrCreateOrg] = await Organization.findOrCreate({
+      where: { name: props.add_organization_name },
+    });
+    updateObj.organization_id = foundOrCreateOrg.id;
   }
   if (props.verify_status) {
     if (!req.isAPIUser) {

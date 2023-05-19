@@ -1,7 +1,7 @@
 import express from 'express';
 import * as UserController from '../controllers/UserController';
 import * as UserValidator from '../validators/user';
-import { ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
+import { ensureAPIUserHasPermission, ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const usersRouter = express.Router();
@@ -9,6 +9,7 @@ const usersRouter = express.Router();
 usersRouter.route('/').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:read']),
   validate(UserValidator.getAllUsersSchema, 'query'),
   catchInternal(UserController.getAllUsers),
 );
