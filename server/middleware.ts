@@ -7,7 +7,9 @@ import {
 import { verifyAPIUserAuth } from './controllers/APIUserController';
 import errors from './errors';
 import { APIUserPermission } from './types/apiusers';
+import { UserUUIDParams } from './types/users';
 
+type RequestPart = 'body' | 'query' | 'params';
 type MiddlewareResult = Response | void;
 type Middleware = (request: Request, response: Response, next: NextFunction) => MiddlewareResult;
 type AsyncMiddlewareResult = Promise<MiddlewareResult>;
@@ -94,7 +96,7 @@ export async function verifyAPIAuthentication(req: Request, res: Response, next:
  * @param part - The portion of the request object to run validation against.
  * @returns The validation middleware.
  */
-export function validate(schema: Joi.Schema, part: 'body' | 'query' | 'params'): AsyncMiddleware {
+export function validate(schema: Joi.Schema, part: RequestPart): AsyncMiddleware {
   if (!schema) {
     throw (new Error('Schema not provided!'));
   }
@@ -143,6 +145,37 @@ export function ensureAPIUserHasPermission(requestedPermissions: APIUserPermissi
   return function(req: Request, res: Response, next: NextFunction): MiddlewareResult {
     const hasAllRequested = requestedPermissions.every((perm) => req.apiUserPermissions?.includes(perm));
     if (!hasAllRequested) {
+      return errors.forbidden(res);
+    }
+    return next();
+  }
+}
+
+/**
+ * Asserts that either the current API User has permissions to read or modify a user, or that the
+ * current user is only attempting to read or modify themselves.
+ *
+ * @param write - If write permissions should be asserted.
+ * @returns The permission assertion middleware.
+ */
+export function ensureUserResourcePermission(write = false): Middleware {
+  return function(req: Request, res: Response, next: NextFunction): MiddlewareResult {
+    const { uuid } = req.params as UserUUIDParams;
+    if (!uuid) {
+      throw (new Error('UUID not provided in route parameters!'));
+    }
+
+    let authorized = false;
+    if (req.isAPIUser) {
+      const requestedPermissions: APIUserPermission[] = ['users:read'];
+      if (write) {
+        requestedPermissions.push('users:write');
+      }
+      authorized = requestedPermissions.every((perm) => req.apiUserPermissions?.includes(perm));
+    } else {
+      authorized = (!!req.isAuthenticated && req.userUUID === uuid);
+    }
+    if (!authorized) {
       return errors.forbidden(res);
     }
     return next();

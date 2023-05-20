@@ -18,12 +18,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 describe('Users', async () => {
   let mainAPIUser: APIUser;
   let mainAPIUserUsername: string;
+  let mainAPIUserHashedPassword: string;
   const mainAPIUserPassword = 'test-password';
   before(async () => {
-    const hashedUserPass = await bcrypt.hash(mainAPIUserPassword, 10);
+    mainAPIUserHashedPassword = await bcrypt.hash(mainAPIUserPassword, 10);
     mainAPIUser = await APIUser.create({
       username: 'apiuser1',
-      password: hashedUserPass,
+      password: mainAPIUserHashedPassword,
     });
     mainAPIUserUsername = mainAPIUser.get('username');
     await APIUserPermissionConfig.create({
@@ -33,6 +34,7 @@ describe('Users', async () => {
       organizations_read: true,
       organizations_write: false,
       users_read: true,
+      users_write: true,
     });
   });
   after(async () => {
@@ -297,6 +299,77 @@ describe('Users', async () => {
       });
       await user1.destroy();
     });
+    it('should not allow update if not self', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const user2 = await User.create({
+        uuid: uuidv4(),
+        email: 'info+1@libretexts.org',
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send({ first_name: 'Info' })
+        .set('Cookie', await createSessionCookiesForTest(user2.uuid));
+      
+      expect(response.status).to.equal(403);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '403',
+        code: 'forbidden',
+      });
+      await Promise.all([user1.destroy(), user2.destroy()]);
+    });
+    it('should allow API User to update user attributes', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const updateObj = { first_name: 'Info', last_name: 'LibreTexts' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object').that.includes.all.keys([
+        'uuid',
+        'email',
+        ...Object.keys(updateObj),
+      ]);
+      await user1.destroy();
+    });
+    it('should prevent API User to update if permission not granted', async () => {
+      const apiUser2 = await APIUser.create({
+        username: 'apiuser2',
+        password: mainAPIUserHashedPassword,
+      });
+      await APIUserPermissionConfig.create({ api_user_id: apiUser2.id, users_read: true });
+
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send({ first_name: 'Info' })
+        .auth(apiUser2.get('username'), mainAPIUserPassword);
+      
+      expect(response.status).to.equal(403);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '403',
+        code: 'forbidden',
+      });
+      await user1.destroy();
+      await apiUser2.destroy();
+    });
     it('should add user to existing organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
       const user1 = await User.create({
@@ -380,6 +453,7 @@ describe('Users', async () => {
       const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
       expect(updatedUser?.avatar).to.exist;
       await user1.destroy();
+      s3Mock.restore();
     });
   });
 });

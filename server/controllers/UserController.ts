@@ -11,7 +11,6 @@ import type {
   UpdateUserBody,
   UserUUIDParams,
 } from '../types/users';
-import { checkUserResourcePermission } from '../helpers';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -62,10 +61,6 @@ export async function getUserInternal(uuid: string): Promise<Record<string, stri
  */
 export async function getUser(req: Request, res: Response): Promise<Response> {
   const { uuid } = req.params as UserUUIDParams;
-  const authorized = checkUserResourcePermission(req, uuid);
-  if (!authorized) {
-    return errors.forbidden(res);
-  }
 
   const foundUser = await User.findOne({
     where: {
@@ -181,10 +176,6 @@ export async function resolvePrincipalAttributes(req: Request, res: Response): P
 export async function updateUser(req: Request, res: Response): Promise<Response> {
   const { uuid } = req.params as UserUUIDParams;
   const props = req.body as UpdateUserBody;
-  const authorized = checkUserResourcePermission(req, uuid);
-  if (!authorized) {
-    return errors.forbidden(res);
-  }
 
   const foundUser = await User.findOne({ where: { uuid } });
   if (!foundUser) {
@@ -235,10 +226,6 @@ export async function updateUserAvatar(req: Request, res: Response): Promise<Res
   }
 
   const { uuid } = req.params as UserUUIDParams;
-  const authorized = checkUserResourcePermission(req, uuid);
-  if (!authorized) {
-    return errors.forbidden(res);
-  }
 
   const foundUser = await User.findOne({ where: { uuid }});
   if (!foundUser) {

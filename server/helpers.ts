@@ -52,14 +52,3 @@ export function safeJSONParse(input: string): object | boolean {
   }
   return false;
 }
-
-/**
- * Verify that the actor of an incoming API request has permission to read/modify a given User resource.
- *
- * @param req - Incoming API request.
- * @param uuid - UUID of the User resource to read/modify.
- * @returns True if actor has permission, false otherwise.
- */
-export function checkUserResourcePermission(req: Request, uuid: string): boolean {
-  return req.isAPIUser || (!!req.isAuthenticated && req.userUUID === uuid);
-}
