@@ -11,7 +11,6 @@ import { renderPage } from 'vite-plugin-ssr'
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './models';
-import { initMailSender } from './controllers/MailController';
 import { APIRouter } from './routes';
 import type { Request, Response, NextFunction } from 'express';
 import type { PageContextInitCustom } from '@renderer/types';
@@ -33,7 +32,6 @@ app.use(cookieParser());
 app.use('/api/v1', APIRouter);
 
 await connectDatabase();
-initMailSender();
 
 if (isProduction) {
   app.use(sirv(`dist/client`));

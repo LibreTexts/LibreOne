@@ -1,46 +1,97 @@
-import { SESv2Client } from '@aws-sdk/client-sesv2';
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2';
 
-let mailSender: SESv2Client;
+export type SendEmailParams = {
+  destination: {
+    to?: string[];
+    cc?: string[];
+    bcc?: string[];
+  };
+  subject: string;
+  htmlContent: string;
+};
 
-/**
- * Establishes an SES Client for use in the API.
- *
- * @returns True if client initiated successfully, false otherwise.
- */
-export async function initMailSender(): Promise<boolean> {
-  const region = process.env.AWS_SES_REGION;
-  const accessKeyId = process.env.AWS_SES_ACCESS_KEY;
-  const secretAccessKey = process.env.AWS_SES_SECRET_KEY;
-  if (!region || !accessKeyId || !secretAccessKey) {
-    console.error('Missing AWS SES initialization parameters!');
-    return false;
+export class MailController {
+  private mailClient: SESv2Client | null;
+
+  constructor() {
+    const region = process.env.AWS_SES_REGION;
+    const accessKeyId = process.env.AWS_SES_ACCESS_KEY;
+    const secretAccessKey = process.env.AWS_SES_SECRET_KEY;
+    if (!region || !accessKeyId || !secretAccessKey) {
+      console.error('Missing AWS SES initialization parameters!');
+      return;
+    }
+    this.mailClient = new SESv2Client({
+      region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
   }
 
-  mailSender = new SESv2Client({
-    region,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
-  return true;
-}
-
-/**
- * Retrieves the active SES client, or attempts to initialize one on-the-fly.
- *
- * @returns An SES client, or null if unable to initialize one.
- */
-export async function useMailSender(): Promise<SESv2Client | null> {
-  if (mailSender) {
-    return mailSender;
+  /**
+   * Verifies that the mail service client has been initialized.
+   *
+   * @returns True if initialized, false otherwise.
+   */
+  public isReady() {
+    return !!this.mailClient;
   }
 
-  // Try to initialize on-the-fly
-  const didInit = await initMailSender();
-  if (didInit) {
-    return mailSender;
+  /**
+   * Destroys the mail service client. This method is not necessary to call, but can be used
+   * to close unused sockets, especially when there are multiple MailController instances in
+   * a single runtime.
+   */
+  public destroy() {
+    this.mailClient?.destroy();
+    this.mailClient = null;
   }
 
-  return null;
+  /**
+   * Send an email message using the mail service client.
+   *
+   * @param params - Email message configuration
+   * @returns True if message successfully sent, false otherwise.
+   */
+  public async send(params: SendEmailParams): Promise<boolean> {
+    if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== 'test') {
+        console.debug('[MailController] Simulate send:', params);
+      }
+      return true;
+    }
+
+    const { destination, subject, htmlContent } = params;
+    if (!this.mailClient) {
+      return false;
+    }
+
+    const response = await this.mailClient.send(
+      new SendEmailCommand({
+        Content: {
+          Simple: {
+            Subject: { Data: subject },
+            Body: {
+              Html: { Data: htmlContent },
+            },
+          },
+        },
+        Destination: {
+          ...(destination.to && { ToAddresses: destination.to }),
+          ...(destination.cc && { CcAddresses: destination.cc }),
+          ...(destination.bcc && { BccAddresses: destination.bcc }),
+        },
+        FromEmailAddress: process.env.AWS_SES_FROM_ADDR || 'no-reply@one.libretexts.org',
+      }),
+    );
+
+    if (response.$metadata.httpStatusCode !== 200) {
+      console.warn('[MailController] Error sending email!', response.$metadata);
+      return false;
+    }
+    return true;
+  }
+
 }

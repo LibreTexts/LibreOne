@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { randomBytes } from 'crypto';
-import { SendEmailCommand } from '@aws-sdk/client-sesv2';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { CompactEncrypt, SignJWT, jwtVerify } from 'jose';
@@ -9,7 +8,7 @@ import { URLSearchParams } from 'url';
 import { Agent } from 'https';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { ResetPasswordToken, sequelize, User } from '../models';
-import { useMailSender } from './MailController';
+import { MailController } from './MailController';
 import { getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
@@ -155,9 +154,9 @@ export async function register(req: Request, res: Response): Promise<Response> {
   try {
     const props = req.body as RegisterBody;
     const ip = req.get('x-forwarded-for') || req.socket.remoteAddress || '';
-
-    const sesClient = await useMailSender();
-    if (!sesClient) {
+  
+    const mailSender = new MailController();
+    if (!mailSender.isReady()) {
       throw new Error('No mail sender available to issue email verification!');
     }
   
@@ -179,29 +178,21 @@ export async function register(req: Request, res: Response): Promise<Response> {
     });
 
     // Send email verification
-    const emailRes = await sesClient.send(new SendEmailCommand({
-      Content: {
-        Simple: {
-          Subject: { Data: `LibreOne Verification Code: ${verifyCode}` },
-          Body: {
-            Html: {
-              Data: `
-                <p>Hello there,</p>
-                <p>Please verify your email address by entering this code:</p>
-                <p style="font-size: 1.5em;">${verifyCode}</p>
-                <p>If this wasn't you, you can safely ignore this email.</p>
-                <p>Best,</p>
-                <p>The LibreTexts Team</p>
-              `,
-            },
-          },
-        },
-      },
-      Destination: { ToAddresses: [props.email] },
-      FromEmailAddress: process.env.AWS_SES_FROM_ADDR || 'no-reply@one.libretexts.org',
-    }));
-    if (emailRes.$metadata.httpStatusCode !== 200) {
-      console.warn(`Error sending email verification to "${props.email}"!`);
+    const emailRes = await mailSender.send({
+      destination: { to: [props.email] },
+      subject: `LibreOne Verification Code: ${verifyCode}`,
+      htmlContent: `
+        <p>Hello there,</p>
+        <p>Please verify your email address by entering this code:</p>
+        <p style="font-size: 1.5em;">${verifyCode}</p>
+        <p>If this wasn't you, you can safely ignore this email.</p>
+        <p>Best,</p>
+        <p>The LibreTexts Team</p>
+      `,
+    });
+    mailSender.destroy();
+    if (!emailRes) {
+      throw new Error('Unable to send email verification!');
     }
 
     const resourceURL = `${getProductionURL()}/api/v1/users/${newUser.get('uuid')}`;
@@ -428,8 +419,8 @@ export async function sendResetPasswordLink(req: Request, res: Response): Promis
   const { email, redirectURI } = req.body as InitResetPasswordBody;
   const response = { msg: 'Reset link sent.' };
 
-  const sesClient = await useMailSender();
-  if (!sesClient) {
+  const mailSender = new MailController();
+  if (!mailSender.isReady()) {
     return errors.internalServerError(res);
   }
 
@@ -454,31 +445,22 @@ export async function sendResetPasswordLink(req: Request, res: Response): Promis
     ...(redirectURI && { redirect_uri: redirectURI }),
   });
   const resetLink = `${getProductionURL()}/passwordrecovery/complete?${linkParams.toString()}`;
-  const emailRes = await sesClient.send(new SendEmailCommand({
-    Content: {
-      Simple: {
-        Subject: { Data: `Reset Your LibreOne Password` },
-        Body: {
-          Html: {
-            Data: `
-              <p>Hello there,</p>
-              <p>We received a request to reset your LibreOne password. You can do so by following this link:</p>
-              <a href="${resetLink}" target="_blank" rel="noopener noreferrer">${resetLink}</a>
-              <p>If this wasn't you, you can safely ignore this email.</p>
-              <p>Best,</p>
-              <p>The LibreTexts Team</p>
-              <p>&nbsp;</p>
-              <p>P.S.: Stay safe by never opening suspicious or unsolicited links received via email. Official communication from LibreTexts will always come from an <em>@libretexts.org</em> address.</p>
-            `,
-          },
-        },
-      },
-    },
-    Destination: { ToAddresses: [email] },
-    FromEmailAddress: process.env.AWS_SES_FROM_ADDR || 'no-reply@one.libretexts.org',
-  }));
-
-  if (emailRes.$metadata.httpStatusCode !== 200) {
+  const emailRes = await mailSender.send({
+    destination: { to: [email] },
+    subject: `Reset Your LibreOne Password`,
+    htmlContent: `
+      <p>Hello there,</p>
+      <p>We received a request to reset your LibreOne password. You can do so by following this link:</p>
+      <a href="${resetLink}" target="_blank" rel="noopener noreferrer">${resetLink}</a>
+      <p>If this wasn't you, you can safely ignore this email.</p>
+      <p>Best,</p>
+      <p>The LibreTexts Team</p>
+      <p>&nbsp;</p>
+      <p>P.S.: Stay safe by never opening suspicious or unsolicited links received via email. Official communication from LibreTexts will always come from an <em>@libretexts.org</em> address.</p>
+    `,
+  });
+  mailSender.destroy();
+  if (!emailRes) {
     console.error(`Error sending password reset email to "${email}"!`);
     return errors.internalServerError(res);
   }
@@ -523,32 +505,24 @@ export async function resetPassword(req: Request, res: Response): Promise<Respon
 
   // Send password changed email
   try {
-    const sesClient = await useMailSender();
-    if (sesClient) {
+    const mailSender = new MailController();
+    if (mailSender.isReady()) {
       const dateStr = now.toLocaleDateString('en-US', { timeZone: 'UTC' });
       const timeStr = now.toLocaleTimeString('en-US', { timeZone: 'UTC' });
-      const emailRes = await sesClient.send(new SendEmailCommand({
-        Content: {
-          Simple: {
-            Subject: { Data: `LibreOne Password Changed` },
-            Body: {
-              Html: {
-                Data: `
-                  <p>Hello there,</p>
-                  <p>We're writing to confirm that your LibreOne password was updated on ${dateStr} at ${timeStr} UTC.</p>
-                  <p>If this wasn't you, please <a href="mailto:support@libretexts.org?subject=Unrecognized Password Change" target="_blank" rel="noopener">contact LibreTexts.</p>
-                  <p>Best,</p>
-                  <p>The LibreTexts Team</p>
-                `,
-              },
-            },
-          },
-        },
-        Destination: { ToAddresses: [foundUser.email] },
-        FromEmailAddress: process.env.AWS_SES_FROM_ADDR || 'no-reply@one.libretexts.org',
-      }));
-      if (emailRes.$metadata.httpStatusCode !== 200) {
-        throw new Error(`${emailRes.$metadata.httpStatusCode}`);
+      const emailRes = await mailSender.send({
+        destination: { to: [foundUser.email] },
+        subject: `LibreOne Password Changed`,
+        htmlContent: `
+          <p>Hello there,</p>
+          <p>We're writing to confirm that your LibreOne password was updated on ${dateStr} at ${timeStr} UTC.</p>
+          <p>If this wasn't you, please <a href="mailto:support@libretexts.org?subject=Unrecognized Password Change" target="_blank" rel="noopener">contact LibreTexts.</p>
+          <p>Best,</p>
+          <p>The LibreTexts Team</p>
+        `,
+      });
+      mailSender.destroy();
+      if (!emailRes) {
+        throw new Error('Email send failed.');
       }
     }
   } catch (e) {
