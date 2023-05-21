@@ -1,4 +1,4 @@
-import { OrganizationIDParams } from "./organizations";
+import { OrganizationIDParams } from './organizations';
 
 export type UserUUIDParams = {
   uuid: string;

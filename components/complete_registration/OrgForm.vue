@@ -116,7 +116,7 @@
       if (!firstQuery.value) {
         firstQuery.value = true;
       }
-      const queryResult = await axios.get(`/organizations`, {
+      const queryResult = await axios.get('/organizations', {
         params: {
           query: newQuery,
           limit: 10,

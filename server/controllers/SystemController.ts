@@ -29,7 +29,7 @@ export async function getAllSystems(req: Request, res: Response): Promise<Respon
     offset,
     limit,
     order: sequelize.col('name'),
-    include: [Organization]
+    include: [Organization],
   });
   return res.send({
     meta: {

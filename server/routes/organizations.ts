@@ -9,31 +9,31 @@ const organizationsRouter = express.Router();
 organizationsRouter.route('/')
   .get(
     validate(OrganizationValidator.getAllOrganizationsSchema, 'query'),
-    catchInternal(OrganizationController.getAllOrganizations)
+    catchInternal(OrganizationController.getAllOrganizations),
   ).post(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write', 'domains:read', 'domains:write']),
     validate(OrganizationValidator.createOrganizationSchema, 'body'),
-    catchInternal(OrganizationController.createOrganization)
+    catchInternal(OrganizationController.createOrganization),
   );
 
 organizationsRouter.route('/:orgID')
   .get(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
-    catchInternal(OrganizationController.getOrganization)
+    catchInternal(OrganizationController.getOrganization),
   ).patch(
     validate(OrganizationValidator.updateOrganizationSchema, 'body'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.updateOrganization)
+    catchInternal(OrganizationController.updateOrganization),
   ).delete(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.deleteOrganization)
+    catchInternal(OrganizationController.deleteOrganization),
   );
 
 organizationsRouter.route('/:orgID/aliases')
@@ -79,5 +79,5 @@ organizationsRouter.route('/:orgID/domains/:domainID')
   );
 
 export {
-  organizationsRouter
+  organizationsRouter,
 };

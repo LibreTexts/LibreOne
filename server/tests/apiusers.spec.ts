@@ -39,7 +39,7 @@ describe('API Users', async () => {
   describe('helpers', () => {
     it('should map permissions config to permissions array', async () => {
       const config = await APIUserPermissionConfig.findOne({
-        where: { api_user_id: mainAPIUser.id }
+        where: { api_user_id: mainAPIUser.id },
       });
       expect(config).to.exist;
       const permissions = parseAPIUserPermissions(config as APIUserPermissionConfig);
@@ -99,7 +99,7 @@ describe('API Users', async () => {
       expect(userRecord.permissions?.get('api_user_id')).to.equal(userRecord?.id);
       const computedPerms = parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
       expect(computedPerms).to.have.length(3);
-      expect(computedPerms).to.deep.equal(permissionsInput)
+      expect(computedPerms).to.deep.equal(permissionsInput);
 
       await newUser?.destroy();
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
@@ -141,7 +141,7 @@ describe('API Users', async () => {
       expect(response.status).to.equal(200);
       expect(_.pick(response.body?.data, 'username', 'permissions')).to.deep.equal({
         username: 'test4',
-        permissions: permissionsInput
+        permissions: permissionsInput,
       });
 
       await newUser.destroy();
@@ -159,7 +159,7 @@ describe('API Users', async () => {
           username: 'test6',
           password: (await bcrypt.hash('test6password', 10)),
         }),
-      ])
+      ]);
       await Promise.all([
         APIUserPermissionConfig.create({
           api_user_id: newUser1.id,
@@ -198,7 +198,7 @@ describe('API Users', async () => {
         where: {
           api_user_id: {
             [Op.in]: [newUser1.id, newUser2.id],
-          }
+          },
         },
       });
     });
@@ -207,7 +207,7 @@ describe('API Users', async () => {
   describe('UPDATE', () => {
     it('should validate id parameter', async () => {
       const response = await request(server)
-        .patch(`/api/v1/api-users/abcd`)
+        .patch('/api/v1/api-users/abcd')
         .auth(mainAPIUserUsername, mainAPIUserPassword);
       expect(response.status).to.equal(400);
       const error = response.body?.errors[0];
@@ -223,7 +223,7 @@ describe('API Users', async () => {
         password: (await bcrypt.hash('test7password', 10)),
       });
 
-      const updateUserName = 'test7+1'
+      const updateUserName = 'test7+1';
       const response = await request(server)
         .patch(`/api/v1/api-users/${user1.id}`)
         .send({ username: updateUserName })
@@ -247,7 +247,7 @@ describe('API Users', async () => {
         password: (await bcrypt.hash('test8+1password', 10)),
       });
 
-      const updateUserName = 'test8+1'
+      const updateUserName = 'test8+1';
       const response = await request(server)
         .patch(`/api/v1/api-users/${user1.id}`)
         .send({ username: updateUserName })

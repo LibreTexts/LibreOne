@@ -38,5 +38,5 @@ apiUsersRouter.route('/:id')
   );
 
 export {
-  apiUsersRouter
-}
+  apiUsersRouter,
+};

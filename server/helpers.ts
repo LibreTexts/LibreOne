@@ -19,7 +19,7 @@ export function catchInternal(fn: APIFunction | AsyncAPIFunction): AsyncAPIFunct
       console.error(e);
       return errors.internalServerError(res);
     }
-  } 
+  }; 
 }
 
 /**

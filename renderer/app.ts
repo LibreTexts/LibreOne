@@ -13,7 +13,7 @@ import { setPageContext } from './usePageContext';
 import { initAxios } from './useAxios';
 import BaseLayout from '@components/BaseLayout.vue';
 import enUSMessages from '@locales/en-us.json';
-import esMXMessages from '@locales/es-mx.json'
+import esMXMessages from '@locales/es-mx.json';
 import type { PageContext } from './types';
 
 /**

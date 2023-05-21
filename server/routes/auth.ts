@@ -46,5 +46,5 @@ authRouter.route('/passwordrecovery/complete').post(
 );
 
 export {
-  authRouter
-}
+  authRouter,
+};

@@ -37,7 +37,7 @@ usersRouter.route('/:uuid')
 usersRouter.route('/:uuid/organizations')
   .all(
     verifyAPIAuthentication,
-    validate(UserValidator.uuidParamSchema, 'params')
+    validate(UserValidator.uuidParamSchema, 'params'),
   ).get(
     ensureUserResourcePermission(),
     catchInternal(UserController.getAllUserOrganizations),
@@ -63,5 +63,5 @@ usersRouter.route('/:uuid/avatar').post(
 );
 
 export {
-  usersRouter
-}
+  usersRouter,
+};

@@ -113,7 +113,7 @@ export function validate(schema: Joi.Schema, part: RequestPart): AsyncMiddleware
       console.error(e);
       return errors.internalServerError(res);
     }
-  }
+  };
 }
 
 /**
@@ -148,7 +148,7 @@ export function ensureAPIUserHasPermission(requestedPermissions: APIUserPermissi
       return errors.forbidden(res);
     }
     return next();
-  }
+  };
 }
 
 /**
@@ -179,5 +179,5 @@ export function ensureUserResourcePermission(write = false): Middleware {
       return errors.forbidden(res);
     }
     return next();
-  }
+  };
 }

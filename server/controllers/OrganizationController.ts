@@ -262,7 +262,7 @@ export async function getOrganizationDomain(req: Request, res: Response): Promis
         where: { id: orgID },
         attributes: [],
       },
-    ]
+    ],
   });
   if (!foundDomain) {
     return errors.notFound(res);
@@ -367,7 +367,7 @@ export async function getAllOrganizationDomains(req: Request, res: Response): Pr
         where: { id: orgID },
         attributes: [],
       },
-    ]
+    ],
   });
 
   return res.send({

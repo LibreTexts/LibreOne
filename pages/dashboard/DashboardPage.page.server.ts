@@ -1,4 +1,4 @@
-import type { PageContextServer } from "@renderer/types";
+import type { PageContextServer } from '@renderer/types';
 
 /**
  * Redirects the user to login if they are not yet authenticated.
@@ -10,7 +10,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   let redirectTo = null;
   if (!pageContext.user) {
     const params = new URLSearchParams({ redirectURI: '/dashboard' });
-    redirectTo = `/api/v1/auth/login?${params}`
+    redirectTo = `/api/v1/auth/login?${params}`;
   }
   return {
     pageContext: {

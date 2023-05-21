@@ -1,8 +1,8 @@
-import { renderToNodeStream } from '@vue/server-renderer'
-import { escapeInject } from 'vite-plugin-ssr'
-import { createApp } from './app'
+import { renderToNodeStream } from '@vue/server-renderer';
+import { escapeInject } from 'vite-plugin-ssr';
+import { createApp } from './app';
 import faviconURL from './favicon.ico';
-import type { PageContextServer } from './types'
+import type { PageContextServer } from './types';
 import { getUserInternal } from '@server/controllers/UserController';
 
 export const passToClient = ['pageProps', 'urlPathname', 'locale', 'user'];
@@ -23,7 +23,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
     pageContext: {
       ...(user && {
         user,
-      })
+      }),
     },
   };
 }

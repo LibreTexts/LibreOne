@@ -10,11 +10,11 @@ const APIRouter = express.Router();
 
 APIRouter.use('/api-users', apiUsersRouter);
 APIRouter.use('/auth', authRouter);
-APIRouter.use('/organizations', organizationsRouter)
+APIRouter.use('/organizations', organizationsRouter);
 APIRouter.use('/services', servicesRouter);
 APIRouter.use('/systems', systemsRouter);
 APIRouter.use('/users', usersRouter);
 
 export {
-  APIRouter
+  APIRouter,
 };

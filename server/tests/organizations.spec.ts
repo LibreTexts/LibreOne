@@ -61,7 +61,7 @@ describe('Organizations', async () => {
   describe('CREATE', () => {
     it('should create an organization (no aliases, no domains)', async () => {
       const response = await request(server)
-        .post(`/api/v1/organizations`)
+        .post('/api/v1/organizations')
         .send({ name: 'Test Organization' })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -77,7 +77,7 @@ describe('Organizations', async () => {
       const aliases = ['TO', 'TOU', 'TestOrg'];
       const domains = ['tou.org', 'tou.com', 'testorganization.edu', 'test-org.net'];
       const response = await request(server)
-        .post(`/api/v1/organizations`)
+        .post('/api/v1/organizations')
         .send({ name: 'Test Organization', aliases, domains })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -97,7 +97,7 @@ describe('Organizations', async () => {
       await Organization.create({ name: 'Test Organization' });
 
       const response = await request(server)
-        .post(`/api/v1/organizations`)
+        .post('/api/v1/organizations')
         .send({ name: 'Test Organization' })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -111,7 +111,7 @@ describe('Organizations', async () => {
     });
     it('should error when system does not exist', async () => {
       const response = await request(server)
-        .post(`/api/v1/organizations`)
+        .post('/api/v1/organizations')
         .send({ name: 'Test Organization', system_id: 123 })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -141,7 +141,7 @@ describe('Organizations', async () => {
     });
     it('should error when alias already exists', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const alias1 = await Alias.create({ alias: 'Libre' })
+      const alias1 = await Alias.create({ alias: 'Libre' });
       await OrganizationAlias.create({
         organization_id: org.id,
         alias_id: alias1.id,
@@ -182,7 +182,7 @@ describe('Organizations', async () => {
     });
     it('should error when domain already exists', async () => {
       const org = await Organization.create({ name: 'LibreTexts' });
-      const domain1 = await Domain.create({ domain: 'libretexts.org' })
+      const domain1 = await Domain.create({ domain: 'libretexts.org' });
       await OrganizationDomain.create({
         organization_id: org.id,
         domain_id: domain1.id,
@@ -204,7 +204,7 @@ describe('Organizations', async () => {
       const aliases = [1, 2];
       const domains = ['hello', 'hi.comm'];
       const response = await request(server)
-        .post(`/api/v1/organizations`)
+        .post('/api/v1/organizations')
         .send({ name: 'Test Organization', aliases, domains })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -391,7 +391,7 @@ describe('Organizations', async () => {
       const org = await Organization.create({ name: 'Test Organization' });
       const alias1 = await Alias.create({ alias: 'Libre1' });
       const d1 = await Domain.create({ domain: 'libretexts.org' });
-      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id })
+      await OrganizationAlias.create({ organization_id: org.id, alias_id: alias1.id });
       await OrganizationDomain.create({ organization_id: org.id, domain_id: d1.id });
 
       const response = await request(server)

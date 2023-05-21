@@ -8,7 +8,7 @@ systemsRouter.use(verifyAPIAuthentication);
 
 systemsRouter.route('/')
   .get(catchInternal(SystemController.getAllSystems))
-  .post(catchInternal(SystemController.createSystem))
+  .post(catchInternal(SystemController.createSystem));
 
 systemsRouter.route('/:systemID')
   .get(catchInternal(SystemController.getSystem))
@@ -16,5 +16,5 @@ systemsRouter.route('/:systemID')
   .delete(catchInternal(SystemController.deleteSystem));
 
 export {
-  systemsRouter
+  systemsRouter,
 };

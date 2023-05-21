@@ -9,7 +9,7 @@ servicesRouter.use(ensureActorIsAPIUser);
 
 servicesRouter.route('/')
   .get(catchInternal(ServiceController.getAllServices))
-  .post(catchInternal(ServiceController.createService))
+  .post(catchInternal(ServiceController.createService));
 
 servicesRouter.route('/:serviceID')
   .get(catchInternal(ServiceController.getService))
@@ -17,5 +17,5 @@ servicesRouter.route('/:serviceID')
   .delete(catchInternal(ServiceController.deleteService));
 
 export {
-  servicesRouter
+  servicesRouter,
 };

@@ -6,8 +6,8 @@ import express from 'express';
 import helmet from 'helmet';
 import sirv from 'sirv';
 import * as vite from 'vite';
-import compression from 'compression'
-import { renderPage } from 'vite-plugin-ssr'
+import compression from 'compression';
+import { renderPage } from 'vite-plugin-ssr';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './models';
@@ -34,12 +34,12 @@ app.use('/api/v1', APIRouter);
 await connectDatabase();
 
 if (isProduction) {
-  app.use(sirv(`dist/client`));
+  app.use(sirv('dist/client'));
 } else {
   const viteDevMiddleware = (
     await vite.createServer({
       root,
-      server: { middlewareMode: true }
+      server: { middlewareMode: true },
     })
   ).middlewares;
   app.use(viteDevMiddleware);

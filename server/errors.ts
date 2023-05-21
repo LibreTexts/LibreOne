@@ -53,8 +53,8 @@ function unauthorized(res: Response, detail?: string, realm?: string): Response 
     status: '401',
     code: 'unauthorized',
     title: 'Unauthorized',
-    detail: detail || "Authorization is required to access this resource.",
-  })
+    detail: detail || 'Authorization is required to access this resource.',
+  });
 }
 
 /**
@@ -69,7 +69,7 @@ function forbidden(res: Response, detail?: string): Response {
     status: '403',
     code: 'forbidden',
     title: 'Forbidden',
-    detail: detail || "Provided authorization is insufficient for this resource.",
+    detail: detail || 'Provided authorization is insufficient for this resource.',
   });
 }
 
@@ -85,7 +85,7 @@ function notFound(res: Response, detail?: string): Response {
     status: '404',
     code: 'not_found',
     title: 'Not Found',
-    detail: detail || "Sorry, we couldn't find a resource with that identifier.",
+    detail: detail || 'Sorry, we couldn\'t find a resource with that identifier.',
   });
 }
 
@@ -145,4 +145,4 @@ export default {
   conflict,
   contentTooLarge,
   internalServerError,
-}
+};

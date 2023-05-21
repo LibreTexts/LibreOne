@@ -83,7 +83,7 @@ export async function verifyClientAuthentication(req: Request): Promise<TokenAut
     expired: false,
     isAuthenticated: false,
     userUUID: null,
-  }
+  };
 }
 
 /**
@@ -294,7 +294,7 @@ export async function completeRegistration(req: Request, res: Response): Promise
   const casParams = new URLSearchParams({
     service: CAS_CALLBACK,
     token: casJWE,
-  });``
+  });
   const initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
 
   return res.send({
@@ -447,7 +447,7 @@ export async function sendResetPasswordLink(req: Request, res: Response): Promis
   const resetLink = `${getProductionURL()}/passwordrecovery/complete?${linkParams.toString()}`;
   const emailRes = await mailSender.send({
     destination: { to: [email] },
-    subject: `Reset Your LibreOne Password`,
+    subject: 'Reset Your LibreOne Password',
     htmlContent: `
       <p>Hello there,</p>
       <p>We received a request to reset your LibreOne password. You can do so by following this link:</p>
@@ -511,7 +511,7 @@ export async function resetPassword(req: Request, res: Response): Promise<Respon
       const timeStr = now.toLocaleTimeString('en-US', { timeZone: 'UTC' });
       const emailRes = await mailSender.send({
         destination: { to: [foundUser.email] },
-        subject: `LibreOne Password Changed`,
+        subject: 'LibreOne Password Changed',
         htmlContent: `
           <p>Hello there,</p>
           <p>We're writing to confirm that your LibreOne password was updated on ${dateStr} at ${timeStr} UTC.</p>

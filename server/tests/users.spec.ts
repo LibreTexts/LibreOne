@@ -263,7 +263,7 @@ describe('Users', async () => {
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
       const response = await request(server)
-        .get(`/api/v1/users/principal-attributes`)
+        .get('/api/v1/users/principal-attributes')
         .query({ username: user1.email })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
@@ -308,7 +308,7 @@ describe('Users', async () => {
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
       const response = await request(server)
-        .get(`/api/v1/users/principal-attributes`)
+        .get('/api/v1/users/principal-attributes')
         .query({ username: user1.uuid })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
 
