@@ -1,4 +1,5 @@
 import {
+  AllowNull,
   BelongsTo,
   BelongsToMany,
   Column,
@@ -7,13 +8,14 @@ import {
   Index,
   Model,
   Table,
-  AllowNull,
 } from 'sequelize-typescript';
 import { Alias } from './Alias';
 import { Domain } from './Domain';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
 import { System } from './System';
+import { User } from './User';
+import { UserOrganization } from './UserOrganization';
 
 @Table({
   timestamps: true,
@@ -40,6 +42,9 @@ export class Organization extends Model {
 
   @BelongsToMany(() => Domain, () => OrganizationDomain)
   domains?: Array<Domain & { OrganizationDomain: OrganizationDomain }>;
+
+  @BelongsToMany(() => User, () => UserOrganization)
+  users?: Array<User & { UserOrganization: UserOrganization }>;
 
   // TODO: Commons?
 }

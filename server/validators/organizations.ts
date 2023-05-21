@@ -1,6 +1,6 @@
 import joi from 'joi';
 
-const orgIDValidator = joi.number().integer().required();
+export const orgIDValidator = joi.number().integer().required();
 const orgAliasValidator = joi.string().min(2).max(100);
 const orgDomainValidator = joi.string().domain();
 const orgLogoValidator = joi.string().uri();

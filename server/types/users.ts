@@ -1,5 +1,14 @@
+import { OrganizationIDParams } from "./organizations";
+
 export type UserUUIDParams = {
   uuid: string;
+};
+
+export type UserOrganizationIDParams = UserUUIDParams & OrganizationIDParams;
+
+export type CreateUserOrganizationBody = {
+  organization_id?: number;
+  add_organization_name?: string;
 };
 
 export type GetAllUsersQuery = {
@@ -12,8 +21,6 @@ export type UpdateUserBody = {
   last_name?: string;
   bio_url?: string;
   user_type?: string;
-  organization_id?: number;
-  add_organization_name?: string;
   verify_status?: string;
 };
 

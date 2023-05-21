@@ -34,6 +34,26 @@ usersRouter.route('/:uuid')
     catchInternal(UserController.updateUser),
   );
 
+usersRouter.route('/:uuid/organizations')
+  .all(
+    verifyAPIAuthentication,
+    validate(UserValidator.uuidParamSchema, 'params')
+  ).get(
+    ensureUserResourcePermission(),
+    catchInternal(UserController.getAllUserOrganizations),
+  ).post(
+    ensureUserResourcePermission(true),
+    validate(UserValidator.createUserOrganizationSchema, 'body'),
+    catchInternal(UserController.createUserOrganization),
+  );
+
+usersRouter.route('/:uuid/organizations/:orgID').delete(
+  verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(UserValidator.uuidOrgIDParamsSchema, 'params'),
+  catchInternal(UserController.deleteUserOrganization),
+);
+
 usersRouter.route('/:uuid/avatar').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),

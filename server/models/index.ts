@@ -10,6 +10,7 @@ import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
 import { System } from './System';
 import { User } from './User';
+import { UserOrganization } from './UserOrganization';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -37,6 +38,7 @@ sequelize.addModels([
   Service,
   System,
   User,
+  UserOrganization,
 ]);
 
 /**
@@ -68,4 +70,5 @@ export {
   Service,
   System,
   User,
+  UserOrganization,
 };

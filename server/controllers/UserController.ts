@@ -4,11 +4,13 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { Organization, System, User } from '../models';
+import { Organization, System, User, UserOrganization } from '../models';
 import errors from '../errors';
 import type {
+  CreateUserOrganizationBody,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
+  UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
 
@@ -37,6 +39,49 @@ export function avatarUploadHandler(req: Request, res: Response, next: NextFunct
       return errors.badRequest(res);
     }
     return next();
+  });
+}
+
+/**
+ * Associates a User with an Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function createUserOrganization(req: Request, res: Response): Promise<Response> {
+  const { uuid } = (req.params as unknown) as UserUUIDParams;
+  const props = req.body as CreateUserOrganizationBody;
+
+  const foundUser = await User.findOne({ where: { uuid } });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  let orgID: number;
+  if (props.organization_id) {
+    const foundOrg = await Organization.findOne({ where: { id: props.organization_id } });
+    if (!foundOrg) {
+      return errors.notFound(res);
+    }
+
+    await UserOrganization.create({ user_id: uuid, organization_id: foundOrg.id });
+    orgID = foundOrg.id;
+  } else if (props.add_organization_name) {
+    const [foundOrCreateOrg] = await Organization.findOrCreate({
+      where: { name: props.add_organization_name },
+    });
+    await UserOrganization.create({ user_id: uuid, organization_id: foundOrCreateOrg.id });
+    orgID = foundOrCreateOrg.id;
+  } else {
+    return errors.badRequest(res);
+  }
+
+  return res.send({
+    data: {
+      uuid: foundUser.get('uuid'),
+      organization_id: orgID,
+    },
   });
 }
 
@@ -73,6 +118,7 @@ export async function getUser(req: Request, res: Response): Promise<Response> {
     include: [{
       model: Organization,
       attributes: ['id', 'name', 'logo'],
+      through: { attributes: [] },
     }],
   });
   if (!foundUser) {
@@ -102,9 +148,11 @@ export async function getAllUsers(req: Request, res: Response): Promise<Response
         { enabled: true },
       ],
     },
-    include: [
-      { model: Organization, attributes: ['id', 'name', 'logo'] },
-    ],
+    include: [{
+      model: Organization,
+      attributes: ['id', 'name', 'logo'],
+      through: { attributes: [] },
+    }],
   });
   return res.send({
     meta: {
@@ -113,6 +161,33 @@ export async function getAllUsers(req: Request, res: Response): Promise<Response
       total: count,
     },
     data: rows,
+  });
+}
+
+/**
+ * Retrieves a list of all Organizations a User is associated with.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function getAllUserOrganizations(req: Request, res: Response): Promise<Response> {
+  const { uuid } = (req.params as unknown) as UserUUIDParams;
+  const foundOrgs = await Organization.findAll({
+    include: [
+      {
+        model: User,
+        through: { attributes: [] },
+        where: { uuid },
+        attributes: [],
+      },
+    ],
+  });
+
+  return res.send({
+    data: {
+      organizations: foundOrgs.map((o) => o.get()) || [],
+    },
   });
 }
 
@@ -147,6 +222,7 @@ export async function resolvePrincipalAttributes(req: Request, res: Response): P
         attributes: ['id', 'name', 'logo'],
       }],
       attributes: ['id', 'name', 'logo'],
+      through: { attributes: [] },
     }],
   });
   if (!foundUser) {
@@ -158,7 +234,7 @@ export async function resolvePrincipalAttributes(req: Request, res: Response): P
     email: foundUser.email,
     first_name: foundUser.first_name,
     last_name: foundUser.last_name,
-    organization: foundUser.get('organization') || null,
+    organizations: foundUser.get('organizations') || [],
     user_type: foundUser.user_type || null,
     bio_url: foundUser.bio_url || '',
     verify_status: foundUser.verify_status,
@@ -189,17 +265,6 @@ export async function updateUser(req: Request, res: Response): Promise<Response>
       updateObj[key] = value;
     }
   });
-  if (props.organization_id) {
-    const foundOrg = await Organization.findOne({ where: { id: props.organization_id } });
-    if (foundOrg) {
-      updateObj.organization_id = foundOrg.id;
-    }
-  } else if (props.add_organization_name) {
-    const [foundOrCreateOrg] = await Organization.findOrCreate({
-      where: { name: props.add_organization_name },
-    });
-    updateObj.organization_id = foundOrCreateOrg.id;
-  }
   if (props.verify_status) {
     if (!req.isAPIUser) {
       return errors.forbidden(res);
@@ -281,4 +346,34 @@ export async function updateUserAvatar(req: Request, res: Response): Promise<Res
       avatar: avatarURL,
     },
   });
+}
+
+/**
+ * Removes a User's association with a specified Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function deleteUserOrganization(req: Request, res: Response): Promise<Response> {
+  const { uuid, orgID } = (req.params as unknown) as UserOrganizationIDParams;
+
+  const foundUser = await User.findOne({ where: { uuid } });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  const foundUserOrg = await UserOrganization.findOne({
+    where: {
+      user_id: uuid,
+      organization_id: orgID,
+    },
+  });
+  if (!foundUserOrg) {
+    return errors.notFound(res);
+  }
+
+  await foundUserOrg.destroy();
+
+  return res.send({});
 }

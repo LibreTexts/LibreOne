@@ -8,8 +8,9 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 import { server } from '..';
-import { APIUser, APIUserPermissionConfig, Organization, System, User } from '../models';
+import { APIUser, APIUserPermissionConfig, Organization, System, User, UserOrganization } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { createSessionCookiesForTest } from './test-helpers';
 
@@ -74,25 +75,66 @@ describe('Users', async () => {
         email: 'info@libretexts.org',
         active: true,
         enabled: true,
-        organization_id: org1.id,
       });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
       const response = await request(server)
         .get(`/api/v1/users/${user1.uuid}`)
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
 
       expect(response.status).to.equal(200);
-      expect(_.pick(response.body?.data, ['uuid', 'email', 'organization'])).to.deep.equal({
+      expect(_.pick(response.body?.data, ['uuid', 'email', 'organizations'])).to.deep.equal({
         uuid: user1.uuid,
         email: user1.email,
-        organization: {
+        organizations: [{
           id: org1.id,
           name: 'LibreTexts',
           logo: null,
-        },
+        }],
       });
+
       await user1.destroy();
       await org1.destroy();
+    });
+    it('should retrieve user (with multiple organizations)', async () => {
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      const org2 = await Organization.create({ name: 'LibreTexts+1' });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        active: true,
+        enabled: true,
+      });
+      await UserOrganization.bulkCreate([
+        { user_id: user1.uuid, organization_id: org1.id },
+        { user_id: user1.uuid, organization_id: org2.id },
+      ]);
+
+      const response = await request(server)
+        .get(`/api/v1/users/${user1.uuid}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(_.pick(response.body?.data, ['uuid', 'email', 'organizations'])).to.deep.equal({
+        uuid: user1.uuid,
+        email: user1.email,
+        organizations: [
+          {
+            id: org1.id,
+            name: 'LibreTexts',
+            logo: null,
+          },
+          {
+            id: org2.id,
+            name: 'LibreTexts+1',
+            logo: null,
+          },
+        ],
+      });
+
+      await user1.destroy();
+      await org1.destroy();
+      await org2.destroy();
     });
     it('should not return user if not self', async () => {
       const user1 = await User.create({
@@ -132,14 +174,16 @@ describe('Users', async () => {
           email: 'info@libretexts.org',
           active: true,
           enabled: true,
-          organization_id: org1.id,
         }, {
           uuid: uuidv4(),
           email: 'info+1@libretexts.org',
           active: true,
           enabled: true,
-          organization_id: org2.id,
         },
+      ]);
+      await UserOrganization.bulkCreate([
+        { user_id: user1.uuid, organization_id: org1.id },
+        { user_id: user2.uuid, organization_id: org2.id },
       ]);
 
       const response = await request(server)
@@ -149,29 +193,59 @@ describe('Users', async () => {
       expect(response.status).to.equal(200);
       expect(response.body?.meta).to.exist;
       expect(response.body?.data).to.have.length(2);
-      const users = await response.body.data.map((u) => _.pick(u, ['uuid', 'email', 'organization']));
+      const users = await response.body.data.map((u) => _.pick(u, ['uuid', 'email', 'organizations']));
       expect(users).to.have.deep.members([
         {
           uuid: user1.uuid,
           email: user1.email,
-          organization: {
+          organizations: [{
             id: org1.id,
             name: 'Test1',
             logo: null,
-          },
+          }],
         },
         {
           uuid: user2.uuid,
           email: user2.email,
-          organization: {
+          organizations: [{
             id: org2.id,
             name: 'Test2',
             logo: null,
-          },
+          }],
         },
       ]);
       await Promise.all([user1.destroy(), user2.destroy()]);
       await Promise.all([org1.destroy(), org2.destroy()]);
+    });
+    it('should retrieve all user organizations', async () => {
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      const org2 = await Organization.create({ name: 'LibreTexts+1' });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        active: true,
+        enabled: true,
+      });
+      await UserOrganization.bulkCreate([
+        { user_id: user1.uuid, organization_id: org1.id },
+        { user_id: user1.uuid, organization_id: org2.id },
+      ]);
+
+      const response = await request(server)
+        .get(`/api/v1/users/${user1.uuid}/organizations`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.organizations).to.be.an('array').with.length(2);
+      const organizations = response.body?.data?.organizations?.map((o) => _.pick(o, ['id', 'name']));
+      expect(organizations).to.have.deep.members([
+        { id: org1.id, name: 'LibreTexts' },
+        { id: org2.id, name: 'LibreTexts+1' },
+      ]);
+
+      await user1.destroy();
+      await org1.destroy();
+      await org2.destroy();
     });
     it('should resolve CAS principal attributes (using email)', async () => {
       const system1 = await System.create({ name: 'LibreTextsMain', logo: '' });
@@ -183,10 +257,10 @@ describe('Users', async () => {
         last_name: 'LibreTexts',
         active: true,
         enabled: true,
-        organization_id: org1.id,
         user_type: 'instructor',
         verify_status: 'not_attempted',
       });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
       const response = await request(server)
         .get(`/api/v1/users/principal-attributes`)
@@ -199,7 +273,7 @@ describe('Users', async () => {
         email: user1.email,
         first_name: 'Info',
         last_name: 'LibreTexts',
-        organization: {
+        organizations: [{
           id: org1.id,
           name: 'LibreTexts',
           logo: null,
@@ -208,7 +282,7 @@ describe('Users', async () => {
             name: 'LibreTextsMain',
             logo: '',
           },
-        },
+        }],
         user_type: 'instructor',
         bio_url: '',
         verify_status: 'not_attempted',
@@ -228,10 +302,10 @@ describe('Users', async () => {
         last_name: 'LibreTexts',
         active: true,
         enabled: true,
-        organization_id: org1.id,
         user_type: 'instructor',
         verify_status: 'not_attempted',
       });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
       const response = await request(server)
         .get(`/api/v1/users/principal-attributes`)
@@ -244,7 +318,7 @@ describe('Users', async () => {
         email: user1.email,
         first_name: 'Info',
         last_name: 'LibreTexts',
-        organization: {
+        organizations: [{
           id: org1.id,
           name: 'LibreTexts',
           logo: null,
@@ -253,7 +327,7 @@ describe('Users', async () => {
             name: 'LibreTextsMain',
             logo: '',
           },
-        },
+        }],
         user_type: 'instructor',
         bio_url: '',
         verify_status: 'not_attempted',
@@ -379,17 +453,21 @@ describe('Users', async () => {
 
       const updateObj = { organization_id: org1.id };
       const response = await request(server)
-        .patch(`/api/v1/users/${user1.uuid}`)
+        .post(`/api/v1/users/${user1.uuid}/organizations`)
         .send(updateObj)
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
-      
       expect(response.status).to.equal(200);
-      const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
-      expect(updatedUser).to.exist;
-      expect(_.pick(updatedUser?.get(), ['uuid', 'organization_id'])).to.deep.equal({
-        uuid: user1.uuid,
-        ...updateObj,
+
+      const orgMembership = await UserOrganization.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user1.uuid },
+            { organization_id: org1.id },
+          ],
+        },
       });
+      expect(orgMembership).to.exist;
+
       await user1.destroy();
       await org1.destroy();
     });
@@ -400,18 +478,49 @@ describe('Users', async () => {
       });
 
       const response = await request(server)
-        .patch(`/api/v1/users/${user1.uuid}`)
+        .post(`/api/v1/users/${user1.uuid}/organizations`)
         .send({ add_organization_name: 'LibreTexts' })
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
-      
       expect(response.status).to.equal(200);
-      const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
-      expect(updatedUser).to.exist;
-      expect(updatedUser?.organization_id).to.exist;
-      const createdOrg = await Organization.findOne({ where: { id: updatedUser?.organization_id }});
-      expect(createdOrg?.name).to.equal('LibreTexts');
+
+      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      expect(orgMembership).to.exist;
+
+      const createdOrgID = orgMembership?.get('organization_id');
+      const createdOrg = await Organization.findOne({ where: { id: createdOrgID } });
+      expect(createdOrg).to.exist;
+      expect(createdOrg?.get('name')).to.equal('LibreTexts');
+
       await user1.destroy();
       await createdOrg?.destroy();
+    });
+    it('should remove user from organization', async () => {
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        active: true,
+        enabled: true,
+      });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
+
+      const response = await request(server)
+        .delete(`/api/v1/users/${user1.uuid}/organizations/${org1.id}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      const orgMembership = await UserOrganization.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user1.uuid },
+            { organization_id: org1.id },
+          ],
+        },
+      });
+      expect(orgMembership).to.not.exist;
+
+      await user1.destroy();
+      await org1.destroy();
     });
     it('should prevent updating verification status by user', async () => {
       const user1 = await User.create({

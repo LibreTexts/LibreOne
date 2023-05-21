@@ -1,7 +1,20 @@
 import joi from 'joi';
+import { orgIDValidator } from './organizations';
+
+const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
 
 export const uuidParamSchema = joi.object({
-  uuid: joi.string().uuid({ version: 'uuidv4' }).required(),
+  uuid: uuidValidator,
+});
+
+export const uuidOrgIDParamsSchema = joi.object({
+  uuid: uuidValidator,
+  orgID: orgIDValidator,
+});
+
+export const createUserOrganizationSchema = joi.object({
+  organization_id: joi.number().integer(),
+  add_organization_name: joi.string().max(100),
 });
 
 export const getAllUsersSchema = joi.object({
@@ -14,7 +27,5 @@ export const updateUserSchema = joi.object({
   last_name: joi.string().min(1).max(100).trim(),
   bio_url: joi.string().uri(), // TODO: stricter validation?
   user_type: joi.string().valid('student', 'instructor'),
-  organization_id: joi.number().integer(),
-  add_organization_name: joi.string().max(100),
   verify_status: joi.string().trim(),
 });

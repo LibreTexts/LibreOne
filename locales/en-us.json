@@ -60,7 +60,7 @@
   "complete_registration_org": {
     "header": "One last thing.",
     "tagline": "What institution/organization are you part of?",
-    "tagline_note": "This will help us to better tailor your LibreTexts experience.",
+    "tagline_note": "This will help us to better tailor your LibreTexts experience. Select your primary institution; if you're involved with multiple, you can add them later.",
     "search_label": "Search for an Institution",
     "results": "Results",
     "results_live": "Results will update as you type.",

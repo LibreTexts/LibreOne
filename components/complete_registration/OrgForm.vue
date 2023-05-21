@@ -5,7 +5,7 @@
   <p class="text-center mt-4">
     {{ $t('complete_registration_org.tagline') }}
   </p>
-  <p class="text-center mt-1 text-sm text-gray-500">
+  <p class="text-center mt-1 mb-4 text-sm text-gray-500">
     {{ $t('complete_registration_org.tagline_note') }}
   </p>
   <template v-if="!loading">
@@ -137,7 +137,7 @@
   async function submitOrganization(data: OrganizationPatch) {
     loading.value = true;
     try {
-      await axios.patch(`/users/${props.uuid}`, data);
+      await axios.post(`/users/${props.uuid}/organizations`, data);
       const finishResult = await axios.post('/auth/complete-registration');
       if (finishResult.data.data?.initSessionURL) {
         window.location.assign(finishResult.data.data.initSessionURL);

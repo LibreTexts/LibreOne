@@ -1,16 +1,16 @@
 import {
   AllowNull,
-  BelongsTo,
+  BelongsToMany,
   Column,
   DataType,
   DefaultScope,
-  ForeignKey,
   Index,
   Model,
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
 import { Organization } from './Organization';
+import { UserOrganization } from './UserOrganization';
 
 @DefaultScope(() => ({
   attributes: {
@@ -41,12 +41,8 @@ export class User extends Model {
   @Column(DataType.STRING)
   declare password?: string;
 
-  @ForeignKey(() => Organization)
-  @Column(DataType.INTEGER)
-  declare organization_id?: number;
-
-  @BelongsTo(() => Organization)
-  organization?: Organization;
+  @BelongsToMany(() => Organization, () => UserOrganization)
+  organizations?: Array<Organization & { UserOrganization: UserOrganization }>;
 
   @Column(DataType.ENUM('student', 'instructor'))
   declare user_type?: string;
