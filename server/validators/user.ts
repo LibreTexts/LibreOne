@@ -1,5 +1,6 @@
 import joi from 'joi';
 import { orgIDValidator } from './organizations';
+import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
 
 const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
 
@@ -28,4 +29,8 @@ export const updateUserSchema = joi.object({
   bio_url: joi.string().uri(), // TODO: stricter validation?
   user_type: joi.string().valid('student', 'instructor'),
   verify_status: joi.string().trim(),
+});
+
+export const updateUserOrganizationAdminRoleSchema = joi.object({
+  admin_role: joi.string().valid(...Object.keys(UserOrganizationAdminRoleEnum)).required(),
 });

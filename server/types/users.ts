@@ -1,4 +1,5 @@
 import { OrganizationIDParams } from './organizations';
+import { UserOrganizationAdminRole } from '../controllers/PermissionsController';
 
 export type UserUUIDParams = {
   uuid: string;
@@ -22,6 +23,10 @@ export type UpdateUserBody = {
   bio_url?: string;
   user_type?: string;
   verify_status?: string;
+};
+
+export type UpdateUserOrganizationAdminRoleBody = {
+  admin_role: UserOrganizationAdminRole;
 };
 
 export type ResolvePrincipalAttributesQuery = {

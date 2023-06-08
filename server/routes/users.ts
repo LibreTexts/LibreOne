@@ -54,6 +54,19 @@ usersRouter.route('/:uuid/organizations/:orgID').delete(
   catchInternal(UserController.deleteUserOrganization),
 );
 
+usersRouter.route('/:uuid/organizations/:orgID/admin-role')
+  .all(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write', 'organizations:write']),
+    validate(UserValidator.uuidOrgIDParamsSchema, 'params'),
+  ).post(
+    validate(UserValidator.updateUserOrganizationAdminRoleSchema, 'body'),
+    catchInternal(UserController.updateUserOrganizationAdminRole),
+  ).delete(
+    catchInternal(UserController.deleteUserOrganizationAdminRole),
+  );
+
 usersRouter.route('/:uuid/avatar').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),

@@ -6,6 +6,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
+import { AdminRole } from './AdminRole';
 import { Organization } from './Organization';
 import { User } from './User';
 
@@ -23,4 +24,8 @@ export class UserOrganization extends Model {
   @AllowNull(false)
   @Column(DataType.INTEGER)
   declare organization_id: number;
+
+  @ForeignKey(() => AdminRole)
+  @Column(DataType.STRING)
+  declare admin_role: string;
 }

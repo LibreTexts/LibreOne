@@ -10,6 +10,7 @@ import type {
   CreateUserOrganizationBody,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
+  UpdateUserOrganizationAdminRoleBody,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
@@ -64,17 +65,29 @@ export async function createUserOrganization(req: Request, res: Response): Promi
     if (!foundOrg) {
       return errors.notFound(res);
     }
-
-    await UserOrganization.create({ user_id: uuid, organization_id: foundOrg.id });
     orgID = foundOrg.id;
   } else if (props.add_organization_name) {
     const [foundOrCreateOrg] = await Organization.findOrCreate({
       where: { name: props.add_organization_name },
     });
-    await UserOrganization.create({ user_id: uuid, organization_id: foundOrCreateOrg.id });
     orgID = foundOrCreateOrg.id;
   } else {
     return errors.badRequest(res);
+  }
+
+  const foundUserOrg = await UserOrganization.findOne({
+    where: {
+      [Op.and]: [
+        { user_id: uuid },
+        { organization_id: orgID },
+      ],
+    },
+  });
+  if (!foundUserOrg) {
+    await UserOrganization.create({
+      user_id: uuid,
+      organization_id: orgID,
+    });
   }
 
   return res.send({
@@ -349,6 +362,42 @@ export async function updateUserAvatar(req: Request, res: Response): Promise<Res
 }
 
 /**
+ * Updates a User's admin role in a specified Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function updateUserOrganizationAdminRole(req: Request, res: Response): Promise<Response> {
+  const { orgID, uuid } = (req.params as unknown) as UserOrganizationIDParams;
+  const { admin_role } = req.body as UpdateUserOrganizationAdminRoleBody;
+
+  const foundUser = await User.findOne({ where: { uuid } });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  const [userOrg, created] = await UserOrganization.findOrCreate({
+    where: {
+      user_id: uuid,
+      organization_id: orgID,
+    },
+    defaults: { admin_role },
+  });
+  if (!created) {
+    await userOrg.update({ admin_role });
+  }
+
+  return res.send({
+    data: {
+      uuid: foundUser.get('uuid'),
+      organization_id: orgID,
+      admin_role,
+    },
+  });
+}
+
+/**
  * Removes a User's association with a specified Organization.
  *
  * @param req - Incoming API request.
@@ -374,6 +423,36 @@ export async function deleteUserOrganization(req: Request, res: Response): Promi
   }
 
   await foundUserOrg.destroy();
+
+  return res.send({});
+}
+
+/**
+ * Removes a User's admin role in a specified Organization.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
+export async function deleteUserOrganizationAdminRole(req: Request, res: Response): Promise<Response> {
+  const { uuid, orgID } = (req.params as unknown) as UserOrganizationIDParams;
+
+  const foundUser = await User.findOne({ where: { uuid } });
+  if (!foundUser) {
+    return errors.notFound(res);
+  }
+
+  const foundUserOrg = await UserOrganization.findOne({
+    where: {
+      user_id: uuid,
+      organization_id: orgID,
+    },
+  });
+  if (!foundUserOrg) {
+    return errors.notFound(res);
+  }
+
+  await foundUserOrg.update({ admin_role: null });
 
   return res.send({});
 }

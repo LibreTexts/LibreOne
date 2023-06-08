@@ -33,7 +33,7 @@ describe('Users', async () => {
       api_users_read: true,
       api_users_write: true,
       organizations_read: true,
-      organizations_write: false,
+      organizations_write: true,
       users_read: true,
       users_write: true,
     });
@@ -522,6 +522,101 @@ describe('Users', async () => {
       await user1.destroy();
       await org1.destroy();
     });
+
+    it('should give user admin role in organization', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'org_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      expect(orgMembership?.admin_role).to.equal('org_admin');
+
+      await user1.destroy();
+      await org1.destroy();
+    });
+    it('should give user admin role in organization (not yet a member)', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'org_sys_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      expect(orgMembership?.admin_role).to.equal('org_sys_admin');
+
+      await user1.destroy();
+      await org1.destroy();
+    });
+    it('should change user admin role in organization', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id, admin_role: 'org_admin' });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'org_sys_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      expect(orgMembership?.admin_role).to.equal('org_sys_admin');
+
+      await user1.destroy();
+      await org1.destroy();
+    });
+    it('should not give reserved admin role in organization', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+
+      const response1 = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'super_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response1.status).to.equal(400);
+      const error1 = response1.body?.errors[0];
+      expect(error1).to.exist;
+      expect(_.pick(error1, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+
+      const response2 = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'super_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response2.status).to.equal(400);
+      const error2 = response2.body?.errors[0];
+      expect(error2).to.exist;
+      expect(_.pick(error2, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+
+      await user1.destroy();
+      await org1.destroy();
+    });
+
     it('should prevent updating verification status by user', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -563,6 +658,28 @@ describe('Users', async () => {
       expect(updatedUser?.avatar).to.exist;
       await user1.destroy();
       s3Mock.restore();
+    });
+  });
+
+  describe('DELETE', () => {
+    it('should remove user admin role in organization', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id, admin_role: 'org_admin' });
+
+      const response = await request(server)
+        .delete(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      expect(orgMembership?.admin_role).to.be.null;
+
+      await user1.destroy();
+      await org1.destroy();
     });
   });
 });
