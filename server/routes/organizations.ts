@@ -1,81 +1,82 @@
 import express from 'express';
-import * as OrganizationController from '../controllers/OrganizationController';
+import { OrganizationController } from '../controllers/OrganizationController';
 import * as OrganizationValidator from '../validators/organizations';
 import { ensureAPIUserHasPermission, ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const organizationsRouter = express.Router();
+const controller = new OrganizationController();
 
 organizationsRouter.route('/')
   .get(
     validate(OrganizationValidator.getAllOrganizationsSchema, 'query'),
-    catchInternal(OrganizationController.getAllOrganizations),
+    catchInternal((req, res) => controller.getAllOrganizations(req, res)),
   ).post(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write', 'domains:read', 'domains:write']),
     validate(OrganizationValidator.createOrganizationSchema, 'body'),
-    catchInternal(OrganizationController.createOrganization),
+    catchInternal((req, res) => controller.createOrganization(req, res)),
   );
 
 organizationsRouter.route('/:orgID')
   .get(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
-    catchInternal(OrganizationController.getOrganization),
+    catchInternal((req, res) => controller.getOrganization(req, res)),
   ).patch(
     validate(OrganizationValidator.updateOrganizationSchema, 'body'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.updateOrganization),
+    catchInternal((req, res) => controller.updateOrganization(req, res)),
   ).delete(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.deleteOrganization),
+    catchInternal((req, res) => controller.deleteOrganization(req, res)),
   );
 
 organizationsRouter.route('/:orgID/aliases')
   .all(validate(OrganizationValidator.orgIDParamSchema, 'params'))
-  .get(catchInternal(OrganizationController.getAllOrganizationAliases))
+  .get(catchInternal((req, res) => controller.getAllOrganizationAliases(req, res)))
   .post(
     validate(OrganizationValidator.createOrganizationAliasSchema, 'body'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.createOrganizationAlias),
+    catchInternal((req, res) => controller.createOrganizationAlias(req, res)),
   );
 
 organizationsRouter.route('/:orgID/aliases/:aliasID')
   .all(validate(OrganizationValidator.orgAliasIDParamsSchema, 'params'))
-  .get(catchInternal(OrganizationController.getOrganizationAlias))
+  .get(catchInternal((req, res) => controller.getOrganizationAlias(req, res)))
   .delete(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write']),
-    catchInternal(OrganizationController.deleteOrganizationAlias),
+    catchInternal((req, res) => controller.deleteOrganizationAlias(req, res)),
   );
 
 organizationsRouter.route('/:orgID/domains')
   .all(validate(OrganizationValidator.orgIDParamSchema, 'params'))
-  .get(catchInternal(OrganizationController.getAllOrganizationDomains))
+  .get(catchInternal((req, res) => controller.getAllOrganizationDomains(req, res)))
   .post(
     validate(OrganizationValidator.createOrganizationDomainSchema, 'body'),
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write', 'domains:write']),
-    catchInternal(OrganizationController.createOrganizationDomain),
+    catchInternal((req, res) => controller.createOrganizationDomain(req, res)),
   );
 
 organizationsRouter.route('/:orgID/domains/:domainID')
   .all(validate(OrganizationValidator.orgDomainIDParamsSchema, 'params'))
-  .get(catchInternal(OrganizationController.getOrganizationDomain))
+  .get(catchInternal((req, res) => controller.getOrganizationDomain(req, res)))
   .delete(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
     ensureAPIUserHasPermission(['organizations:write', 'domains:write']),
-    catchInternal(OrganizationController.deleteOrganizationDomain),
+    catchInternal((req, res) => controller.deleteOrganizationDomain(req, res)),
   );
 
 export {
