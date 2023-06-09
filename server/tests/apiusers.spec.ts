@@ -5,7 +5,7 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { server } from '..';
 import { APIUser, APIUserPermissionConfig } from '../models';
-import { mapAPIUserPermissionsToConfig, parseAPIUserPermissions } from '../controllers/APIUserController';
+import { APIUserController } from '../controllers/APIUserController';
 import { APIUserPermission } from '../types/apiusers';
 import { Op } from 'sequelize';
 
@@ -42,7 +42,7 @@ describe('API Users', async () => {
         where: { api_user_id: mainAPIUser.id },
       });
       expect(config).to.exist;
-      const permissions = parseAPIUserPermissions(config as APIUserPermissionConfig);
+      const permissions = APIUserController.parseAPIUserPermissions(config as APIUserPermissionConfig);
       expect(permissions).to.deep.equal([
         'api_users:read',
         'api_users:write',
@@ -69,7 +69,7 @@ describe('API Users', async () => {
       expect(userRecord.username).to.equal(username);
       expect(userRecord.password).to.be.a('string');
       expect(userRecord.permissions?.get('api_user_id')).to.equal(userRecord?.id);
-      const computedPerms = parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
+      const computedPerms = APIUserController.parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
       expect(computedPerms).to.have.length(0);
 
       await APIUser.destroy({ where: { id: newUser?.id }});
@@ -97,7 +97,7 @@ describe('API Users', async () => {
       expect(userRecord.username).to.equal(username);
       expect(userRecord.password).to.be.a('string');
       expect(userRecord.permissions?.get('api_user_id')).to.equal(userRecord?.id);
-      const computedPerms = parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
+      const computedPerms = APIUserController.parseAPIUserPermissions(userRecord.permissions as APIUserPermissionConfig);
       expect(computedPerms).to.have.length(3);
       expect(computedPerms).to.deep.equal(permissionsInput);
 
@@ -132,7 +132,7 @@ describe('API Users', async () => {
       });
       await APIUserPermissionConfig.create({
         api_user_id: newUser.id,
-        ...mapAPIUserPermissionsToConfig(permissionsInput),
+        ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput),
       });
 
       const response = await request(server)
@@ -163,11 +163,11 @@ describe('API Users', async () => {
       await Promise.all([
         APIUserPermissionConfig.create({
           api_user_id: newUser1.id,
-          ...mapAPIUserPermissionsToConfig(permissionsInput1),
+          ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput1),
         }),
         APIUserPermissionConfig.create({
           api_user_id: newUser2.id,
-          ...mapAPIUserPermissionsToConfig(permissionsInput2),
+          ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput2),
         }),
       ]);
 
@@ -290,7 +290,7 @@ describe('API Users', async () => {
       });
       const newConfig = await APIUserPermissionConfig.create({
         api_user_id: newUser.id,
-        ...mapAPIUserPermissionsToConfig(permissionsInput),
+        ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput),
       });
 
       const response = await request(server)
@@ -301,7 +301,7 @@ describe('API Users', async () => {
 
       const updatedConfig = await APIUserPermissionConfig.findByPk(newConfig.id);
       expect(updatedConfig).to.exist;
-      const permissions = parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
+      const permissions = APIUserController.parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
       expect(permissions).to.have.members([...newPermissionsInput]);
 
       await newUser.destroy();
@@ -315,7 +315,7 @@ describe('API Users', async () => {
       });
       const newConfig = await APIUserPermissionConfig.create({
         api_user_id: newUser.id,
-        ...mapAPIUserPermissionsToConfig(permissionsInput),
+        ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput),
       });
 
       const response = await request(server)
@@ -326,7 +326,7 @@ describe('API Users', async () => {
 
       const updatedConfig = await APIUserPermissionConfig.findByPk(newConfig.id);
       expect(updatedConfig).to.exist;
-      const permissions = parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
+      const permissions = APIUserController.parseAPIUserPermissions(updatedConfig as APIUserPermissionConfig);
       expect(permissions).to.deep.equal([]);
 
       await newUser.destroy();
@@ -343,7 +343,7 @@ describe('API Users', async () => {
       });
       const config1 = await APIUserPermissionConfig.create({
         api_user_id: user1.id,
-        ...mapAPIUserPermissionsToConfig(permissionsInput),
+        ...APIUserController.mapAPIUserPermissionsToConfig(permissionsInput),
       });
 
       const response = await request(server)

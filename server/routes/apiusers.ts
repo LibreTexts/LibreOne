@@ -1,10 +1,11 @@
 import express from 'express';
-import * as APIUserController from '../controllers/APIUserController';
+import { APIUserController } from '../controllers/APIUserController';
 import * as APIUserValidator from '../validators/apiusers';
 import { ensureAPIUserHasPermission, ensureActorIsAPIUser, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const apiUsersRouter = express.Router();
+const controller = new APIUserController();
 
 apiUsersRouter.route('*').all(
   verifyAPIAuthentication,
@@ -15,11 +16,11 @@ apiUsersRouter.route('/')
   .get(
     ensureAPIUserHasPermission(['api_users:read']),
     validate(APIUserValidator.getAllAPIUsersSchema, 'query'),
-    catchInternal(APIUserController.getAllAPIUsers),
+    catchInternal((req, res) => controller.getAllAPIUsers(req, res)),
   ).post(
     ensureAPIUserHasPermission(['api_users:write']),
     validate(APIUserValidator.createAPIUserSchema, 'body'),
-    catchInternal(APIUserController.createAPIUser),
+    catchInternal((req, res) => controller.createAPIUser(req, res)),
   );
 
 apiUsersRouter.route('/:id')
@@ -27,14 +28,14 @@ apiUsersRouter.route('/:id')
     validate(APIUserValidator.idParamSchema, 'params'),
   ).get(
     ensureAPIUserHasPermission(['api_users:read']),
-    catchInternal(APIUserController.getAPIUser),
+    catchInternal((req, res) => controller.getAPIUser(req, res)),
   ).patch(
     ensureAPIUserHasPermission(['api_users:write']),
     validate(APIUserValidator.updateAPIUserSchema, 'body'),
-    catchInternal(APIUserController.updateAPIUser),
+    catchInternal((req, res) => controller.updateAPIUser(req, res)),
   ).delete(
     ensureAPIUserHasPermission(['api_users:write']),
-    catchInternal(APIUserController.deleteAPIUser),
+    catchInternal((req, res) => controller.deleteAPIUser(req, res)),
   );
 
 export {

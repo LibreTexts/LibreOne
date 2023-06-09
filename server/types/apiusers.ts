@@ -1,4 +1,4 @@
-import { API_USERS_PERMISSIONS } from '@server/controllers/APIUserController';
+import { API_USERS_PERMISSIONS } from '../controllers/APIUserController';
 
 export type APIUserPermission = typeof API_USERS_PERMISSIONS[number];
 
