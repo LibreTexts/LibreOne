@@ -1,24 +1,25 @@
 import express from 'express';
-import * as UserController from '../controllers/UserController';
+import { UserController } from '../controllers/UserController';
 import * as UserValidator from '../validators/user';
 import { ensureAPIUserHasPermission, ensureActorIsAPIUser, ensureUserResourcePermission, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const usersRouter = express.Router();
+const controller = new UserController();
 
 usersRouter.route('/').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:read']),
   validate(UserValidator.getAllUsersSchema, 'query'),
-  catchInternal(UserController.getAllUsers),
+  catchInternal((req, res) => controller.getAllUsers(req, res)),
 );
 
 usersRouter.route('/principal-attributes').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:read']),
-  catchInternal(UserController.resolvePrincipalAttributes),
+  catchInternal((req, res) => controller.resolvePrincipalAttributes(req, res)),
 );
 
 usersRouter.route('/:uuid')
@@ -26,12 +27,12 @@ usersRouter.route('/:uuid')
     verifyAPIAuthentication,
     ensureUserResourcePermission(),
     validate(UserValidator.uuidParamSchema, 'params'),
-    catchInternal(UserController.getUser),
+    catchInternal((req, res) => controller.getUser(req, res)),
   ).patch(
     verifyAPIAuthentication,
     ensureUserResourcePermission(true),
     validate(UserValidator.updateUserSchema, 'body'),
-    catchInternal(UserController.updateUser),
+    catchInternal((req, res) => controller.updateUser(req, res)),
   );
 
 usersRouter.route('/:uuid/organizations')
@@ -40,18 +41,18 @@ usersRouter.route('/:uuid/organizations')
     validate(UserValidator.uuidParamSchema, 'params'),
   ).get(
     ensureUserResourcePermission(),
-    catchInternal(UserController.getAllUserOrganizations),
+    catchInternal((req, res) => controller.getAllUserOrganizations(req, res)),
   ).post(
     ensureUserResourcePermission(true),
     validate(UserValidator.createUserOrganizationSchema, 'body'),
-    catchInternal(UserController.createUserOrganization),
+    catchInternal((req, res) => controller.createUserOrganization(req, res)),
   );
 
 usersRouter.route('/:uuid/organizations/:orgID').delete(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
   validate(UserValidator.uuidOrgIDParamsSchema, 'params'),
-  catchInternal(UserController.deleteUserOrganization),
+  catchInternal((req, res) => controller.deleteUserOrganization(req, res)),
 );
 
 usersRouter.route('/:uuid/organizations/:orgID/admin-role')
@@ -62,17 +63,17 @@ usersRouter.route('/:uuid/organizations/:orgID/admin-role')
     validate(UserValidator.uuidOrgIDParamsSchema, 'params'),
   ).post(
     validate(UserValidator.updateUserOrganizationAdminRoleSchema, 'body'),
-    catchInternal(UserController.updateUserOrganizationAdminRole),
+    catchInternal((req, res) => controller.updateUserOrganizationAdminRole(req, res)),
   ).delete(
-    catchInternal(UserController.deleteUserOrganizationAdminRole),
+    catchInternal((req, res) => controller.deleteUserOrganizationAdminRole(req, res)),
   );
 
 usersRouter.route('/:uuid/avatar').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
   validate(UserValidator.uuidParamSchema, 'params'),
-  UserController.avatarUploadHandler,
-  catchInternal(UserController.updateUserAvatar),
+  (...args) => controller.avatarUploadHandler(...args),
+  catchInternal((req, res) => controller.updateUserAvatar(req, res)),
 );
 
 export {

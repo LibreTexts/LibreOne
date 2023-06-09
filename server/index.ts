@@ -15,7 +15,7 @@ import { APIRouter } from './routes';
 import type { Request, Response, NextFunction } from 'express';
 import type { PageContextInitCustom } from '@renderer/types';
 import { AuthController } from './controllers/AuthController';
-import { getUserInternal } from './controllers/UserController';
+import { UserController } from './controllers/UserController';
 import { getProductionURL } from './helpers';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -47,10 +47,11 @@ if (isProduction) {
 
 const clientRouter = express.Router();
 clientRouter.route('*').get(async (req: Request, res: Response, next: NextFunction) => {
+  const userController = new UserController();
   const { expired, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
   let user;
   if (isAuthenticated && userUUID) {
-    user = await getUserInternal(userUUID);
+    user = await userController.getUserInternal(userUUID);
   }
   const pageContextInit: PageContextInitCustom = {
     isAuthenticated,
