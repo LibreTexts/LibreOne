@@ -8,7 +8,7 @@ import {
   OrganizationAlias,
   OrganizationDomain,
   sequelize,
-  System,
+  OrganizationSystem,
 } from '../models';
 import errors from '../errors';
 import type {
@@ -199,7 +199,7 @@ export async function getOrganization(req: Request, res: Response): Promise<Resp
   const { orgID } = (req.params as unknown) as OrganizationIDParams;
   const foundOrg = await Organization.findByPk(orgID, {
     include: [
-      { model: System, attributes: ['id', 'name', 'logo'] },
+      { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
       { model: Alias, through: { attributes: [] } },
       { model: Domain, through: { attributes: [] } },
     ],
@@ -300,7 +300,7 @@ export async function getAllOrganizations(req: Request, res: Response): Promise<
     order: sequelize.col('name'),
     attributes: ['id', 'name', 'logo'],
     include: [
-      { model: System, attributes: ['id', 'name', 'logo'] },
+      { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
       { model: Alias, through: { attributes: [] } },
       { model: Domain, through: { attributes: [] } },
     ],

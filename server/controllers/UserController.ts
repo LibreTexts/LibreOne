@@ -4,7 +4,7 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { Organization, System, User, UserOrganization } from '../models';
+import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
 import errors from '../errors';
 import type {
   CreateUserOrganizationBody,
@@ -231,7 +231,7 @@ export async function resolvePrincipalAttributes(req: Request, res: Response): P
     include: [{
       model: Organization,
       include: [{
-        model: System,
+        model: OrganizationSystem,
         attributes: ['id', 'name', 'logo'],
       }],
       attributes: ['id', 'name', 'logo'],

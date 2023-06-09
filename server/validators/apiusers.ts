@@ -1,8 +1,8 @@
 import joi from 'joi';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { passwordStrengthOptions } from '../../passwordstrength';
-import { API_USERS_PERMISSIONS } from '@server/controllers/APIUserController';
-import { isAPIUserPermission } from '@server/types/apiusers';
+import { API_USERS_PERMISSIONS } from '../controllers/APIUserController';
+import { isAPIUserPermission } from '../types/apiusers';
 
 const apiUserUsernameValidator = joi.string().min(5).max(50).trim();
 

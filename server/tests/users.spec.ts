@@ -10,7 +10,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { server } from '..';
-import { APIUser, APIUserPermissionConfig, Organization, System, User, UserOrganization } from '../models';
+import { APIUser, APIUserPermissionConfig, Organization, OrganizationSystem, User, UserOrganization } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { createSessionCookiesForTest } from './test-helpers';
 
@@ -42,7 +42,7 @@ describe('Users', async () => {
     await APIUser.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
-    await System.destroy({ where: {} });
+    await OrganizationSystem.destroy({ where: {} });
     if (server?.listening) {
       server.close();
     }
@@ -248,8 +248,8 @@ describe('Users', async () => {
       await org2.destroy();
     });
     it('should resolve CAS principal attributes (using email)', async () => {
-      const system1 = await System.create({ name: 'LibreTextsMain', logo: '' });
-      const org1 = await Organization.create({ name: 'LibreTexts', system_id: system1.id });
+      const orgSystem1 = await OrganizationSystem.create({ name: 'LibreTextsMain', logo: '' });
+      const org1 = await Organization.create({ name: 'LibreTexts', system_id: orgSystem1.id });
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
@@ -278,7 +278,7 @@ describe('Users', async () => {
           name: 'LibreTexts',
           logo: null,
           system: {
-            id: system1.id,
+            id: orgSystem1.id,
             name: 'LibreTextsMain',
             logo: '',
           },
@@ -290,11 +290,11 @@ describe('Users', async () => {
       });
       await user1.destroy();
       await org1.destroy();
-      await system1.destroy();
+      await orgSystem1.destroy();
     });
     it('should resolve CAS principal attributes (using UUID)', async () => {
-      const system1 = await System.create({ name: 'LibreTextsMain', logo: '' });
-      const org1 = await Organization.create({ name: 'LibreTexts', system_id: system1.id });
+      const orgSystem1 = await OrganizationSystem.create({ name: 'LibreTextsMain', logo: '' });
+      const org1 = await Organization.create({ name: 'LibreTexts', system_id: orgSystem1.id });
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
@@ -323,7 +323,7 @@ describe('Users', async () => {
           name: 'LibreTexts',
           logo: null,
           system: {
-            id: system1.id,
+            id: orgSystem1.id,
             name: 'LibreTextsMain',
             logo: '',
           },
@@ -335,7 +335,7 @@ describe('Users', async () => {
       });
       await user1.destroy();
       await org1.destroy();
-      await system1.destroy();
+      await orgSystem1.destroy();
     });
   });
 

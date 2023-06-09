@@ -19,10 +19,10 @@ export const API_USERS_PERMISSIONS = [
   'domains:write',
   'organizations:read',
   'organizations:write',
+  'organization_systems:read',
+  'organization_systems:write',
   'services:read',
   'services:write',
-  'systems:read',
-  'systems:write',
   'users:read',
   'users:write',
 ] as const;

@@ -9,7 +9,7 @@ import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
 import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
-import { System } from './System';
+import { OrganizationSystem } from './OrganizationSystem';
 import { User } from './User';
 import { UserOrganization } from './UserOrganization';
 
@@ -38,7 +38,7 @@ sequelize.addModels([
   OrganizationDomain,
   ResetPasswordToken,
   Service,
-  System,
+  OrganizationSystem,
   User,
   UserOrganization,
 ]);
@@ -107,7 +107,7 @@ export {
   OrganizationDomain,
   ResetPasswordToken,
   Service,
-  System,
+  OrganizationSystem,
   User,
   UserOrganization,
 };

@@ -13,7 +13,7 @@ import { Alias } from './Alias';
 import { Domain } from './Domain';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
-import { System } from './System';
+import { OrganizationSystem } from './OrganizationSystem';
 import { User } from './User';
 import { UserOrganization } from './UserOrganization';
 
@@ -30,12 +30,12 @@ export class Organization extends Model {
   @Column(DataType.STRING)
   declare logo?: string;
 
-  @ForeignKey(() => System)
+  @ForeignKey(() => OrganizationSystem)
   @Column(DataType.INTEGER)
   declare system_id?: number;
 
-  @BelongsTo(() => System)
-  system?: System;
+  @BelongsTo(() => OrganizationSystem)
+  system?: OrganizationSystem;
 
   @BelongsToMany(() => Alias, () => OrganizationAlias)
   aliases?: Array<Alias & { OrganizationAlias: OrganizationAlias }>;

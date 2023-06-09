@@ -4,7 +4,7 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { server } from '..';
-import { APIUser, APIUserPermissionConfig, Organization, Service, System, User, UserOrganization } from '../models';
+import { APIUser, APIUserPermissionConfig, Organization, OrganizationSystem, Service, User, UserOrganization } from '../models';
 
 describe('Permissions', async () => {
   let mainAPIUser: APIUser;
@@ -16,7 +16,7 @@ describe('Permissions', async () => {
   let user1: User;
   let libreTexts: Organization;
   let org1: Organization;
-  let system1: System;
+  let orgSystem1: OrganizationSystem;
   let service1: Service;
   before(async () => {
     mainAPIUserHashedPassword = await bcrypt.hash(mainAPIUserPassword, 10);
@@ -40,7 +40,7 @@ describe('Permissions', async () => {
     });
     libreTexts = await Organization.create({ name: 'LibreTexts' });
     org1 = await Organization.create({ name: 'Organization1' });
-    system1 = await System.create({ name: 'System1', logo: '' });
+    orgSystem1 = await OrganizationSystem.create({ name: 'System1', logo: '' });
     service1 = await Service.create({
       body: '',
       evaluation_Order: 1,
@@ -53,7 +53,7 @@ describe('Permissions', async () => {
     await APIUser.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
-    await System.destroy({ where: {} });
+    await OrganizationSystem.destroy({ where: {} });
     await Service.destroy({ where: {} });
     if (server?.listening) {
       server.close();
@@ -137,13 +137,13 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'DENY' });
       });
-      it('should not allow user to edit a System', async () => {
+      it('should not allow user to edit an OrganizationSystem', async () => {
         const response = await request(server)
           .post('/api/v1/permissions/check')
           .send({
             userUUID: user1.uuid,
-            resourceType: 'System',
-            resourceID: system1.id,
+            resourceType: 'OrganizationSystem',
+            resourceID: orgSystem1.id,
             action: 'WRITE',
           })
           .auth(mainAPIUserUsername, mainAPIUserPassword);
@@ -293,13 +293,13 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'DENY' });
       });
-      it('should not allow org admin to edit a System', async () => {
+      it('should not allow org admin to edit a OrganizationSystem', async () => {
         const response = await request(server)
           .post('/api/v1/permissions/check')
           .send({
             userUUID: orgAdmin.uuid,
-            resourceType: 'System',
-            resourceID: system1.id,
+            resourceType: 'OrganizationSystem',
+            resourceID: orgSystem1.id,
             action: 'WRITE',
           })
           .auth(mainAPIUserUsername, mainAPIUserPassword);
@@ -370,7 +370,7 @@ describe('Permissions', async () => {
         });
         orgWithSystem = await Organization.create({
           name: 'OrganizationWithSystem',
-          system_id: system1.id,
+          system_id: orgSystem1.id,
         });
         await UserOrganization.create({
           user_id: orgSysAdmin.uuid,
@@ -398,10 +398,10 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'ALLOW' });
       });
-      it('should allow org system admin to edit another Organization in the System', async () => {
+      it('should allow org system admin to edit another Organization in the OrganizationSystem', async () => {
         const org2 = await Organization.create({
           name: 'Organization2',
-          system_id: system1.id,
+          system_id: orgSystem1.id,
         });
 
         const response = await request(server)
@@ -432,7 +432,7 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'DENY' });
       });
-      it('should not allow org system admin to edit Organization not in the System', async () => {
+      it('should not allow org system admin to edit Organization not in the OrganizationSystem', async () => {
         const org2 = await Organization.create({ name: 'Organization2' });
 
         const response = await request(server)
@@ -450,13 +450,13 @@ describe('Permissions', async () => {
 
         await org2.destroy();
       });
-      it('should not allow org system admin to edit the System', async () => {
+      it('should not allow org system admin to edit the OrganizationSystem', async () => {
         const response = await request(server)
           .post('/api/v1/permissions/check')
           .send({
             userUUID: orgSysAdmin.uuid,
-            resourceType: 'System',
-            resourceID: system1.id,
+            resourceType: 'OrganizationSystem',
+            resourceID: orgSystem1.id,
             action: 'WRITE',
           })
           .auth(mainAPIUserUsername, mainAPIUserPassword);
@@ -615,13 +615,13 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'ALLOW' });
       });
-      it('should allow super admin to edit any System', async () => {
+      it('should allow super admin to edit any OrganizationSystem', async () => {
         const response = await request(server)
           .post('/api/v1/permissions/check')
           .send({
             userUUID: superAdmin.uuid,
-            resourceType: 'System',
-            resourceID: system1.id,
+            resourceType: 'OrganizationSystem',
+            resourceID: orgSystem1.id,
             action: 'WRITE',
           })
           .auth(mainAPIUserUsername, mainAPIUserPassword);

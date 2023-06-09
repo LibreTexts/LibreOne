@@ -76,13 +76,13 @@ describe('API Users', async () => {
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
     it('should create an API User (with permissions)', async () => {
-      const permissionsInput = ['organizations:write', 'systems:write', 'users:read'];
+      const permissionsInput = ['organizations:write', 'organization_systems:write', 'users:read'];
       const response = await request(server)
         .post('/api/v1/api-users/')
         .send({
           username: 'test2',
           password: 'test2password',
-          permissions: ['organizations:write', 'systems:write', 'users:read'],
+          permissions: permissionsInput,
         })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
       expect(response.status).to.equal(201);
@@ -125,7 +125,7 @@ describe('API Users', async () => {
 
   describe('READ', () => {
     it('should retrieve a single API User', async () => {
-      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'organization_systems:read', 'users:read'];
       const newUser = await APIUser.create({
         username: 'test4',
         password: (await bcrypt.hash('test4password', 10)),
@@ -148,7 +148,7 @@ describe('API Users', async () => {
       await APIUserPermissionConfig.destroy({ where: { api_user_id: newUser?.id }});
     });
     it('should retrieve all API Users', async () => {
-      const permissionsInput1: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput1: APIUserPermission[] = ['organizations:read', 'organization_systems:read', 'users:read'];
       const permissionsInput2: APIUserPermission[] = ['api_users:read', 'services:read', 'users:read'];
       const [newUser1, newUser2] = await Promise.all([
         APIUser.create({
@@ -282,7 +282,7 @@ describe('API Users', async () => {
       await updatedUser?.destroy();
     });
     it('should update API User permissions', async () => {
-      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'organization_systems:read', 'users:read'];
       const newPermissionsInput: APIUserPermission[] = ['organizations:write', 'domains:write'];
       const newUser = await APIUser.create({
         username: 'test10',
@@ -308,7 +308,7 @@ describe('API Users', async () => {
       await updatedConfig?.destroy();
     });
     it('should remove API User permissions if empty array given', async () => {
-      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'organization_systems:read', 'users:read'];
       const newUser = await APIUser.create({
         username: 'test11',
         password: (await bcrypt.hash('test11password', 10)),
@@ -336,7 +336,7 @@ describe('API Users', async () => {
 
   describe('DELETE', () => {
     it('should delete API User and Permission Config', async () => {
-      const permissionsInput: APIUserPermission[] = ['organizations:read', 'systems:read', 'users:read'];
+      const permissionsInput: APIUserPermission[] = ['organizations:read', 'organization_systems:read', 'users:read'];
       const user1 = await APIUser.create({
         username: 'test12',
         password: (await bcrypt.hash('test12password', 10)),

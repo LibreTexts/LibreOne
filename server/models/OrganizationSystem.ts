@@ -3,9 +3,9 @@ import { Organization } from './Organization';
 
 @Table({
   timestamps: true,
-  tableName: 'systems',
+  tableName: 'organization_systems',
 })
-export class System extends Model {
+export class OrganizationSystem extends Model {
   @AllowNull(false)
   @Column(DataType.STRING)
   declare name: string;

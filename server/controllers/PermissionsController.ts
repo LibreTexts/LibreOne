@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { CheckPermissionBody } from '../types/permissions';
-import { Organization, System, User } from '../models';
+import { Organization, OrganizationSystem, User } from '../models';
 import errors from '../errors';
 
 export enum PermissionsActionsEnum {
@@ -10,8 +10,8 @@ export enum PermissionsActionsEnum {
 export enum PermissionsResourcesEnum {
   APIUser = 'APIUser',
   Organization = 'Organization',
+  OrganizationSystem = 'OrganizationSystem',
   Service = 'Service',
-  System = 'System',
   User = 'User',
 }
 export enum ReservedRoleEnum {
@@ -35,7 +35,7 @@ export class PermissionsController {
   }
 
   private async isOrganizationSystemAdministrator(user: User, system_id: number): Promise<boolean> {
-    const foundSystem = await System.findOne({
+    const foundSystem = await OrganizationSystem.findOne({
       where: { id: system_id },
       include: [{
         model: Organization,
@@ -95,7 +95,7 @@ export class PermissionsController {
         case 'Service':
           hasPermission = this.isOmnipotent(foundUser);
           break;
-        case 'System':
+        case 'OrganizationSystem':
           hasPermission = true; // all roles
           break;
         case 'User':
@@ -123,7 +123,7 @@ export class PermissionsController {
         case 'Service':
           hasPermission = this.isOmnipotent(foundUser);
           break;
-        case 'System':
+        case 'OrganizationSystem':
           hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
           break;
         case 'User':
