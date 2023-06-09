@@ -1,48 +1,49 @@
 import express from 'express';
-import * as AuthController from '../controllers/AuthController';
+import { AuthController } from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
 import { validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const authRouter = express.Router();
+const controller = new AuthController();
 
 authRouter.route('/register').post(
   validate(AuthValidator.registerSchema, 'body'),
-  catchInternal(AuthController.register),
+  catchInternal((req, res) => controller.register(req, res)),
 );
 
 authRouter.route('/verify-email').post(
   validate(AuthValidator.verifyEmailSchema, 'body'),
-  catchInternal(AuthController.verifyRegistrationEmail),
+  catchInternal((req, res) => controller.verifyRegistrationEmail(req, res)),
 );
 
 authRouter.route('/complete-registration').post(
   verifyAPIAuthentication,
-  catchInternal(AuthController.completeRegistration),
+  catchInternal((req, res) => controller.completeRegistration(req, res)),
 );
 
 authRouter.route('/login').get(
   validate(AuthValidator.initLoginQuerySchema, 'query'),
-  catchInternal(AuthController.initLogin),
+  catchInternal((req, res) => controller.initLogin(req, res)),
 );
 
 authRouter.route('/cas-callback').get(
   validate(AuthValidator.completeLoginSchema, 'query'),
-  catchInternal(AuthController.completeLogin),
+  catchInternal((req, res) => controller.completeLogin(req, res)),
 );
 
 authRouter.route('/logout').get(
-  catchInternal(AuthController.logout),
+  catchInternal((req, res) => controller.logout(req, res)),
 );
 
 authRouter.route('/passwordrecovery').post(
   validate(AuthValidator.initResetPasswordSchema, 'body'),
-  catchInternal(AuthController.sendResetPasswordLink),
+  catchInternal((req, res) => controller.sendResetPasswordLink(req, res)),
 );
 
 authRouter.route('/passwordrecovery/complete').post(
   validate(AuthValidator.resetPasswordSchema, 'body'),
-  catchInternal(AuthController.resetPassword),
+  catchInternal((req, res) =>  controller.resetPassword(req, res)),
 );
 
 export {

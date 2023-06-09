@@ -1,9 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
-import {
-  checkAuthCookies,
-  extractUserFromToken,
-} from './controllers/AuthController';
+import { AuthController } from './controllers/AuthController';
 import { APIUserController } from './controllers/APIUserController';
 import errors from './errors';
 import { APIUserPermission } from './types/apiusers';
@@ -24,7 +21,7 @@ type AsyncMiddleware = (request: Request, response: Response, next: NextFunction
  * @returns The result of the next middleware, or an error response.
  */
 export async function verifyTokenAuthentication(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
-  const { expired, isAuthenticated, userUUID } = await extractUserFromToken(req);
+  const { expired, isAuthenticated, userUUID } = await AuthController.extractUserFromToken(req);
   if (isAuthenticated && userUUID) {
     req.isAuthenticated = true;
     req.userUUID = userUUID;
@@ -80,7 +77,7 @@ export async function verifyBasicAuthorization(req: Request, res: Response, next
  * @returns The result of the next middleware, or a fulfilled error response.
  */
 export async function verifyAPIAuthentication(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
-  if (checkAuthCookies(req)) {
+  if (AuthController.checkAuthCookies(req)) {
     return verifyTokenAuthentication(req, res, next);
   }
   if (req.headers.authorization) {

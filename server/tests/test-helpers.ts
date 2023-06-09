@@ -1,4 +1,4 @@
-import { createSessionJWT, splitSessionJWT } from '../controllers/AuthController';
+import { AuthController } from '../controllers/AuthController';
 
 /**
  * Creates session cookies for use with superagent test requests.
@@ -7,7 +7,7 @@ import { createSessionJWT, splitSessionJWT } from '../controllers/AuthController
  * @returns Cookie strings for use in superagent requests.
  */
 export async function createSessionCookiesForTest(uuid: string): Promise<[string, string]> {
-  const sessionJWT = await createSessionJWT(uuid);
-  const [access, signed] = splitSessionJWT(sessionJWT);
+  const sessionJWT = await AuthController.createSessionJWT(uuid);
+  const [access, signed] = AuthController.splitSessionJWT(sessionJWT);
   return [`one_access=${access}`, `one_signed=${signed}`];
 }

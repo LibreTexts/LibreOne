@@ -14,7 +14,7 @@ import { connectDatabase } from './models';
 import { APIRouter } from './routes';
 import type { Request, Response, NextFunction } from 'express';
 import type { PageContextInitCustom } from '@renderer/types';
-import { verifyClientAuthentication } from './controllers/AuthController';
+import { AuthController } from './controllers/AuthController';
 import { getUserInternal } from './controllers/UserController';
 import { getProductionURL } from './helpers';
 
@@ -47,7 +47,7 @@ if (isProduction) {
 
 const clientRouter = express.Router();
 clientRouter.route('*').get(async (req: Request, res: Response, next: NextFunction) => {
-  const { expired, isAuthenticated, userUUID } = await verifyClientAuthentication(req);
+  const { expired, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
   let user;
   if (isAuthenticated && userUUID) {
     user = await getUserInternal(userUUID);
