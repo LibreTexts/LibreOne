@@ -3,7 +3,7 @@ import { escapeInject } from 'vite-plugin-ssr';
 import { createApp } from './app';
 import faviconURL from './favicon.ico';
 import type { PageContextServer } from './types';
-import { getUserInternal } from '@server/controllers/UserController';
+import { UserController } from '../server/controllers/UserController';
 
 export const passToClient = ['pageProps', 'urlPathname', 'locale', 'user'];
 
@@ -15,9 +15,10 @@ export const passToClient = ['pageProps', 'urlPathname', 'locale', 'user'];
  * @returns New pageContext object with any applicable user information.
  */
 export async function onBeforeRender(pageContext: PageContextServer) {
-  let user = null;
+  let user: Record<string, string> | null = null;
   if (pageContext.isAuthenticated && pageContext.user?.uuid) {
-    user = await getUserInternal(pageContext.user.uuid);
+    const userController = new UserController();
+    user = await userController.getUserInternal(pageContext.user.uuid);
   }
   return {
     pageContext: {
