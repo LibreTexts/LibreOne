@@ -1,3 +1,5 @@
+import { IncomingHttpHeaders } from 'http';
+
 export type TokenAuthenticationVerificationResult = {
   expired: boolean;
   isAuthenticated: boolean;
@@ -12,6 +14,15 @@ export type RegisterBody = {
 export type VerifyEmailBody = {
   email: string;
   code: number;
+};
+
+export type CreateUserFromExternalIdPHeaders = IncomingHttpHeaders & {
+  clientname: string;
+  principalattributes: string;
+  principalid: string;
+  profileattributes: string;
+  profileid: string;
+  profiletypeid: string;
 };
 
 export type InitLoginQuery = {

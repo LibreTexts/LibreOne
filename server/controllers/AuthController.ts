@@ -2,7 +2,7 @@ import axios from 'axios';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
-import { CompactEncrypt, SignJWT, jwtVerify } from 'jose';
+import { CompactEncrypt, createRemoteJWKSet, SignJWT, jwtVerify } from 'jose';
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
@@ -15,6 +15,7 @@ import { CookieOptions, Request, Response } from 'express';
 import type {
   RegisterBody,
   VerifyEmailBody,
+  CreateUserFromExternalIdPHeaders,
   CompleteLoginQuery,
   InitLoginQuery,
   InitResetPasswordBody,
@@ -42,6 +43,29 @@ export class AuthController {
    */
   static checkAuthCookies(req: Request): boolean {
     return Object.hasOwn(req.cookies, 'one_access') && Object.hasOwn(req.cookies, 'one_signed');
+  }
+
+  /**
+   * Parses a header from CAS (in key=value) string format into an object.
+   *
+   * @param header - The header string to parse.
+   * @returns The parsed key-value pair(s).
+   */
+  static parseCASKeyValueHeader(header: string) {
+    const headerObject: Record<string, string> = {};
+    const regex = /(\w+)=\[(.*?)\]/g;
+    let match;
+    while ((match = regex.exec(header)) !== null) {
+      const key = match[1];
+      let value = match[2];
+      if (value.includes(',')) {
+        value = value.split(',').map((v) => v.replace(/['"]/g, '').trim());
+      } else {
+        value = value.replace(/['"]/g, '');
+      }
+      headerObject[key] = value;
+    }
+    return headerObject;
   }
 
   /**
@@ -304,6 +328,75 @@ export class AuthController {
         uuid: foundUser.uuid,
       },
     });
+  }
+
+  /**
+   * Creates a new user via a request from CAS to authenticate using an external identity
+   * provider (e.g. Microsoft Active Directory).
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async createUserFromExternalIdentityProvider(req: Request, res: Response): Promise<Response> {
+    const headers = req.headers as CreateUserFromExternalIdPHeaders;
+    const userData = {
+      clientname: headers.clientname,
+      userSub: headers.principalid,
+      principalattributes: AuthController.parseCASKeyValueHeader(headers.principalattributes),
+      profileattributes: AuthController.parseCASKeyValueHeader(headers.profileattributes),
+    };
+
+    if (userData.clientname === 'MicrosoftActiveDirectory') {
+      const microsoftURL = 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
+      const microsoftConfig = await axios.get(microsoftURL);
+      const jwksURI = microsoftConfig.data.jwks_uri;
+
+      const jwks = createRemoteJWKSet(new URL (jwksURI));
+      const { payload } = await jwtVerify(userData.principalattributes.id_token, jwks, {
+        issuer: userData.principalattributes.iss,
+        audience: userData.principalattributes.aud,
+      });
+
+      let givenName = payload.given_name;
+      let familyName = payload.family_name;
+      if ((!givenName || !familyName) && payload.name) {
+        const nameSplit = (payload.name as string).split(' ');
+        if (nameSplit.length > 1) {
+          givenName = nameSplit[0];
+          familyName = nameSplit.slice(1).join(' ');
+        }
+      }
+
+      const foundUser = await User.findOne({ where: { external_subject_id: payload.sub } });
+      if (!foundUser) {
+        await User.create({
+          uuid: uuidv4(),
+          external_subject_id: payload.sub,
+          email: payload.upn,
+          first_name: givenName,
+          last_name: familyName,
+          active: true,
+          enabled: true,
+          legacy: false,
+          ip_address: payload.ipaddr,
+          verify_status: 'not_attempted',
+          external_idp: userData.clientname,
+          last_access: new Date(),
+        });
+      } else {
+        await foundUser.update({
+          email: payload.upn,
+          first_name: givenName,
+          last_name: familyName,
+          ip_address: payload.ipaddr,
+          last_access: new Date(),
+        });
+      }
+      return res.status(200).send({});
+    }
+
+    return errors.badRequest(res);
   }
 
   /**

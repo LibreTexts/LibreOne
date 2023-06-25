@@ -1,7 +1,7 @@
 import express from 'express';
 import { AuthController } from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
-import { validate, verifyAPIAuthentication } from '../middleware';
+import { ensureActorIsAPIUser, ensureAPIUserHasPermission, validate, verifyAPIAuthentication } from '../middleware';
 import { catchInternal } from '../helpers';
 
 const authRouter = express.Router();
@@ -20,6 +20,13 @@ authRouter.route('/verify-email').post(
 authRouter.route('/complete-registration').post(
   verifyAPIAuthentication,
   catchInternal((req, res) => controller.completeRegistration(req, res)),
+);
+
+authRouter.route('/external-provision').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write']),
+  catchInternal((req, res) => controller.createUserFromExternalIdentityProvider(req, res)),
 );
 
 authRouter.route('/login').get(

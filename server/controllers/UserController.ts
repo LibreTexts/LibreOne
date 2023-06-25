@@ -218,12 +218,18 @@ export class UserController {
    */
   public async resolvePrincipalAttributes(req: Request, res: Response): Promise<Response> {
     const { username } = req.query as ResolvePrincipalAttributesQuery;
-  
+    
     // Decide which attribute to match a record with
-    let attrMatch: Record<string, string> = { email: username };
-    if (UUID_V4_REGEX.test(username)) {
-      attrMatch = { uuid: username };
-    }
+    const getAttrMatchKey = (username) => {
+      if (username.includes('@')) {
+        return 'email';
+      }
+      if (UUID_V4_REGEX.test(username)) {
+        return 'uuid';
+      }
+      return 'external_subject_id';
+    };
+    const attrMatch = { [getAttrMatchKey(username)]: username };
   
     const foundUser = await User.findOne({
       where: {
