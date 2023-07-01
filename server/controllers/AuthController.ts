@@ -9,6 +9,7 @@ import { Agent } from 'https';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { ResetPasswordToken, sequelize, User } from '../models';
 import { MailController } from './MailController';
+import { DEFAULT_AVATAR } from './UserController';
 import { getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
@@ -347,56 +348,76 @@ export class AuthController {
       profileattributes: AuthController.parseCASKeyValueHeader(headers.profileattributes),
     };
 
-    if (userData.clientname === 'MicrosoftActiveDirectory') {
-      const microsoftURL = 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
-      const microsoftConfig = await axios.get(microsoftURL);
-      const jwksURI = microsoftConfig.data.jwks_uri;
-
-      const jwks = createRemoteJWKSet(new URL (jwksURI));
-      const { payload } = await jwtVerify(userData.principalattributes.id_token, jwks, {
-        issuer: userData.principalattributes.iss,
-        audience: userData.principalattributes.aud,
-      });
-
-      let givenName = payload.given_name;
-      let familyName = payload.family_name;
-      if ((!givenName || !familyName) && payload.name) {
-        const nameSplit = (payload.name as string).split(' ');
-        if (nameSplit.length > 1) {
-          givenName = nameSplit[0];
-          familyName = nameSplit.slice(1).join(' ');
-        }
+    const getDiscoveryURI = (clientName: string): string => {
+      switch (clientName) {
+        case 'GoogleWorkspace':
+          return 'https://accounts.google.com/.well-known/openid-configuration';
+        case 'MicrosoftActiveDirectory':
+          return 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
+        default:
+          return 'INVALID_URI';
       }
+    };
 
-      const foundUser = await User.findOne({ where: { external_subject_id: payload.sub } });
-      if (!foundUser) {
-        await User.create({
-          uuid: uuidv4(),
-          external_subject_id: payload.sub,
-          email: payload.upn,
-          first_name: givenName,
-          last_name: familyName,
-          active: true,
-          enabled: true,
-          legacy: false,
-          ip_address: payload.ipaddr,
-          verify_status: 'not_attempted',
-          external_idp: userData.clientname,
-          last_access: new Date(),
-        });
-      } else {
-        await foundUser.update({
-          email: payload.upn,
-          first_name: givenName,
-          last_name: familyName,
-          ip_address: payload.ipaddr,
-          last_access: new Date(),
-        });
+    const discoveryURI = getDiscoveryURI(userData.clientname);
+    const discoveryConfig = await axios.get(discoveryURI);
+    const jwksURI = discoveryConfig.data.jwks_uri;
+    const jwks = createRemoteJWKSet(new URL (jwksURI));
+    const { payload } = await jwtVerify(userData.principalattributes.id_token, jwks, {
+      issuer: userData.principalattributes.iss,
+      audience: userData.principalattributes.aud,
+    });
+
+    let givenName = payload.given_name as string;
+    let familyName = payload.family_name as string;
+    if ((!givenName || !familyName) && payload.name) {
+      const nameSplit = (payload.name as string).split(' ');
+      if (nameSplit.length > 1) {
+        givenName = nameSplit[0];
+        familyName = nameSplit.slice(1).join(' ');
       }
-      return res.status(200).send({});
     }
 
-    return errors.badRequest(res);
+    const getEmailPayloadField = (clientName: string): string => {
+      switch (clientName) {
+        case 'GoogleWorkspace':
+          return 'email';
+        case 'MicrosoftActiveDirectory':
+          return 'upn';
+        default:
+          return 'INVALID_FIELD';
+      }
+    };
+
+    const foundUser = await User.findOne({ where: { external_subject_id: payload.sub } });
+    if (!foundUser) {
+      await User.create({
+        uuid: uuidv4(),
+        external_subject_id: payload.sub,
+        email: payload[getEmailPayloadField(userData.clientname)],
+        first_name: givenName.trim(),
+        last_name: familyName.trim(),
+        avatar: payload.picture || DEFAULT_AVATAR,
+        active: true,
+        enabled: true,
+        legacy: false,
+        ip_address: payload.ipaddr,
+        verify_status: 'not_attempted',
+        external_idp: userData.clientname,
+        last_access: new Date(),
+      });
+    } else {
+      await foundUser.update({
+        email: payload[getEmailPayloadField(userData.clientname)],
+        first_name: givenName.trim(),
+        last_name: familyName.trim(),
+        avatar: payload.picture || DEFAULT_AVATAR,
+        ip_address: payload.ipaddr,
+        last_access: new Date(),
+      });
+    }
+
+    return res.status(200).send({});
   }
 
   /**
