@@ -3,6 +3,7 @@ import {
   BelongsToMany,
   Column,
   DataType,
+  Default,
   DefaultScope,
   Index,
   Model,
@@ -53,8 +54,9 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare active: boolean;
 
+  @Default(false)
   @Column(DataType.BOOLEAN)
-  declare enabled: boolean;
+  declare expired: boolean;
 
   @Column(DataType.BOOLEAN)
   declare legacy: boolean;

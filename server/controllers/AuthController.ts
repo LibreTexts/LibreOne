@@ -196,7 +196,7 @@ export class AuthController {
         first_name: 'LibreTexts',
         last_name: 'User',
         active: false,
-        enabled: false,
+        expired: false,
         legacy: false,
         ip_address: ip,
         verify_status: 'not_attempted',
@@ -282,12 +282,11 @@ export class AuthController {
   public async completeRegistration(req: Request, res: Response): Promise<Response | void> {
     const { userUUID } = req;
     const foundUser = await User.findOne({ where: { uuid: userUUID }});
-    if (!foundUser || foundUser.active || foundUser.enabled) {
+    if (!foundUser || foundUser.active || foundUser.expired) {
       return errors.badRequest(res);
     }
 
     foundUser.active = true;
-    foundUser.enabled = true;
     await foundUser.save();
 
     // create SSO session tokens
@@ -399,7 +398,7 @@ export class AuthController {
         last_name: familyName.trim(),
         avatar: payload.picture || DEFAULT_AVATAR,
         active: true,
-        enabled: true,
+        expired: false,
         legacy: false,
         ip_address: payload.ipaddr,
         verify_status: 'not_attempted',

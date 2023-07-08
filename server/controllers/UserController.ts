@@ -130,7 +130,7 @@ export class UserController {
         [Op.and]: [
           { uuid },
           { active: true },
-          { enabled: true },
+          { expired: false },
         ],
       },
       include: [{
@@ -148,7 +148,7 @@ export class UserController {
   }
   
   /**
-   * Retrieves all active and enabled users (with pagination).
+   * Retrieves all active and unexpired users (with pagination).
    *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
@@ -163,7 +163,7 @@ export class UserController {
       where: {
         [Op.and]: [
           { active: true },
-          { enabled: true },
+          { expired: false },
         ],
       },
       include: [{
@@ -236,7 +236,7 @@ export class UserController {
         [Op.and]: [
           attrMatch,
           { active: true },
-          { enabled: true },
+          { expired: false },
         ],
       },
       include: [{

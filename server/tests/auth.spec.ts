@@ -111,9 +111,9 @@ describe('Authentication and Authorization', async () => {
       expect(response.get('Set-Cookie')).to.be.an('array').with.length(1);
 
       const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
-      expect(_.pick(updatedUser?.get(), ['active', 'enabled'])).to.deep.equal({
+      expect(_.pick(updatedUser?.get(), ['active', 'expired'])).to.deep.equal({
         active: true,
-        enabled: true,
+        expired: false,
       });
       await user1.destroy();
     });

@@ -54,7 +54,7 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
 
       const response = await request(server)
@@ -74,7 +74,7 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
@@ -103,7 +103,7 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
       await UserOrganization.bulkCreate([
         { user_id: user1.uuid, organization_id: org1.id },
@@ -141,13 +141,13 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
       const user2 = await User.create({
         uuid: uuidv4(),
         email: 'info+1@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
 
       const response = await request(server)
@@ -173,12 +173,12 @@ describe('Users', async () => {
           uuid: uuidv4(),
           email: 'info@libretexts.org',
           active: true,
-          enabled: true,
+          expired: false,
         }, {
           uuid: uuidv4(),
           email: 'info+1@libretexts.org',
           active: true,
-          enabled: true,
+          expired: false,
         },
       ]);
       await UserOrganization.bulkCreate([
@@ -224,7 +224,7 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
       await UserOrganization.bulkCreate([
         { user_id: user1.uuid, organization_id: org1.id },
@@ -256,7 +256,7 @@ describe('Users', async () => {
         first_name: 'Info',
         last_name: 'LibreTexts',
         active: true,
-        enabled: true,
+        expired: false,
         user_type: 'instructor',
         verify_status: 'not_attempted',
       });
@@ -301,7 +301,7 @@ describe('Users', async () => {
         first_name: 'Info',
         last_name: 'LibreTexts',
         active: true,
-        enabled: true,
+        expired: false,
         user_type: 'instructor',
         verify_status: 'not_attempted',
       });
@@ -500,7 +500,7 @@ describe('Users', async () => {
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         active: true,
-        enabled: true,
+        expired: false,
       });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
 
