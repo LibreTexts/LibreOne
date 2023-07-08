@@ -1,10 +1,12 @@
 import {
   AllowNull,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { AdminRole } from './AdminRole';
 import { Organization } from './Organization';
@@ -28,4 +30,10 @@ export class UserOrganization extends Model {
   @ForeignKey(() => AdminRole)
   @Column(DataType.STRING)
   declare admin_role: string;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

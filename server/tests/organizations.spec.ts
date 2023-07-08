@@ -19,7 +19,7 @@ describe('Organizations', async () => {
   let mainAPIUserUsername: string;
   const mainAPIUserPassword = 'test-password';
 
-  const omitFields = ['createdAt', 'updatedAt'];
+  const omitFields = ['created_at', 'updated_at'];
   const defaultFields = (override?: Record<string, unknown>) => ({
     aliases: [],
     domains: [],
@@ -318,7 +318,7 @@ describe('Organizations', async () => {
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}/aliases/${alias1.id}`);
       expect(response.status).to.equal(200);
-      expect(_.omit(response.body?.data, ['createdAt', 'updatedAt'])).to.have.deep.equal({
+      expect(_.omit(response.body?.data, ['created_at', 'updated_at'])).to.have.deep.equal({
         id: alias1.id,
         alias: 'Libre1',
       });
@@ -346,7 +346,7 @@ describe('Organizations', async () => {
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}/domains/${d1.id}`);
       expect(response.status).to.equal(200);
-      expect(_.omit(response.body?.data?.domain, ['createdAt', 'updatedAt'])).to.deep.equal({
+      expect(_.omit(response.body?.data?.domain, ['created_at', 'updated_at'])).to.deep.equal({
         id: d1.id,
         domain: 'libretexts.org',
       });
@@ -365,7 +365,7 @@ describe('Organizations', async () => {
 
       const response = await request(server).get(`/api/v1/organizations/${org.id}/domains`);
       expect(response.status).to.equal(200);
-      const domains = response.body.data.domains.map((a) => _.omit(a, ['createdAt', 'updatedAt']));
+      const domains = response.body.data.domains.map((a) => _.omit(a, ['created_at', 'updated_at']));
       expect(domains).to.have.deep.members([
         { id: d1.id, domain: 'libretexts.org' },
         { id: d2.id, domain: 'libretexts.net' },

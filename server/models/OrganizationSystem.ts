@@ -1,4 +1,13 @@
-import { AllowNull, Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  Column,
+  CreatedAt,
+  DataType,
+  HasMany,
+  Model,
+  Table,
+  UpdatedAt,
+} from 'sequelize-typescript';
 import { Organization } from './Organization';
 
 @Table({
@@ -16,6 +25,12 @@ export class OrganizationSystem extends Model {
 
   @HasMany(() => Organization)
   organizations: Organization[];
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 
   // TODO: Commons?
 }

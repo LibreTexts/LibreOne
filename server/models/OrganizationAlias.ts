@@ -1,10 +1,12 @@
 import {
   AllowNull,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { Alias } from './Alias';
 import { Organization } from './Organization';
@@ -23,4 +25,10 @@ export class OrganizationAlias extends Model {
   @AllowNull(false)
   @Column(DataType.INTEGER)
   declare alias_id: number;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

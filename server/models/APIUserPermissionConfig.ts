@@ -3,10 +3,12 @@ import {
   AllowNull,
   BelongsTo,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { APIUser } from './APIUser';
 
@@ -58,4 +60,10 @@ export class APIUserPermissionConfig extends Model {
 
   @Column(DataType.BOOLEAN)
   declare users_write: boolean;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

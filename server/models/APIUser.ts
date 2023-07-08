@@ -1,12 +1,14 @@
 import {
   AllowNull,
   Column,
+  CreatedAt,
   DataType,
   DefaultScope,
   HasOne,
   Index,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 
@@ -37,4 +39,10 @@ export class APIUser extends Model {
 
   @HasOne(() => APIUserPermissionConfig)
   permissions?: APIUserPermissionConfig;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

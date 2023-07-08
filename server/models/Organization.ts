@@ -3,11 +3,13 @@ import {
   BelongsTo,
   BelongsToMany,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Index,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { Alias } from './Alias';
 import { Domain } from './Domain';
@@ -45,6 +47,12 @@ export class Organization extends Model {
 
   @BelongsToMany(() => User, () => UserOrganization)
   users?: Array<User & { UserOrganization: UserOrganization }>;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 
   // TODO: Commons?
 }

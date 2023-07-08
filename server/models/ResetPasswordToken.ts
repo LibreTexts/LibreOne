@@ -2,11 +2,13 @@ import {
   AllowNull,
   BelongsTo,
   Column,
+  CreatedAt,
   DataType,
   ForeignKey,
   Model,
   PrimaryKey,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { User } from './User';
 
@@ -31,4 +33,10 @@ export class ResetPasswordToken extends Model {
   @AllowNull(false)
   @Column(DataType.BIGINT)
   declare expires_at: number;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

@@ -2,6 +2,7 @@ import {
   AllowNull,
   BelongsToMany,
   Column,
+  CreatedAt,
   DataType,
   Default,
   DefaultScope,
@@ -9,6 +10,7 @@ import {
   Model,
   PrimaryKey,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { Organization } from './Organization';
 import { UserOrganization } from './UserOrganization';
@@ -85,4 +87,10 @@ export class User extends Model {
 
   @Column(DataType.DATE)
   declare last_password_change: Date;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

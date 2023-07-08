@@ -2,10 +2,12 @@ import {
   AllowNull,
   BelongsToMany,
   Column,
+  CreatedAt,
   DataType,
   Index,
   Model,
   Table,
+  UpdatedAt,
 } from 'sequelize-typescript';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
@@ -22,4 +24,10 @@ export class Alias extends Model {
 
   @BelongsToMany(() => Organization, () => OrganizationAlias)
   organizations?: Array<Organization & { OrganizationAlias: OrganizationAlias }>;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }

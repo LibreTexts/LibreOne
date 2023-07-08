@@ -1,4 +1,13 @@
-import { AllowNull, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import {
+  AllowNull,
+  Column,
+  CreatedAt,
+  DataType,
+  ForeignKey,
+  Model,
+  Table,
+  UpdatedAt,
+} from 'sequelize-typescript';
 import { Domain } from './Domain';
 import { Organization } from './Organization';
 
@@ -16,4 +25,10 @@ export class OrganizationDomain extends Model {
   @AllowNull(false)
   @Column(DataType.INTEGER)
   declare domain_id: number;
+
+  @CreatedAt
+  declare created_at: Date;
+
+  @UpdatedAt
+  declare updated_at: Date;
 }
