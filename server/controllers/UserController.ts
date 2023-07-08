@@ -126,13 +126,7 @@ export class UserController {
     const { uuid } = req.params as UserUUIDParams;
   
     const foundUser = await User.findOne({
-      where: {
-        [Op.and]: [
-          { uuid },
-          { disabled: false },
-          { expired: false },
-        ],
-      },
+      where: { uuid },
       include: [{
         model: Organization,
         attributes: ['id', 'name', 'logo'],
@@ -148,7 +142,7 @@ export class UserController {
   }
   
   /**
-   * Retrieves all active and unexpired users (with pagination).
+   * Retrieves all users (of any status) with pagination.
    *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
@@ -160,12 +154,6 @@ export class UserController {
     const { count, rows } = await User.findAndCountAll({
       offset,
       limit,
-      where: {
-        [Op.and]: [
-          { disabled: false },
-          { expired: false },
-        ],
-      },
       include: [{
         model: Organization,
         attributes: ['id', 'name', 'logo'],

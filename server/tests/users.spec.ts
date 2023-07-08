@@ -172,13 +172,9 @@ describe('Users', async () => {
         {
           uuid: uuidv4(),
           email: 'info@libretexts.org',
-          disabled: false,
-          expired: false,
         }, {
           uuid: uuidv4(),
           email: 'info+1@libretexts.org',
-          disabled: false,
-          expired: false,
         },
       ]);
       await UserOrganization.bulkCreate([
