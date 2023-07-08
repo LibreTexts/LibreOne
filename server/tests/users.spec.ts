@@ -53,7 +53,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
 
@@ -73,7 +73,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });
@@ -102,7 +102,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
       await UserOrganization.bulkCreate([
@@ -140,13 +140,13 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
       const user2 = await User.create({
         uuid: uuidv4(),
         email: 'info+1@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
 
@@ -172,12 +172,12 @@ describe('Users', async () => {
         {
           uuid: uuidv4(),
           email: 'info@libretexts.org',
-          active: true,
+          disabled: false,
           expired: false,
         }, {
           uuid: uuidv4(),
           email: 'info+1@libretexts.org',
-          active: true,
+          disabled: false,
           expired: false,
         },
       ]);
@@ -223,7 +223,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
       await UserOrganization.bulkCreate([
@@ -255,7 +255,7 @@ describe('Users', async () => {
         email: 'info@libretexts.org',
         first_name: 'Info',
         last_name: 'LibreTexts',
-        active: true,
+        disabled: false,
         expired: false,
         user_type: 'instructor',
         verify_status: 'not_attempted',
@@ -300,7 +300,7 @@ describe('Users', async () => {
         email: 'info@libretexts.org',
         first_name: 'Info',
         last_name: 'LibreTexts',
-        active: true,
+        disabled: false,
         expired: false,
         user_type: 'instructor',
         verify_status: 'not_attempted',
@@ -499,7 +499,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        active: true,
+        disabled: false,
         expired: false,
       });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id });

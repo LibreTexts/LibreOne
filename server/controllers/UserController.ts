@@ -129,7 +129,7 @@ export class UserController {
       where: {
         [Op.and]: [
           { uuid },
-          { active: true },
+          { disabled: false },
           { expired: false },
         ],
       },
@@ -162,7 +162,7 @@ export class UserController {
       limit,
       where: {
         [Op.and]: [
-          { active: true },
+          { disabled: false },
           { expired: false },
         ],
       },
@@ -235,7 +235,7 @@ export class UserController {
       where: {
         [Op.and]: [
           attrMatch,
-          { active: true },
+          { disabled: false },
           { expired: false },
         ],
       },

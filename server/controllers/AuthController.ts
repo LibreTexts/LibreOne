@@ -195,7 +195,7 @@ export class AuthController {
         password: hashed,
         first_name: 'LibreTexts',
         last_name: 'User',
-        active: false,
+        disabled: true,
         expired: false,
         legacy: false,
         ip_address: ip,
@@ -259,6 +259,7 @@ export class AuthController {
     }
 
     foundUser.email_verify_code = null;
+    foundUser.disabled = false;
     await foundUser.save();
 
     // create a local session
@@ -282,12 +283,9 @@ export class AuthController {
   public async completeRegistration(req: Request, res: Response): Promise<Response | void> {
     const { userUUID } = req;
     const foundUser = await User.findOne({ where: { uuid: userUUID }});
-    if (!foundUser || foundUser.active || foundUser.expired) {
+    if (!foundUser) {
       return errors.badRequest(res);
     }
-
-    foundUser.active = true;
-    await foundUser.save();
 
     // create SSO session tokens
     const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
@@ -397,7 +395,7 @@ export class AuthController {
         first_name: givenName.trim(),
         last_name: familyName.trim(),
         avatar: payload.picture || DEFAULT_AVATAR,
-        active: true,
+        disabled: false,
         expired: false,
         legacy: false,
         ip_address: payload.ipaddr,

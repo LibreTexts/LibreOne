@@ -52,7 +52,7 @@ export class User extends Model {
   declare user_type?: string;
 
   @Column(DataType.BOOLEAN)
-  declare active: boolean;
+  declare disabled: boolean;
 
   @Default(false)
   @Column(DataType.BOOLEAN)
