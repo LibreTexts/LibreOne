@@ -196,7 +196,7 @@ describe('Authentication and Authorization', async () => {
       const now = new Date();
       now.setHours(now.getHours() - 1);
       const expires_at = Math.floor(now.getTime() / 1000);
-      await ResetPasswordToken.create({
+      const token1 = await ResetPasswordToken.create({
         token: tokenValue,
         expires_at,
         uuid: user1.uuid,
@@ -214,6 +214,7 @@ describe('Authentication and Authorization', async () => {
         code: 'bad_request',
       });
       
+      await token1.destroy();
       await user1.destroy();
     });
   });
