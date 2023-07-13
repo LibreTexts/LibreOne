@@ -30,6 +30,7 @@ export type GetAllOrganizationsQuery = {
   offset: number;
   limit: number;
   query?: string;
+  onlyUnassociated?: boolean;
 };
 
 export type UpdateOrganizationBody = {

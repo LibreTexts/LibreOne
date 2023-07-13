@@ -284,18 +284,32 @@ export class OrganizationController {
    * @returns The fulfilled API response.
    */
   public async getAllOrganizations(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query } = (req.query as unknown) as GetAllOrganizationsQuery;
+    const { offset, limit, query, onlyUnassociated } = (req.query as unknown) as GetAllOrganizationsQuery;
+
     const fuzzyQuery = query ? `%${query}%` : null;
-    const { count, rows } = await Organization.findAndCountAll({
-      ...(query && {
-        where: {
-          [Op.or]: [
-            { name: { [Op.like]: fuzzyQuery } },
-            { '$aliases.alias$': { [Op.like]: fuzzyQuery } },
-            { '$domains.domain$': { [Op.like]: fuzzyQuery } },
+    const queryCriteria = [
+      { name: { [Op.like]: fuzzyQuery } },
+      { '$aliases.alias$': { [Op.like]: fuzzyQuery } },
+      { '$domains.domain$': { [Op.like]: fuzzyQuery } },
+    ];
+    const unassociatedCriteria = { system_id: { [Op.is]: null } };
+    const whereSearch = query 
+      ? {
+        ...(onlyUnassociated ? {
+          [Op.and]: [
+            unassociatedCriteria,
+            { [Op.or]: queryCriteria },
           ],
-        },
-      }),
+        } : {
+          [Op.or]: queryCriteria,
+        }),
+      }
+      : onlyUnassociated
+        ? unassociatedCriteria
+        : null;
+
+    const { count, rows } = await Organization.findAndCountAll({
+      ...(whereSearch && { where: whereSearch }),
       offset,
       limit,
       order: sequelize.col('name'),

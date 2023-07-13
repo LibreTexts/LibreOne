@@ -12,6 +12,7 @@ import {
   Organization,
   OrganizationAlias,
   OrganizationDomain,
+  OrganizationSystem,
 } from '../models';
 
 describe('Organizations', async () => {
@@ -54,6 +55,7 @@ describe('Organizations', async () => {
   });
   afterEach(async () => {
     await Organization.destroy({ where: {} });
+    await OrganizationSystem.destroy({ where: {} });
     await Alias.destroy({ where: {} });
     await Domain.destroy({ where: {} });
   });
@@ -383,6 +385,76 @@ describe('Organizations', async () => {
         status: '404',
         code: 'not_found',
       });
+    });
+    it('should search organizations by name', async () => {
+      const [, org2, org3] = await Organization.bulkCreate([
+        { name: 'Bayshore Kindergarten' },
+        { name: 'Broad River College' },
+        { name: 'River Valley School of Fine Arts' },
+      ]);
+
+      const params = new URLSearchParams({ query: 'River' });
+      const response = await request(server).get(`/api/v1/organizations?${params.toString()}`);
+      expect(response.status).to.equal(200);
+      const data = response.body?.data;
+      const orgs = data.map((o) => _.pick(o, ['id', 'name']));
+      expect(orgs).to.deep.equal([
+        {
+          id: org2.id,
+          name: 'Broad River College',
+        },
+        {
+          id: org3.id,
+          name: 'River Valley School of Fine Arts',
+        },
+      ]);
+    });
+    it('should filter results to organizations not associated to a system', async () => {
+      const system1 = await OrganizationSystem.create({ name: 'System1', logo: '' });
+      const [, org2] = await Organization.bulkCreate([
+        { name: 'Org1', system_id: system1.id },
+        { name: 'Org2' },
+      ]);
+
+      const params = new URLSearchParams({ onlyUnassociated: 'true' });
+      const response = await request(server).get(`/api/v1/organizations?${params.toString()}`);
+      expect(response.status).to.equal(200);
+      const data = response.body?.data;
+      const orgs = data.map((o) => _.omit(o, omitFields));
+      expect(orgs).to.deep.equal([
+        {
+          id: org2.id,
+          name: 'Org2',
+          logo: null,
+          aliases: [],
+          domains: [],
+          system: null,
+        },
+      ]);
+    });
+    it('should search by name and filter to unassociated', async () => {
+      const system1 = await OrganizationSystem.create({ name: 'System1', logo: '' });
+      const [,, org3] = await Organization.bulkCreate([
+        { name: 'Bayshore Kindergarten' },
+        { name: 'Broad River College', system_id: system1.id },
+        { name: 'River Valley School of Fine Arts' },
+      ]);
+
+      const params = new URLSearchParams({ query: 'river', onlyUnassociated: 'true' });
+      const response = await request(server).get(`/api/v1/organizations?${params.toString()}`);
+      expect(response.status).to.equal(200);
+      const data = response.body?.data;
+      const orgs = data.map((o) => _.omit(o, omitFields));
+      expect(orgs).to.deep.equal([
+        {
+          id: org3.id,
+          name: 'River Valley School of Fine Arts',
+          logo: null,
+          aliases: [],
+          domains: [],
+          system: null,
+        },
+      ]);
     });
   });
 
