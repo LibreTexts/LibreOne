@@ -1,1 +1,1 @@
-export default "/security";
+export default '/security';
