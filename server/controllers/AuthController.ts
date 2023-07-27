@@ -480,7 +480,7 @@ export class AuthController {
     const uuid = validData.serviceResponse.authenticationSuccess.user;
     await this.createAndAttachLocalSession(res, uuid);
 
-    let redirectURI = '/dashboard';
+    let redirectURI = '/profile';
     if (req.cookies.cas_state) {
       try {
         const cas_state = JSON.parse(req.cookies.cas_state);

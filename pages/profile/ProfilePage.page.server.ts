@@ -9,7 +9,7 @@ import type { PageContextServer } from '@renderer/types';
 export async function onBeforeRender(pageContext: PageContextServer) {
   let redirectTo: string | null = null;
   if (!pageContext.user) {
-    const params = new URLSearchParams({ redirectURI: '/dashboard' });
+    const params = new URLSearchParams({ redirectURI: '/profile' });
     redirectTo = `/api/v1/auth/login?${params}`;
   }
   return {
