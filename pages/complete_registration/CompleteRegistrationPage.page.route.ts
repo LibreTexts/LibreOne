@@ -1,1 +1,1 @@
-export default '/complete-registration';
+export default '/complete-registration/*';

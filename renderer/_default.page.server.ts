@@ -5,7 +5,7 @@ import faviconURL from './favicon.ico';
 import type { PageContextServer } from './types';
 import { UserController } from '../server/controllers/UserController';
 
-export const passToClient = ['pageProps', 'urlPathname', 'locale', 'user'];
+export const passToClient = ['pageProps', 'urlPathname', 'locale', 'user', 'routeParams'];
 
 /**
  * Retrieves the currently authenticated user (if applicable) and inserts their basic

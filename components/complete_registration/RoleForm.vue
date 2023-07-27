@@ -4,7 +4,7 @@
     :aria-busy="loading"
   >
     <h1 class="text-center text-3xl font-medium">
-      {{ $t('complete_registration_role.header', { name: firstName }) }}
+      {{ $t('complete_registration_role.header', { name: pageContext?.user?.first_name }) }}
     </h1>
     <p class="text-center mt-4">
       {{ $t('complete_registration_role.tagline') }}
@@ -44,16 +44,15 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { useAxios } from '@renderer/useAxios';
+  import { usePageContext } from '@renderer/usePageContext';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
 
-  const props = defineProps<{
-    uuid: string;
-    firstName: string;
-  }>();
+  const props = defineProps<{ uuid: string }>();
   const emit = defineEmits<{
     (e: 'role-update', role: string): void;
   }>();
+  const pageContext = usePageContext();
   const axios = useAxios();
 
   const loading = ref(false);

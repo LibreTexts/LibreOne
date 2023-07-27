@@ -6,7 +6,7 @@
         alt="LibreTexts"
         class="max-w-xs my-0 mx-auto"
       >
-      <div class="bg-white p-6 mt-6 shadow-md shadow-gray-400 rounded-md overflow-hidden">
+      <div class="bg-white p-6 mt-6 shadow-md shadow-gray-400 rounded-md overflow-hidden min-h-[16em]">
         <Transition
           mode="out-in"
           enter-from-class="motion-safe:translate-x-full"
@@ -15,8 +15,12 @@
           leave-to-class="motion-safe:-translate-x-full"
           enter-active-class="motion-safe:transition-transform motion-safe:ease-out motion-safe:duration-500"
           leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
+          @after-leave="completeNavigation"
         >
-          <div :key="stage">
+          <div
+            :key="stage"
+            v-if="formVisible"
+          >
             <component
               :is="stage"
               v-bind="componentProps"
@@ -30,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
+  import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
   import { usePageContext } from '@renderer/usePageContext';
   import NameForm from '@components/complete_registration/NameForm.vue';
   const OrgForm = defineAsyncComponent(() => import('@components/complete_registration/OrgForm.vue'));
@@ -38,9 +42,22 @@
 
   const pageContext = usePageContext();
 
-  const stage = shallowRef(NameForm);
-  const firstName = ref('');
-
+  const stage = computed(() => {
+    const stageId = pageContext?.routeParams?.stageId;
+    switch (stageId) {
+      case 'organization': {
+        return OrgForm;
+      }
+      case 'role': {
+        return RoleForm;
+      }
+      case 'name':
+      default:
+        return NameForm;
+    }
+  });
+  const formVisible = ref(false);
+  const nextNavigationURL = ref<string|null>(null);
   const componentProps = computed(() => {
     switch (stage.value) {
       case NameForm: {
@@ -50,7 +67,7 @@
         return { uuid: pageContext.user?.uuid };
       }
       case RoleForm: {
-        return { uuid: pageContext.user?.uuid, firstName: firstName.value };
+        return { uuid: pageContext.user?.uuid };
       }
       default: {
         return { };
@@ -71,24 +88,31 @@
     }
   });
 
+  onMounted(() => formVisible.value = true);
+
+  function handleNavigation(href: string) {
+    nextNavigationURL.value = href;
+    formVisible.value = false;
+  }
+
+  function completeNavigation() {
+    if (nextNavigationURL.value) {
+      window.location.href = nextNavigationURL.value;
+    }
+  }
+
   /**
    * Advances the page to the Role selection stage upon receiving the 'name-update' event.
-   *
-   * @param resFirstName - The user's first name passed with the event.
    */
-  function handleNameInputComplete(resFirstName: string) {
-    firstName.value = resFirstName;
-    stage.value = RoleForm;
+  function handleNameInputComplete() {
+    handleNavigation('/complete-registration/role');
   }
 
   /**
    * Advances the page to the Organization selection state upon receiving the 'role-update' event.
-   *
-   * @param resRole - The user's role selection passed with the event.
    */
-  function handleRoleSelectionComplete(resRole: string) {
-    stage.value = OrgForm;
-    console.log(resRole);
+  function handleRoleSelectionComplete() {
+    handleNavigation('/complete-registration/organization');
   }
 
 </script>
