@@ -30,9 +30,8 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
-import LibreOneHeader from "../../components/LibreOneHeader.vue";
-import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
-import SecurityInfo from "../../components/account_management/SecurityInfo.vue";
+import StandardPageLayout from "@components/layout/StandardPageLayout.vue";
+import SecurityInfo from "@components/account_management/SecurityInfo.vue";
 import { User } from "@server/models";
 const editMode = ref(false);
 const loading = ref(false);

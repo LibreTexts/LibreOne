@@ -1,17 +1,19 @@
 <template>
-  <header class="bg-white shadow-2xl shadow-red-600">
+  <header>
     <nav
-      class="flex flex-col w-auto items-center justify-between content-between p-6"
+      class="flex flex-col w-auto items-center justify-between content-between md:p-6 p-4"
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <a href="#" class="mt-1">
+        <button
+          class="hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 pt-1"
+        >
           <img
             src="@renderer/libretexts_logo.png"
             alt="LibreTexts Logo"
             class="h-9 w-auto mb-1"
           />
-        </a>
+        </button>
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -23,21 +25,21 @@
             {{ item.title }}
           </a>
         </div>
-        <div class="flex flex-row">
+        <div class="flex flex-row mr-2">
           <button
             href="/api/v1/auth/logout"
             class="hidden md:block text-sm font-semibold leading-6 text-gray-900"
           >
             {{ $t("common.logout") }} <span aria-hidden="true">&rarr;</span>
           </button>
-          <button
+          <FontAwesomeIcon
             class="md:hidden clicked-animation"
             @click="menuOpen = !menuOpen"
             aria-label="Open Navigation Menu"
             :class="menuOpen ? 'motion-safe:-rotate-90' : ''"
-          >
-            <img src="@renderer/menu-icon.svg" class="w-6 h-6" />
-          </button>
+            icon="fa-solid fa-bars"
+            size="lg"
+          />
         </div>
       </section>
       <Transition
@@ -77,6 +79,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 const menuOpen = ref<boolean>(false);
 
