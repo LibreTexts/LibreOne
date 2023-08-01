@@ -5,15 +5,7 @@
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <button
-          class="hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 pt-1"
-        >
-          <img
-            src="@renderer/libretexts_logo.png"
-            alt="LibreTexts Logo"
-            class="h-9 w-auto mb-1"
-          />
-        </button>
+        <AppSwitcher class="ml-2 pt-1"/>
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -80,6 +72,7 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import AppSwitcher from "./AppSwitcher.vue";
 
 const menuOpen = ref<boolean>(false);
 

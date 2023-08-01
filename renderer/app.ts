@@ -8,7 +8,8 @@ import {
   faCircleInfo,
   faEye,
   faEyeSlash,
-  faBars
+  faBars,
+  faBolt
 } from '@fortawesome/free-solid-svg-icons';
 import { setPageContext } from './usePageContext';
 import { initAxios } from './useAxios';
@@ -61,7 +62,7 @@ export function createApp(pageContext: PageContext): App<Element> {
   app.use(i18n);
 
   // Font Awesome
-  library.add(faEye, faEyeSlash, faCircleArrowRight, faCircleInfo, faCircleArrowLeft, faBars);
+  library.add(faEye, faEyeSlash, faCircleArrowRight, faCircleInfo, faCircleArrowLeft, faBars, faBolt);
   app.component('FontAwesomeIcon', FontAwesomeIcon);
 
   return app;
