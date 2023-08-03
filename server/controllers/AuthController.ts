@@ -9,7 +9,7 @@ import { Agent } from 'https';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { ResetPasswordToken, sequelize, User } from '../models';
 import { MailController } from './MailController';
-import { DEFAULT_AVATAR } from './UserController';
+import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
 import { getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
@@ -22,11 +22,15 @@ import type {
   InitResetPasswordBody,
   ResetPasswordBody,
   TokenAuthenticationVerificationResult,
+  CheckCASInterruptQuery,
 } from '../types/auth';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
 const COOKIE_DOMAIN = SESSION_DOMAIN.replace('https://', '');
+
+const SELF_PROTO = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const SELF_BASE = `${SELF_PROTO}://${process.env.DOMAIN}`;
 
 const CAS_PROTO = process.env.CAS_PROTO || 'https';
 const CAS_BASE = `${CAS_PROTO}://${process.env.CAS_DOMAIN}`;
@@ -274,7 +278,7 @@ export class AuthController {
 
   /**
    * Activates a new user after onboarding has been completed, then generates a JWT to use
-   * to create a new SSO session.
+   * to create a new SSO session where necessary.
    *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
@@ -287,38 +291,62 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
+    foundUser.registration_complete = true;
+    await foundUser.save();
+
+    let shouldCreateSSOSession = true;
+    let redirectCASService = null;
+    if (req.cookies.cas_state) {
+      try {
+        const cas_state = JSON.parse(req.cookies.cas_state);
+        if (cas_state.redirectCASServiceURI) {
+          shouldCreateSSOSession = false;
+          redirectCASService = cas_state.redirectCASServiceURI;
+        }
+      } catch (e) {
+        console.warn('Error parsing cookie value as JSON.');
+      }
+    }
+
     // create SSO session tokens
-    const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
-    const casEncryptSecret = new TextEncoder().encode(process.env.CAS_JWT_ENCRYPT_SECRET);
-    const casJWT = await new SignJWT({ sub: foundUser.uuid })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setIssuer(SESSION_DOMAIN)
-      .setAudience(CAS_BASE || SESSION_DOMAIN)
-      .setExpirationTime('1m')
-      .sign(casSignSecret);
-    const casJWE = await new CompactEncrypt(new TextEncoder().encode(casJWT))
-      .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
-      .encrypt(casEncryptSecret);
-    const state = JSON.stringify({
-      redirectURI: `${SESSION_DOMAIN}/registration-complete`,
-    });
+    let casJWE: string | null = null;
+    if (shouldCreateSSOSession) {
+      const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
+      const casEncryptSecret = new TextEncoder().encode(process.env.CAS_JWT_ENCRYPT_SECRET);
+      const casJWT = await new SignJWT({ sub: foundUser.uuid })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setIssuer(SESSION_DOMAIN)
+        .setAudience(CAS_BASE || SESSION_DOMAIN)
+        .setExpirationTime('1m')
+        .sign(casSignSecret);
+      casJWE = await new CompactEncrypt(new TextEncoder().encode(casJWT))
+        .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
+        .encrypt(casEncryptSecret);
+      const state = JSON.stringify({
+        redirectURI: `${SESSION_DOMAIN}/registration-complete`,
+      });
+      const prodCookieConfig: CookieOptions = {
+        sameSite: 'strict',
+        domain: COOKIE_DOMAIN,
+        secure: true,
+      };
+      res.cookie('cas_state', state, {
+        httpOnly: true,
+        ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+      });
+    }
 
-    const prodCookieConfig: CookieOptions = {
-      sameSite: 'strict',
-      domain: COOKIE_DOMAIN,
-      secure: true,
-    };
-    res.cookie('cas_state', state, {
-      httpOnly: true,
-      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
-    });
-
-    const casParams = new URLSearchParams({
-      service: CAS_CALLBACK,
-      token: casJWE,
-    });
-    const initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
+    let initSessionURL: string | null = null;
+    if (redirectCASService) {
+      initSessionURL = redirectCASService;
+    } else {
+      const casParams = new URLSearchParams({
+        service: CAS_CALLBACK,
+        ...(casJWE && { token: casJWE }),
+      });
+      initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
+    }
 
     return res.send({
       data: {
@@ -417,6 +445,68 @@ export class AuthController {
     return res.status(200).send({});
   }
 
+  public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
+    const { username } = req.query as CheckCASInterruptQuery;
+    
+    // Decide which attribute to match a record with
+    const getAttrMatchKey = (username: string) => {
+      if (username.includes('@')) {
+        return 'email';
+      }
+      if (UUID_V4_REGEX.test(username)) {
+        return 'uuid';
+      }
+      return 'external_subject_id';
+    };
+    const attrMatch = { [getAttrMatchKey(username)]: username };
+
+    const foundUser = await User.findOne({
+      where: attrMatch,
+    });
+    if (!foundUser) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please contact <a href="mailto:support@libretexts.org>support@libretexts.org</a> for assistance.',
+        links: {},
+      });
+    }
+
+    if (foundUser.disabled) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'This account has been disabled. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> to regain access.',
+        links: {},
+      });
+    }
+
+    if (!foundUser.registration_complete) {
+      const redirectParams = new URLSearchParams({
+        redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
+      });
+
+      return res.send({
+        interrupt: true,
+        block: false,
+        ssoEnabled: true,
+        message: 'Thanks for registering with LibreOne. Lets finish setting up your account.',
+        autoRedirect: true,
+        links: {
+          'Lets Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+        },
+      });
+    }
+
+    return res.send({
+      interrupt: false,
+      block: false,
+      ssoEnabled: true,
+    });
+  }
+
   /**
    * Redirects the browser to the CAS login server after generating state and nonce parameters.
    *
@@ -425,9 +515,10 @@ export class AuthController {
    * @returns The fulfilled API response (302 redirect).
    */
   public async initLogin(req: Request, res: Response): Promise<void> {
-    const { redirectURI } = req.query as InitLoginQuery;
+    const { redirectURI, redirectCASServiceURI } = req.query as InitLoginQuery;
     const state = JSON.stringify({
       ...(redirectURI && { redirectURI }),
+      ...(redirectCASServiceURI && { redirectCASServiceURI }),
     });
 
     const prodCookieConfig: CookieOptions = {
@@ -480,8 +571,16 @@ export class AuthController {
     const uuid = validData.serviceResponse.authenticationSuccess.user;
     await this.createAndAttachLocalSession(res, uuid);
 
-    let redirectURI = '/profile';
-    if (req.cookies.cas_state) {
+    // check registration status
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.badRequest(res);
+    }
+
+    let redirectURI = '/dashboard';
+    if (!foundUser.registration_complete) {
+      redirectURI = '/complete-registration';
+    } else if (req.cookies.cas_state) {
       try {
         const cas_state = JSON.parse(req.cookies.cas_state);
         if (cas_state.redirectURI) {

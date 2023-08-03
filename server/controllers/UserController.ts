@@ -16,7 +16,7 @@ import type {
 } from '../types/users';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
-const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
+export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
 
 export class UserController {
   private avatarUploadStorage: multer.StorageEngine;
@@ -270,8 +270,11 @@ export class UserController {
       return errors.notFound(res);
     }
   
+    const isExternalUser = foundUser.external_subject_id !== null;
     const updateObj: Record<string, string | number> = {};
-    const allowedKeys = ['first_name', 'last_name', 'bio_url', 'user_type'];
+    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type'];
+    const unallowedExternalKeys = ['first_name', 'last_name'];
+    const allowedKeys = isExternalUser ? updatableKeys.filter((k) => !unallowedExternalKeys.includes(k)) : updatableKeys;
     Object.entries(props).forEach(([key, value]) => {
       if (allowedKeys.includes(key)) {
         updateObj[key] = value;

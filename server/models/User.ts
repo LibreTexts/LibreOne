@@ -61,6 +61,9 @@ export class User extends Model {
   declare expired: boolean;
 
   @Column(DataType.BOOLEAN)
+  declare registration_complete: boolean;
+
+  @Column(DataType.BOOLEAN)
   declare legacy: boolean;
 
   @Column(DataType.STRING)

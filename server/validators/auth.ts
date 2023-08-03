@@ -21,6 +21,8 @@ export const verifyEmailSchema = joi.object({
 
 export const initLoginQuerySchema = joi.object({
   redirectURI: joi.string().uri({ relativeOnly: true }),
+  redirectCASServiceURI: joi.string().uri(),
+  casInitSSOSession: joi.boolean(),
 });
 
 export const completeLoginSchema = joi.object({
