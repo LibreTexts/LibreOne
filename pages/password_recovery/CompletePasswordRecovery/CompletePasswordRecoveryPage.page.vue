@@ -103,15 +103,12 @@
 
 <script lang="ts" setup>
   import { computed, ref } from 'vue';
-  import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
   import { AxiosError } from 'axios';
   import { useAxios } from '@renderer/useAxios';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
-  import { passwordStrengthOptions } from '../../../passwordstrength';
-
-  zxcvbnOptions.setOptions(passwordStrengthOptions);
+  import { getPasswordStrength } from '@renderer/utils/auth';
 
   const props = defineProps<{
     token: string;
@@ -127,7 +124,7 @@
   const complete = ref(false);
   const expired = ref(false);
   const willRedirect = ref(false);
-  const passStrength = computed(() => zxcvbn(password.value).score);
+  const passStrength = computed(() => getPasswordStrength(password.value));
   const restartURI = computed(() => {
     const params = new URLSearchParams({
       ...(props.origRedirectURI && { 

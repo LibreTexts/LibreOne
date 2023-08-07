@@ -16,7 +16,8 @@
     "continue": "Continue",
     "updating": "Updating",
     "edit": "Edit",
-    "save": "Save"
+    "save": "Save",
+    "submit": "Submit"
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -113,6 +114,13 @@
     "infoline": "Manage your security settings here. Changes to your account here will be reflected across all LibreTexts services.",
     "security": "Security",
     "lastchanged": "Last Password Change",
+    "changeemail": "Change Email Address",
+    "newemail": "New Email Address",
+    "verify_message":"We just sent a six-digit verification code to your new email. Please enter the code here to finish changing your email address.",
+    "changepassword": "Change Password",
+    "currentpassword": "Current Password",
+    "newpassword": "New Password",
+    "confirmnewpassword": "Confirm New Password",
     "never": "Never"
   }
 }

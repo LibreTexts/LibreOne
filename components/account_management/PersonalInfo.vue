@@ -2,55 +2,24 @@
   <div :aria-busy="isLoading">
     <p class="text-xl font-medium">{{ $t("profile.personalinfo") }}</p>
     <div class="flex-grow border-t border-gray-400"></div>
-
     <div v-if="editMode">
       <form class="lg:mt-4" @submit="submitForm">
-        <div class="my-4">
-          <label for="first_name_input" class="block text-sm font-medium">
-            {{ $t("profile.firstname") }}
-          </label>
-          <input
-            id="first_name_input"
-            type="text"
-            aria-required="true"
-            v-model="firstName"
-            :placeholder="$t('profile.firstname')"
-            :class="[
-              'border',
-              'block',
-              'h-10',
-              'mt-2',
-              'w-full',
-              'rounded-md',
-              'px-2',
-              'placeholder:text-slate-400',
-              'placeholder:font-light',
-            ]"
-          />
-        </div>
-        <div class="my-4">
-          <label for="last_name_input" class="block text-sm font-medium">
-            {{ $t("profile.lastname") }}
-          </label>
-          <input
-            id="last_name_input"
-            type="text"
-            aria-required="true"
-            v-model="lastName"
-            :placeholder="$t('profile.lastname')"
-            :class="[
-              'border',
-              'block',
-              'h-10',
-              'mt-2',
-              'w-full',
-              'rounded-md',
-              'px-2',
-              'placeholder:text-slate-400',
-              'placeholder:font-light',
-            ]"
-          />
-        </div>
+        <ThemedInput
+          id="first_name_input"
+          :label="$t('profile.firstname')"
+          :placeholder="$t('profile.firstname')"
+          v-model="firstName"
+          required
+          class="my-4"
+        />
+        <ThemedInput
+          id="last_name_input"
+          :label="$t('profile.lastname')"
+          :placeholder="$t('profile.lastname')"
+          v-model="lastName"
+          required
+          class="my-4"
+        />
       </form>
     </div>
     <div v-else>
@@ -65,7 +34,7 @@
       </div>
     </div>
     <ThemedButton
-      @click="(e) => editMode ? submitForm(e) : editMode = true"
+      @click="(e) => (editMode ? submitForm(e) : (editMode = true))"
       :variant="editMode ? 'save' : 'default'"
       class="mt-10"
     >
@@ -78,9 +47,10 @@
 import { useAxios } from "@renderer/useAxios";
 import { ref, watch } from "vue";
 import ThemedButton from "../ThemedButton.vue";
+import ThemedInput from "../ThemedInput.vue";
 const emit = defineEmits<{
   (e: "set-unknown-error", error: boolean): void;
-  (e: 'data-updated'): void;
+  (e: "data-updated"): void;
 }>();
 const props = defineProps<{ user?: Record<string, string> }>();
 
