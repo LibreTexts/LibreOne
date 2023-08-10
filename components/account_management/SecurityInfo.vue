@@ -1,74 +1,100 @@
 <template>
-  <div>
+  <div :aria-busy="isLoading">
     <p class="text-xl font-medium">
       {{ $t("security.security") }}
     </p>
     <div class="flex-grow border-t border-gray-400"></div>
 
-    <div v-if="editMode">
-      <form class="lg:mt-4" @submit="submitForm">
-        <div class="my-4">
-          <label for="email_input" class="block text-sm font-medium">
-            {{ $t("common.email") }}
-          </label>
-          <input
-            id="email_input"
-            type="text"
-            aria-required="true"
-            v-model="email"
-            :placeholder="$t('common.email')"
-            :class="[
-              'border',
-              'block',
-              'h-10',
-              'mt-2',
-              'w-full',
-              'rounded-md',
-              'px-2',
-              'placeholder:text-slate-400',
-              'placeholder:font-light',
-            ]"
-          />
-        </div>
-      </form>
+    <div v-if="editEmail">
+      <NewEmailForm
+        :user="user"
+        @data-updated="$emit('data-updated')"
+        @set-unknown-error="$emit('set-unknown-error', $event)"
+      />
+    </div>
+
+    <div v-else-if="editPassword">
+      <NewPasswordForm
+        :user="user"
+        @data-updated="$emit('data-updated')"
+        @set-unknown-error="$emit('set-unknown-error', $event)"
+      />
     </div>
 
     <div v-else>
-      <div class="my-4">
+      <div class="mt-4">
         <p class="text-sm font-light">{{ $t("common.email") }}</p>
-        <p class="font-semibold">{{ user.email }}</p>
+        <p class="font-semibold">{{ user?.email }}</p>
+        <ThemedButton
+          @click="() => (editEmail = true)"
+          small
+          class="mt-2"
+          variant="outlined"
+          >{{ $t("security.changeemail") }}
+        </ThemedButton>
       </div>
 
-      <div class="my-4">
+      <div class="mt-10">
         <p class="text-sm font-light">{{ $t("security.lastchanged") }}</p>
         <p class="font-semibold">
           {{
-            user.last_password_change
+            user?.last_password_change
               ? user.last_password_change
               : $t("security.never")
           }}
         </p>
+        <ThemedButton
+          variant="outlined"
+          class="mt-2"
+          @click="() => (editPassword = true)"
+          small
+          >{{ $t("security.changepassword") }}
+        </ThemedButton>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { User } from "@server/models";
-const props = withDefaults(
-  defineProps<{
-    user: User;
-    editMode: boolean;
-  }>(),
-  {
-    editMode: false,
+import { ref, watch } from "vue";
+import { useAxios } from "@renderer/useAxios";
+import ThemedButton from "../ThemedButton.vue";
+import NewEmailForm from "./NewEmailForm.vue";
+import NewPasswordForm from "./NewPasswordForm.vue";
+const emit = defineEmits<{
+  (e: "set-unknown-error", error: boolean): void;
+  (e: "data-updated"): void;
+}>();
+const props = defineProps<{ user?: Record<string, string> }>();
+const axios = useAxios();
+
+const editEmail = ref(false);
+const editPassword = ref(false);
+const currentPassword = ref("");
+const newPassword = ref("");
+const newPasswordConfirm = ref("");
+const newPasswordError = ref(false);
+const isDirty = ref(false);
+const isLoading = ref(false);
+
+// Reset state when switching between email and password. User can only edit one at a time
+watch(
+  () => [editEmail, editPassword],
+  () => {
+    if (editEmail.value) {
+      editPassword.value = false;
+      currentPassword.value = "";
+      newPassword.value = "";
+      newPasswordConfirm.value = "";
+      newPasswordError.value = false;
+    }
+    if (editPassword.value) {
+      editEmail.value = false;
+    }
   }
 );
 
-const email = ref("");
-
 async function submitForm() {
-  console.log("submit");
+  // TODO: Validate form
 }
 </script>

@@ -195,13 +195,10 @@
 <script lang="ts" setup>
   import { computed, ref } from 'vue';
   import { AxiosError } from 'axios';
-  import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
-  import { passwordStrengthOptions } from '../../passwordstrength';
-
-  zxcvbnOptions.setOptions(passwordStrengthOptions);
+  import { getPasswordStrength } from '@renderer/utils/auth';
 
   defineProps<{
     loginURL: string;
@@ -223,7 +220,7 @@
   const accountExists = ref(false);
   const unknownError = ref(false);
   const showPassword = ref(false);
-  const passStrength = computed(() => zxcvbn(password.value).score);
+  const passStrength = computed(() => getPasswordStrength(password.value));
 
   /**
    * Toggles the show/hide password state.

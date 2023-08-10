@@ -18,7 +18,7 @@
   import { useI18n } from 'vue-i18n';
 
   const STRENGTH_PROPS = {
-    '0': { width: 'w-2', bg: 'bg-gray-300', textKey: 'short' },
+    '0': { width: 'w-full', bg: 'bg-gray-300', textKey: 'short' },
     '1': { width: 'w-1/4', bg: 'bg-red-600', textKey: 'veryweak' },
     '2': { width: 'w-1/2', bg: 'bg-orange-600', textKey: 'weak' },
     '3': { width: 'w-3/4', bg: 'bg-yellow-300', textKey: 'good' },
