@@ -5,12 +5,15 @@ import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import Joi from 'joi';
 import { randomBytes } from 'crypto';
+import { Op } from 'sequelize';
 import { server } from '..';
-import { ResetPasswordToken, User } from '../models';
+import { EmailVerification, ResetPasswordToken, User } from '../models';
+import { EmailVerificationController } from '../controllers/EmailVerificationController';
 import { createSessionCookiesForTest } from './test-helpers';
 
 describe('Authentication and Authorization', async () => {
   after(async () => {
+    await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
     if (server?.listening) {
       server.close();
@@ -29,6 +32,14 @@ describe('Authentication and Authorization', async () => {
       expect(Joi.string().guid({ version: 'uuidv4' }).validate(uuid).error).to.not.exist;
 
       const user1 = await User.unscoped().findOne({ where: { uuid } });
+      const emailVerify1 = await EmailVerification.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: uuid },
+            { email: 'info@libretexts.org' },
+          ],
+        },
+      });
       expect(user1).to.exist;
       expect(_.pick(user1?.get(), ['uuid', 'email', 'first_name', 'last_name'])).to.deep.equal({
         uuid,
@@ -36,7 +47,9 @@ describe('Authentication and Authorization', async () => {
         first_name: 'LibreTexts',
         last_name: 'User',
       });
-      expect(user1?.get('email_verify_code')).to.be.greaterThan(99999);
+      expect(emailVerify1).to.exist;
+      expect(emailVerify1?.get('code')).to.be.greaterThan(99999);
+      await emailVerify1?.destroy();
       await user1?.destroy();
     });
     it('should error on existing user', async () => {
@@ -61,12 +74,15 @@ describe('Authentication and Authorization', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        email_verify_code: 123456,
       });
+      const verifyCode = await new EmailVerificationController().createVerification(
+        user1.get('uuid'),
+        user1.get('email'),
+      );
 
       const response = await request(server)
         .post('/api/v1/auth/verify-email')
-        .send({ email: 'info@libretexts.org', code: 123456 });
+        .send({ email: 'info@libretexts.org', code: verifyCode });
 
       expect(response.status).to.equal(200);
       expect(response.body?.data).to.deep.equal({ uuid: user1.uuid });
@@ -79,8 +95,11 @@ describe('Authentication and Authorization', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
-        email_verify_code: 123456,
       });
+      await new EmailVerificationController().createVerification(
+        user1.get('uuid'),
+        user1.get('email'),
+      );
 
       const response = await request(server)
         .post('/api/v1/auth/verify-email')

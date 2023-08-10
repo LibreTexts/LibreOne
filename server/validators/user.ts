@@ -18,6 +18,10 @@ export const createUserOrganizationSchema = joi.object({
   add_organization_name: joi.string().max(100),
 });
 
+export const createUserEmailChangeRequestSchema = joi.object({
+  email: joi.string().email().required(),
+});
+
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
@@ -29,6 +33,11 @@ export const updateUserSchema = joi.object({
   bio_url: joi.string().uri(), // TODO: stricter validation?
   user_type: joi.string().valid('student', 'instructor'),
   verify_status: joi.string().trim(),
+});
+
+export const updateUserEmailSchema = joi.object({
+  code: joi.number().integer().min(100000).max(999999).required(),
+  email: joi.string().email().required(),
 });
 
 export const updateUserOrganizationAdminRoleSchema = joi.object({

@@ -6,8 +6,9 @@ import { CompactEncrypt, createRemoteJWKSet, SignJWT, jwtVerify } from 'jose';
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
-import { Op, UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { ResetPasswordToken, sequelize, User } from '../models';
+import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
 import { getProductionURL } from '../helpers';
@@ -184,7 +185,8 @@ export class AuthController {
     try {
       const props = req.body as RegisterBody;
       const ip = req.get('x-forwarded-for') || req.socket.remoteAddress || '';
-    
+
+      const verificationController = new EmailVerificationController();
       const mailSender = new MailController();
       if (!mailSender.isReady()) {
         throw new Error('No mail sender available to issue email verification!');
@@ -192,7 +194,6 @@ export class AuthController {
     
       const hashed = await bcrypt.hash(props.password, 10);
 
-      const verifyCode = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
       const newUser = await User.create({
         uuid: uuidv4(),
         email: props.email,
@@ -204,22 +205,18 @@ export class AuthController {
         legacy: false,
         ip_address: ip,
         verify_status: 'not_attempted',
-        email_verify_code: verifyCode,
       });
+      const verifyCode = await verificationController.createVerification(
+        newUser.get('uuid'),
+        props.email,
+      );
 
       // Send email verification
-      const emailRes = await mailSender.send({
-        destination: { to: [props.email] },
-        subject: `LibreOne Verification Code: ${verifyCode}`,
-        htmlContent: `
-          <p>Hello there,</p>
-          <p>Please verify your email address by entering this code:</p>
-          <p style="font-size: 1.5em;">${verifyCode}</p>
-          <p>If this wasn't you, you can safely ignore this email.</p>
-          <p>Best,</p>
-          <p>The LibreTexts Team</p>
-        `,
-      });
+      const emailRes = await verificationController.sendEmailVerificationMessage(
+        mailSender,
+        props.email,
+        verifyCode,
+      );
       mailSender.destroy();
       if (!emailRes) {
         throw new Error('Unable to send email verification!');
@@ -250,19 +247,16 @@ export class AuthController {
   public async verifyRegistrationEmail(req: Request, res: Response): Promise<Response> {
     const { email, code } = req.body as VerifyEmailBody;
 
-    const foundUser = await User.findOne({
-      where: {
-        [Op.and]: [
-          { email },
-          { email_verify_code: code },
-        ],
-      },
-    });
+    const foundVerification = await new EmailVerificationController().checkVerification(email, code);
+    if (!foundVerification || !foundVerification.uuid) {
+      return errors.badRequest(res);
+    }
+    
+    const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
     if (!foundUser) {
       return errors.badRequest(res);
     }
 
-    foundUser.email_verify_code = null;
     foundUser.disabled = false;
     await foundUser.save();
 

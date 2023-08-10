@@ -76,6 +76,22 @@ usersRouter.route('/:uuid/avatar').post(
   catchInternal((req, res) => controller.updateUserAvatar(req, res)),
 );
 
+usersRouter.route('/:uuid/email-change').post(
+  verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.createUserEmailChangeRequestSchema, 'body'),
+  catchInternal((req, res) => controller.createUserEmailChangeRequest(req, res)),
+);
+
+usersRouter.route('/:uuid/verify-email-change').post(
+  verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.updateUserEmailSchema, 'body'),
+  catchInternal((req, res) => controller.updateUserEmail(req, res)),
+);
+
 export {
   usersRouter,
 };

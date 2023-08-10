@@ -4,12 +4,16 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
 import errors from '../errors';
+import { EmailVerificationController } from './EmailVerificationController';
+import { MailController } from './MailController';
+import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
 import type {
+  CreateUserEmailChangeRequestBody,
   CreateUserOrganizationBody,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
+  UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
   UserOrganizationIDParams,
   UserUUIDParams,
@@ -45,6 +49,52 @@ export class UserController {
         return errors.badRequest(res);
       }
       return next();
+    });
+  }
+
+  /**
+   * Creates a new EmailVerification opportunity for a user to change their email address.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async createUserEmailChangeRequest(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { email } = req.body as CreateUserEmailChangeRequestBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return errors.badRequest(res);
+    }
+
+    const verificationController = new EmailVerificationController();
+    const mailSender = new MailController();
+    if (!mailSender.isReady()) {
+      throw new Error('No mail sender available to issue email verification!');
+    }
+
+    const verifyCode = await verificationController.createVerification(uuid, email);
+    const emailRes = await verificationController.sendEmailVerificationMessage(
+      mailSender,
+      email,
+      verifyCode,
+    );
+    mailSender.destroy();
+    if (!emailRes) {
+      throw new Error('Unable to send email verification!');
+    }
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        email,
+      },
     });
   }
   
@@ -359,6 +409,41 @@ export class UserController {
       data: {
         uuid: foundUser.uuid,
         avatar: avatarURL,
+      },
+    });
+  }
+
+  /**
+   * Updates a User's email given a valid verification code is provided.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserEmail(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { code, email } = req.body as UpdateUserEmailBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const verification = await new EmailVerificationController().checkVerification(email, code);
+    if (!verification || !verification.uuid || !verification.email) {
+      return errors.badRequest(res);
+    }
+
+    const existingUser = await User.findOne({ where: { email: verification.email } });
+    if (existingUser) {
+      return errors.badRequest(res);
+    }
+
+    await foundUser.update({ email: verification.email });
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        email: verification.email,
       },
     });
   }

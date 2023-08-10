@@ -10,8 +10,17 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { server } from '..';
-import { APIUser, APIUserPermissionConfig, Organization, OrganizationSystem, User, UserOrganization } from '../models';
+import {
+  APIUser,
+  APIUserPermissionConfig,
+  EmailVerification,
+  Organization,
+  OrganizationSystem,
+  User,
+  UserOrganization,
+} from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
+import { EmailVerificationController } from '../controllers/EmailVerificationController';
 import { createSessionCookiesForTest } from './test-helpers';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -40,12 +49,77 @@ describe('Users', async () => {
   });
   after(async () => {
     await APIUser.destroy({ where: {} });
+    await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
     await OrganizationSystem.destroy({ where: {} });
     if (server?.listening) {
       server.close();
     }
+  });
+
+  describe('CREATE', () => {
+    it('should create user email change request', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/email-change`)
+        .send({ email: 'info+new@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+
+      const emailVerify1 = await EmailVerification.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user1.uuid },
+            { email: 'info+new@libretexts.org' },
+          ],
+        },
+      });
+      expect(emailVerify1).to.exist;
+      expect(emailVerify1?.get('code')).to.be.greaterThan(99999);
+      await emailVerify1?.destroy();
+      await user1.destroy();
+    });
+    it('should prevent email change to existing address', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const user2 = await User.create({
+        uuid: uuidv4(),
+        email: 'info2@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user2.uuid}/email-change`)
+        .send({ email: 'info2@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user2.uuid));
+      
+      expect(response.status).to.equal(400);
+
+      const emailVerify1 = await EmailVerification.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user2.uuid },
+            { email: 'info2@libretexts.org' },
+          ],
+        },
+      });
+      expect(emailVerify1).to.not.exist;
+      await user1.destroy();
+      await user2.destroy();
+    });
   });
 
   describe('READ', () => {
@@ -439,6 +513,87 @@ describe('Users', async () => {
       });
       await user1.destroy();
       await apiUser2.destroy();
+    });
+    it('should update user email with valid code', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const emailVerify1 = await new EmailVerificationController().createVerification(
+        user1.uuid,
+        'info+new@libretexts.org',
+      );
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verify-email-change`)
+        .send({ code: emailVerify1, email: 'info+new@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+      const updatedUser = await User.findOne({ where: { uuid: user1.uuid }});
+      expect(updatedUser?.get('email')).to.equal('info+new@libretexts.org');
+      await user1.destroy();
+    });
+    it('should not allow user email update with expired code', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const emailVerify1 = await EmailVerification.create({
+        user_id: user1.uuid,
+        email: 'info@libretexts.org',
+        code: 123456,
+        expires_at: new Date(),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verify-email-change`)
+        .send({ code: 123456, email: 'info+new@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(400);
+      const error1 = response.body?.errors[0];
+      expect(error1).to.exist;
+      expect(_.pick(error1, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+      await emailVerify1.destroy();
+      await user1.destroy();
+    });
+    it('should not allow user email update to existing address (race verifications)', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const user2 = await User.create({
+        uuid: uuidv4(),
+        email: 'info2@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const emailVerify1 = await new EmailVerificationController().createVerification(user1.uuid, 'info2@libretexts.org');
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verify-email-change`)
+        .send({ code: emailVerify1, email: 'info2@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(400);
+      const error1 = response.body?.errors[0];
+      expect(error1).to.exist;
+      expect(_.pick(error1, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+      await user1.destroy();
+      await user2.destroy();
     });
     it('should add user to existing organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
