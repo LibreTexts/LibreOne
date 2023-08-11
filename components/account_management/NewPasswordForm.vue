@@ -99,12 +99,12 @@
       leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
       v-else
     >
-      <form>
+      <div>
         <div class="flex flex-col text-center my-8">
           <p class="text-lg font-medium">{{ $t("security.passwordchanged") }}</p>
           <p class="mt-4">{{ $t("security.redirecting") }}</p>
         </div>
-      </form>
+      </div>
     </Transition>
   </div>
 </template>

@@ -4,12 +4,11 @@
       <p class="text-md font-medium">{{ $t("security.external") }}</p>
     </div>
     <div v-else>
-      <p class="text-xl font-medium">
-        {{ $t("security.securityinfo") }}
-      </p>
-      <div class="flex-grow border-t border-gray-400"></div>
-
       <div v-if="editEmail">
+        <p class="text-xl font-medium">
+          {{ $t("security.changeemail") }}
+        </p>
+        <div class="flex-grow border-t border-gray-400"></div>
         <NewEmailForm
           :user="user"
           @data-updated="$emit('data-updated')"
@@ -18,6 +17,10 @@
       </div>
 
       <div v-else-if="editPassword">
+        <p class="text-xl font-medium">
+          {{ $t("security.changepassword") }}
+        </p>
+        <div class="flex-grow border-t border-gray-400"></div>
         <NewPasswordForm
           :user="user"
           @password-changed="$emit('data-updated')"
@@ -26,6 +29,10 @@
       </div>
 
       <div v-else>
+        <p class="text-xl font-medium">
+          {{ $t("security.securityinfo") }}
+        </p>
+        <div class="flex-grow border-t border-gray-400"></div>
         <div class="mt-4">
           <p class="text-sm font-light">{{ $t("common.email") }}</p>
           <p class="font-semibold">{{ user?.email }}</p>
