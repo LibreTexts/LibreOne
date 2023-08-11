@@ -17,7 +17,8 @@
     "updating": "Updating",
     "edit": "Edit",
     "save": "Save",
-    "submit": "Submit"
+    "submit": "Submit",
+    "loading": "Loading..."
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -113,6 +114,7 @@
     "header": "Account Security Management",
     "infoline": "Manage your security settings here. Changes to your account here will be reflected across all LibreTexts services.",
     "security": "Security",
+    "securityinfo": "Security Information",
     "lastchanged": "Last Password Change",
     "changeemail": "Change Email Address",
     "newemail": "New Email Address",
@@ -121,6 +123,13 @@
     "currentpassword": "Current Password",
     "newpassword": "New Password",
     "confirmnewpassword": "Confirm New Password",
-    "never": "Never"
+    "never": "Never",
+    "nomatch": "Passwords do not match.",
+    "notstrongenough": "Password is not strong enough.",
+    "passwordupdatefailed": "Password update failed. Please check your current password and try again.",
+    "cannotbecurrent": "New password cannot be the same as the current password.",
+    "passwordchanged": "Password changed successfully!",
+    "redirecting": "We're redirecting you back to the security management page...",
+    "external": "It looks like you're using an external login provider. You can change your email or password with them."
   }
 }

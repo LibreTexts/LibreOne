@@ -1,22 +1,29 @@
 <template>
-  <button v-bind="$attrs" :class="variantClasses">
-    <slot></slot>
+  <button v-bind="$attrs" :class="variantClasses" :aria-busy="$props.loading">
+    <slot v-if="!$props.loading"></slot>
+    <template v-else>
+      <LoadingIndicator />
+      <span class="ml-2">{{ $t("common.loading") }}...</span>
+    </template>
   </button>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
+import LoadingIndicator from '@components/LoadingIndicator.vue';
 
 const props = withDefaults(
   defineProps<{
     variant?: "default" | "save" | "outlined" | "danger";
     small?: boolean;
     disabled?: boolean;
+    loading?: boolean;
   }>(),
   {
     variant: "default",
     small: false,
     disabled: false,
+    loading: false,
   }
 );
 
