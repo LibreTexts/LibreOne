@@ -14,7 +14,7 @@
       src="@renderer/libretexts_logo.png"
       alt="LibreTexts Logo"
       class="h-9 w-auto mb-1"
-    />
+    >
     <FontAwesomeIcon
       icon="fa-solid fa-rocket"
       class="switcher-icon text-primary rounded-md px-2 mt-1 ml-2"
@@ -38,11 +38,20 @@
         @focusout="handleFocusOut(idx)"
       >
         <div class="switcher-item-icon-container">
-          <img :src="item.img" :alt="item.title" width="25" height="25" />
+          <img
+            :src="item.img"
+            :alt="item.title"
+            width="25"
+            height="25"
+          >
         </div>
         <div class="switcher-item-text-container">
-          <p class="switcher-item-header">{{ item.title }}</p>
-          <p class="switcher-item-descrip">{{ item.description }}</p>
+          <p class="switcher-item-header">
+            {{ item.title }}
+          </p>
+          <p class="switcher-item-descrip">
+            {{ item.description }}
+          </p>
         </div>
       </li>
       <li
@@ -55,7 +64,9 @@
         @focusout="handleFocusOut(tempMenuItems.length - 1)"
       >
         <div class="switcher-view-all mx-auto">
-          <p class="switcher-item-header">View All</p>
+          <p class="switcher-item-header">
+            View All
+          </p>
         </div>
       </li>
     </ul>
@@ -63,55 +74,52 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { usePageContext } from "@renderer/usePageContext";
+  import { ref } from 'vue';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-const pageContext = usePageContext();
+  const tempMenuItems: {
+    img: string;
+    title: string;
+    href: string;
+    description: string;
+  }[] = [
+    {
+      img: '',
+      title: 'ADAPT',
+      href: 'https://adapt.libretexts.org',
+      description: 'Create and share interactive content',
+    },
+    {
+      img: '',
+      title: 'Commons',
+      href: 'https://commons.libretexts.org',
+      description: 'Find, remix, and share content',
+    },
+    {
+      img: '',
+      title: 'Conductor',
+      href: 'https://commons.libretexts.org/conductor',
+      description: 'Manage your OER projects',
+    },
+    {
+      img: '',
+      title: 'LibreTexts Website',
+      href: 'https://libretexts.org',
+      description: 'Learn more about LibreTexts',
+    },
+  ];
 
-const tempMenuItems: {
-  img: string;
-  title: string;
-  href: string;
-  description: string;
-}[] = [
-  {
-    img: "",
-    title: "ADAPT",
-    href: "https://adapt.libretexts.org",
-    description: "Create and share interactive content",
-  },
-  {
-    img: "",
-    title: "Commons",
-    href: "https://commons.libretexts.org",
-    description: "Find, remix, and share content",
-  },
-  {
-    img: "",
-    title: "Conductor",
-    href: "https://commons.libretexts.org/conductor",
-    description: "Manage your OER projects",
-  },
-  {
-    img: "",
-    title: "LibreTexts Website",
-    href: "https://libretexts.org",
-    description: "Learn more about LibreTexts",
-  },
-];
+  const isOpen = ref<boolean>(false);
 
-const isOpen = ref<boolean>(false);
-
-function openAppSwitcherLink(href: string) {
-  window.open(href, "_blank");
-}
-
-function handleFocusOut(idx: number) {
-  if (idx === tempMenuItems.length - 1) {
-    isOpen.value = false;
+  function openAppSwitcherLink(href: string) {
+    window.open(href, '_blank');
   }
-}
+
+  function handleFocusOut(idx: number) {
+    if (idx === tempMenuItems.length - 1) {
+      isOpen.value = false;
+    }
+  }
 </script>
 
 <style scoped lang="css">

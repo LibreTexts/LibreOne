@@ -6,7 +6,7 @@
     <div
       :class="
         `w-11/12 bg-white mt-16 py-10 px-8 shadow-md shadow-gray-400 rounded-md overflow-auto` +
-        sizeClasses
+          sizeClasses
       "
     >
       <Transition
@@ -25,16 +25,16 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
-import LibreOneHeader from "@components/layout/LibreOneHeader.vue";
-const props = defineProps({
-  fillHeight: {
-    type: Boolean,
-    default: false,
-  },
-});
+  import { computed } from 'vue';
+  import LibreOneHeader from '@components/layout/LibreOneHeader.vue';
+  const props = defineProps({
+    fillHeight: {
+      type: Boolean,
+      default: false,
+    },
+  });
 
-const sizeClasses = computed(() => {
-  return props.fillHeight ? " h-5/6" : " h-auto";
-});
+  const sizeClasses = computed(() => {
+    return props.fillHeight ? ' h-5/6' : ' h-auto';
+  });
 </script>

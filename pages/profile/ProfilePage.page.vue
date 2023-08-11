@@ -10,7 +10,10 @@
         </p>
       </div>
       <div class="flex flex-col mt-10">
-        <p class="text-error font-medium text-center mb-4" v-if="unknownerror">
+        <p
+          class="text-error font-medium text-center mb-4"
+          v-if="unknownerror"
+        >
           {{ $t("common.unknownerror") }}
         </p>
         <PersonalInfo
@@ -24,16 +27,16 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import PersonalInfo from "../../components/account_management/PersonalInfo.vue";
-import { usePageContext } from "@renderer/usePageContext";
-import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
+  import { ref } from 'vue';
+  import PersonalInfo from '../../components/account_management/PersonalInfo.vue';
+  import { usePageContext } from '@renderer/usePageContext';
+  import StandardPageLayout from '../../components/layout/StandardPageLayout.vue';
 
-const pageContext = usePageContext();
+  const pageContext = usePageContext();
 
-const unknownerror = ref(false);
+  const unknownerror = ref(false);
 
-const handleDataUpdated = () => {
-  window.location.reload();
-};
+  const handleDataUpdated = () => {
+    window.location.reload();
+  };
 </script>

@@ -5,7 +5,7 @@
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <AppSwitcher class="ml-2 pt-1"/>
+        <AppSwitcher class="ml-2 pt-1" />
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -70,26 +70,26 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import AppSwitcher from "./AppSwitcher.vue";
+  import { ref } from 'vue';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import AppSwitcher from './AppSwitcher.vue';
 
-const menuOpen = ref<boolean>(false);
+  const menuOpen = ref<boolean>(false);
 
-const navItems: { title: string; link: string }[] = [
-  {
-    title: "Home",
-    link: "/home",
-  },
-  {
-    title: "Profile",
-    link: "/profile",
-  },
-  {
-    title: "Security",
-    link: "/security",
-  },
-];
+  const navItems: { title: string; link: string }[] = [
+    {
+      title: 'Home',
+      link: '/home',
+    },
+    {
+      title: 'Profile',
+      link: '/profile',
+    },
+    {
+      title: 'Security',
+      link: '/security',
+    },
+  ];
 </script>
 
 <style lang="css">

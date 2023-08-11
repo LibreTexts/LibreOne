@@ -1,6 +1,9 @@
 <template>
   <div v-bind="$attrs">
-    <form @submit="submitPasswordChange" v-if="formStep === 1">
+    <form
+      @submit="submitPasswordChange"
+      v-if="formStep === 1"
+    >
       <div class="flex items-center w-full mt-4">
         <ThemedInput
           id="current_password_input"
@@ -11,7 +14,10 @@
           class="w-full"
           :type="showCurrPassword ? 'text' : 'password'"
         />
-        <button type="button" class="items-center justify-center mt-6 ml-2">
+        <button
+          type="button"
+          class="items-center justify-center mt-6 ml-2"
+        >
           <FontAwesomeIcon
             @click="showCurrPassword = !showCurrPassword"
             :icon="['fa-solid', showCurrPassword ? 'fa-eye-slash' : 'fa-eye']"
@@ -33,7 +39,10 @@
           :placeholder="$t('security.newpassword')"
           class="w-full"
         />
-        <button type="button" class="items-center justify-center mt-6 ml-2">
+        <button
+          type="button"
+          class="items-center justify-center mt-6 ml-2"
+        >
           <FontAwesomeIcon
             @click="showNewPassword = !showNewPassword"
             :icon="['fa-solid', showNewPassword ? 'fa-eye-slash' : 'fa-eye']"
@@ -45,7 +54,10 @@
         </button>
       </div>
 
-      <PasswordStrengthMeter :strength="passStrength" class="mt-2" />
+      <PasswordStrengthMeter
+        :strength="passStrength"
+        class="mt-2"
+      />
 
       <div class="flex items-center w-full mt-6">
         <ThemedInput
@@ -57,7 +69,10 @@
           :placeholder="$t('security.confirmnewpassword')"
           class="w-full"
         />
-        <button type="button" class="items-center justify-center mt-6 ml-2">
+        <button
+          type="button"
+          class="items-center justify-center mt-6 ml-2"
+        >
           <FontAwesomeIcon
             @click="showNewPassword = !showNewPassword"
             :icon="['fa-solid', showNewPassword ? 'fa-eye-slash' : 'fa-eye']"
@@ -86,8 +101,9 @@
         :loading="isLoading"
         class="mt-6"
         @click="submitPasswordChange"
-        >{{ $t("common.submit") }}</ThemedButton
       >
+        {{ $t("common.submit") }}
+      </ThemedButton>
     </form>
     <Transition
       mode="out-in"
@@ -101,8 +117,12 @@
     >
       <div>
         <div class="flex flex-col text-center my-8">
-          <p class="text-lg font-medium">{{ $t("security.passwordchanged") }}</p>
-          <p class="mt-4">{{ $t("security.redirecting") }}</p>
+          <p class="text-lg font-medium">
+            {{ $t("security.passwordchanged") }}
+          </p>
+          <p class="mt-4">
+            {{ $t("security.redirecting") }}
+          </p>
         </div>
       </div>
     </Transition>
@@ -110,106 +130,106 @@
 </template>
 
 <script lang="ts" setup>
-import { useAxios } from "@renderer/useAxios";
-import { ref, watch, computed } from "vue";
-import ThemedInput from "../ThemedInput.vue";
-import ThemedButton from "../ThemedButton.vue";
-import PasswordStrengthMeter from "../PasswordStrengthMeter.vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { getPasswordStrength } from "@renderer/utils/auth";
-import { useI18n } from "vue-i18n";
+  import { useAxios } from '@renderer/useAxios';
+  import { ref, watch, computed } from 'vue';
+  import ThemedInput from '../ThemedInput.vue';
+  import ThemedButton from '../ThemedButton.vue';
+  import PasswordStrengthMeter from '../PasswordStrengthMeter.vue';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { getPasswordStrength } from '@renderer/utils/auth';
+  import { useI18n } from 'vue-i18n';
 
-const props = defineProps<{
-  user?: Record<string, string>;
-}>();
+  const props = defineProps<{
+    user?: Record<string, string>;
+  }>();
 
-const emit = defineEmits<{
-  (e: "set-unknown-error", error: boolean): void;
-  (e: "password-changed"): void;
-}>();
+  const emit = defineEmits<{
+    (e: 'set-unknown-error', error: boolean): void;
+    (e: 'password-changed'): void;
+  }>();
 
-const axios = useAxios();
-const { t } = useI18n();
+  const axios = useAxios();
+  const { t } = useI18n();
 
-const formStep = ref(1);
-const currentPassword = ref("");
-const newPassword = ref("");
-const newPasswordConfirm = ref("");
-const noMatchError = ref(false);
-const errorMsg = ref("");
-const showCurrPassword = ref(false);
-const showNewPassword = ref(false);
-const isLoading = ref(false);
-const passStrength = computed(() => getPasswordStrength(newPassword.value));
+  const formStep = ref(1);
+  const currentPassword = ref('');
+  const newPassword = ref('');
+  const newPasswordConfirm = ref('');
+  const noMatchError = ref(false);
+  const errorMsg = ref('');
+  const showCurrPassword = ref(false);
+  const showNewPassword = ref(false);
+  const isLoading = ref(false);
+  const passStrength = computed(() => getPasswordStrength(newPassword.value));
 
-watch(
-  () => [newPassword.value, newPasswordConfirm.value],
-  () => {
-    if (newPassword.value !== newPasswordConfirm.value) {
-      return (noMatchError.value = true);
-    }
-    return (noMatchError.value = false);
-  }
-);
-
-const validateForm = (): boolean => {
-  if (
-    !currentPassword.value ||
-    !newPassword.value ||
-    !newPasswordConfirm.value
-  ) {
-    return false;
-  }
-  if (newPassword.value !== newPasswordConfirm.value) {
-    noMatchError.value = true;
-    return false;
-  }
-  if (currentPassword.value === newPassword.value) {
-    errorMsg.value = t("security.cannotbecurrent");
-    return false;
-  }
-  if (passStrength.value < 3) {
-    errorMsg.value = t("security.notstrongenough");
-    return false;
-  }
-  return true;
-};
-
-const submitPasswordChange = async (e: Event) => {
-  try {
-    e.preventDefault();
-
-    errorMsg.value = "";
-    if (!validateForm()) return;
-    if (!props.user || !props.user.uuid) return;
-    isLoading.value = true;
-
-    const updateRes = await axios.post(
-      `/users/${props.user.uuid}/password-change`,
-      {
-        old_password: currentPassword.value,
-        new_password: newPassword.value,
+  watch(
+    () => [newPassword.value, newPasswordConfirm.value],
+    () => {
+      if (newPassword.value !== newPasswordConfirm.value) {
+        return (noMatchError.value = true);
       }
-    );
+      return (noMatchError.value = false);
+    },
+  );
 
-    if (updateRes.status === 200 && updateRes.data.data.uuid) {
-      handleSuccess();
-      return;
+  const validateForm = (): boolean => {
+    if (
+      !currentPassword.value ||
+      !newPassword.value ||
+      !newPasswordConfirm.value
+    ) {
+      return false;
     }
+    if (newPassword.value !== newPasswordConfirm.value) {
+      noMatchError.value = true;
+      return false;
+    }
+    if (currentPassword.value === newPassword.value) {
+      errorMsg.value = t('security.cannotbecurrent');
+      return false;
+    }
+    if (passStrength.value < 3) {
+      errorMsg.value = t('security.notstrongenough');
+      return false;
+    }
+    return true;
+  };
 
-    throw new Error("badres");
-  } catch (err) {
-    errorMsg.value = t("security.passwordupdatefailed");
-    currentPassword.value = "";
-  } finally {
-    isLoading.value = false;
+  const submitPasswordChange = async (e: Event) => {
+    try {
+      e.preventDefault();
+
+      errorMsg.value = '';
+      if (!validateForm()) return;
+      if (!props.user || !props.user.uuid) return;
+      isLoading.value = true;
+
+      const updateRes = await axios.post(
+        `/users/${props.user.uuid}/password-change`,
+        {
+          old_password: currentPassword.value,
+          new_password: newPassword.value,
+        },
+      );
+
+      if (updateRes.status === 200 && updateRes.data.data.uuid) {
+        handleSuccess();
+        return;
+      }
+
+      throw new Error('badres');
+    } catch (err) {
+      errorMsg.value = t('security.passwordupdatefailed');
+      currentPassword.value = '';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  function handleSuccess() {
+    formStep.value = 2;
+    setTimeout(() => {
+      emit('password-changed');
+    }, 2000);
   }
-};
-
-function handleSuccess() {
-  formStep.value = 2;
-  setTimeout(() => {
-    emit("password-changed");
-  }, 2000);
-}
 </script>

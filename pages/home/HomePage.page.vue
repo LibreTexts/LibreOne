@@ -1,8 +1,10 @@
 <template>
-  <StandardPageLayout fillHeight>
+  <StandardPageLayout fill-height>
     <div aria-live="polite">
       <div>
-        <p class="text-3xl font-medium">{{ $t("home.yourlibreverse") }}</p>
+        <p class="text-3xl font-medium">
+          {{ $t("home.yourlibreverse") }}
+        </p>
         <p class="mt-2 italic text-gray-400">
           {{ $t("home.yourlibreversetagline") }}
         </p>
@@ -12,13 +14,23 @@
           class="app-item-container"
           v-for="app in tempApps"
           @click="openAppLink(app.href)"
+          :key="app.title"
         >
           <div class="app-item-icon-container">
-            <img :src="app.img" :alt="app.title" width="25" height="25" />
+            <img
+              :src="app.img"
+              :alt="app.title"
+              width="25"
+              height="25"
+            >
           </div>
           <div class="app-item-text-container">
-            <p class="app-item-header">{{ app.title }}</p>
-            <p class="app-item-descrip">{{ app.description }}</p>
+            <p class="app-item-header">
+              {{ app.title }}
+            </p>
+            <p class="app-item-descrip">
+              {{ app.description }}
+            </p>
           </div>
         </div>
       </div>
@@ -27,49 +39,43 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
-import SecurityInfo from "../../components/account_management/SecurityInfo.vue";
-import { usePageContext } from "../../renderer/usePageContext";
+  import StandardPageLayout from '../../components/layout/StandardPageLayout.vue';
 
-const pageContext = usePageContext();
+  const tempApps: {
+    img: string;
+    title: string;
+    href: string;
+    description: string;
+  }[] = [
+    {
+      img: '',
+      title: 'ADAPT',
+      href: 'https://adapt.libretexts.org',
+      description: 'Create and share interactive content',
+    },
+    {
+      img: '',
+      title: 'Commons',
+      href: 'https://commons.libretexts.org',
+      description: 'Find, remix, and share content',
+    },
+    {
+      img: '',
+      title: 'Conductor',
+      href: 'https://commons.libretexts.org/conductor',
+      description: 'Manage your OER projects',
+    },
+    {
+      img: '',
+      title: 'LibreTexts Website',
+      href: 'https://libretexts.org',
+      description: 'Learn more about LibreTexts',
+    },
+  ];
 
-const unknownerror = ref(false);
-const tempApps: {
-  img: string;
-  title: string;
-  href: string;
-  description: string;
-}[] = [
-  {
-    img: "",
-    title: "ADAPT",
-    href: "https://adapt.libretexts.org",
-    description: "Create and share interactive content",
-  },
-  {
-    img: "",
-    title: "Commons",
-    href: "https://commons.libretexts.org",
-    description: "Find, remix, and share content",
-  },
-  {
-    img: "",
-    title: "Conductor",
-    href: "https://commons.libretexts.org/conductor",
-    description: "Manage your OER projects",
-  },
-  {
-    img: "",
-    title: "LibreTexts Website",
-    href: "https://libretexts.org",
-    description: "Learn more about LibreTexts",
-  },
-];
-
-function openAppLink(href: string) {
-  window.open(href, "_blank");
-}
+  function openAppLink(href: string) {
+    window.open(href, '_blank');
+  }
 </script>
 <style lang="css" scoped>
 .apps-grid {
