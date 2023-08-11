@@ -767,7 +767,71 @@ describe('Users', async () => {
       await user1.destroy();
       await org1.destroy();
     });
+    it('should allow user to update password', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
 
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change`)
+        .send({
+          old_password: 'ThisIsASuperStrongPassword!',
+          new_password: 'ThisIsANewSuperStrongPassword!',
+        })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      await user1.destroy();
+    });
+    it('should prevent password update when current is incorrect', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change`)
+        .send({
+          old_password: 'helloworld!',
+          new_password: 'ThisIsANewSuperStrongPassword!',
+        })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(401);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '401',
+        code: 'unauthorized',
+      });
+      await user1.destroy();
+    });
+    it('should prevent password update when user is from an external IdP', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change`)
+        .send({
+          old_password: 'helloworld!',
+          new_password: 'ThisIsANewSuperStrongPassword!',
+        })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+      await user1.destroy();
+    });
     it('should prevent updating verification status by user', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),

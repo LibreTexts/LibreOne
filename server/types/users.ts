@@ -38,6 +38,11 @@ export type UpdateUserOrganizationAdminRoleBody = {
   admin_role: UserOrganizationAdminRole;
 };
 
+export type UpdateUserPasswordBody = {
+  old_password: string;
+  new_password: string;
+};
+
 export type ResolvePrincipalAttributesQuery = {
   username: string;
 };

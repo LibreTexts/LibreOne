@@ -4,6 +4,7 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import bcrypt from 'bcryptjs';
 import errors from '../errors';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
@@ -15,6 +16,7 @@ import type {
   UpdateUserBody,
   UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
+  UpdateUserPasswordBody,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
@@ -480,6 +482,41 @@ export class UserController {
         uuid: foundUser.get('uuid'),
         organization_id: orgID,
         admin_role,
+      },
+    });
+  }
+
+  /**
+   * Updates a User's password given the correct current password is provided.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserPassword(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { old_password, new_password } = req.body as UpdateUserPasswordBody;
+
+    const foundUser = await User.unscoped().findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    if (!foundUser.password) {
+      return errors.badRequest(res); // likely an external IdP user
+    }
+
+    const passMatch = await bcrypt.compare(old_password, foundUser.password);
+    if (!passMatch) {
+      return errors.unauthorized(res);
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await foundUser.update({ password: hashed });
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
       },
     });
   }

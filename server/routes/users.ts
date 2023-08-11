@@ -92,6 +92,14 @@ usersRouter.route('/:uuid/verify-email-change').post(
   catchInternal((req, res) => controller.updateUserEmail(req, res)),
 );
 
+usersRouter.route('/:uuid/password-change').post(
+  verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.updateUserPasswordSchema, 'body'),
+  catchInternal((req, res) => controller.updateUserPassword(req, res)),
+);
+
 export {
   usersRouter,
 };
