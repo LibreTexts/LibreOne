@@ -78,6 +78,10 @@ const menuOpen = ref<boolean>(false);
 
 const navItems: { title: string; link: string }[] = [
   {
+    title: "Home",
+    link: "/home",
+  },
+  {
     title: "Profile",
     link: "/profile",
   },

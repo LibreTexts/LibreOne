@@ -101,6 +101,10 @@
     "completedtagline": "Nice! You can now log in to LibreTexts services using the password you just set.",
     "redirecting": "We're redirecting you to the login screen."
   },
+  "home": {
+    "yourlibreverse": "Your LibreVerse",
+    "yourlibreversetagline": "Access all of your LibreTexts applications from one place."
+  },
   "profile": {
     "header": "Profile Management",
     "infoline": "Manage your LibreOne Account details here. Changes to your account here will be reflected across all LibreTexts services.",

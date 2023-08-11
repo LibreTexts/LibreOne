@@ -1,6 +1,6 @@
 <template>
   <button
-    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)]  rounded-md px-2 pt-1"
+    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 pt-1"
     @click="isOpen = !isOpen"
     @keydown.prevent.enter="isOpen = !isOpen"
     tabindex="0"
@@ -43,6 +43,19 @@
         <div class="switcher-item-text-container">
           <p class="switcher-item-header">{{ item.title }}</p>
           <p class="switcher-item-descrip">{{ item.description }}</p>
+        </div>
+      </li>
+      <li
+        class="switcher-item"
+        key="all-apps"
+        role="button"
+        tabindex="0"
+        @click="openAppSwitcherLink('/apps')"
+        @keydown.prevent.enter="openAppSwitcherLink('/apps')"
+        @focusout="handleFocusOut(tempMenuItems.length - 1)"
+      >
+        <div class="switcher-view-all mx-auto">
+          <p class="switcher-item-header">View All</p>
         </div>
       </li>
     </ul>
@@ -152,5 +165,13 @@ function handleFocusOut(idx: number) {
 .switcher-item-descrip {
   font-size: 0.7rem;
   color: #6b7280;
+}
+.switcher-view-all {
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 </style>
