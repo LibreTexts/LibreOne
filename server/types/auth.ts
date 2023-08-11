@@ -25,8 +25,14 @@ export type CreateUserFromExternalIdPHeaders = IncomingHttpHeaders & {
   profiletypeid: string;
 };
 
+export type CheckCASInterruptQuery = {
+  username: string;
+};
+
 export type InitLoginQuery = {
   redirectURI?: string;
+  redirectCASServiceURI?: string;
+  casInitSSOSession?: boolean;
 };
 
 export type CompleteLoginQuery = {

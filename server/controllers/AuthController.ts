@@ -6,10 +6,11 @@ import { CompactEncrypt, createRemoteJWKSet, SignJWT, jwtVerify } from 'jose';
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
-import { Op, UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { ResetPasswordToken, sequelize, User } from '../models';
+import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
-import { DEFAULT_AVATAR } from './UserController';
+import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
 import { getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
@@ -22,11 +23,15 @@ import type {
   InitResetPasswordBody,
   ResetPasswordBody,
   TokenAuthenticationVerificationResult,
+  CheckCASInterruptQuery,
 } from '../types/auth';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
 const COOKIE_DOMAIN = SESSION_DOMAIN.replace('https://', '');
+
+const SELF_PROTO = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const SELF_BASE = `${SELF_PROTO}://${process.env.DOMAIN}`;
 
 const CAS_PROTO = process.env.CAS_PROTO || 'https';
 const CAS_BASE = `${CAS_PROTO}://${process.env.CAS_DOMAIN}`;
@@ -180,7 +185,8 @@ export class AuthController {
     try {
       const props = req.body as RegisterBody;
       const ip = req.get('x-forwarded-for') || req.socket.remoteAddress || '';
-    
+
+      const verificationController = new EmailVerificationController();
       const mailSender = new MailController();
       if (!mailSender.isReady()) {
         throw new Error('No mail sender available to issue email verification!');
@@ -188,7 +194,6 @@ export class AuthController {
     
       const hashed = await bcrypt.hash(props.password, 10);
 
-      const verifyCode = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
       const newUser = await User.create({
         uuid: uuidv4(),
         email: props.email,
@@ -200,22 +205,18 @@ export class AuthController {
         legacy: false,
         ip_address: ip,
         verify_status: 'not_attempted',
-        email_verify_code: verifyCode,
       });
+      const verifyCode = await verificationController.createVerification(
+        newUser.get('uuid'),
+        props.email,
+      );
 
       // Send email verification
-      const emailRes = await mailSender.send({
-        destination: { to: [props.email] },
-        subject: `LibreOne Verification Code: ${verifyCode}`,
-        htmlContent: `
-          <p>Hello there,</p>
-          <p>Please verify your email address by entering this code:</p>
-          <p style="font-size: 1.5em;">${verifyCode}</p>
-          <p>If this wasn't you, you can safely ignore this email.</p>
-          <p>Best,</p>
-          <p>The LibreTexts Team</p>
-        `,
-      });
+      const emailRes = await verificationController.sendEmailVerificationMessage(
+        mailSender,
+        props.email,
+        verifyCode,
+      );
       mailSender.destroy();
       if (!emailRes) {
         throw new Error('Unable to send email verification!');
@@ -246,19 +247,16 @@ export class AuthController {
   public async verifyRegistrationEmail(req: Request, res: Response): Promise<Response> {
     const { email, code } = req.body as VerifyEmailBody;
 
-    const foundUser = await User.findOne({
-      where: {
-        [Op.and]: [
-          { email },
-          { email_verify_code: code },
-        ],
-      },
-    });
+    const foundVerification = await new EmailVerificationController().checkVerification(email, code);
+    if (!foundVerification || !foundVerification.uuid) {
+      return errors.badRequest(res);
+    }
+    
+    const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
     if (!foundUser) {
       return errors.badRequest(res);
     }
 
-    foundUser.email_verify_code = null;
     foundUser.disabled = false;
     await foundUser.save();
 
@@ -274,7 +272,7 @@ export class AuthController {
 
   /**
    * Activates a new user after onboarding has been completed, then generates a JWT to use
-   * to create a new SSO session.
+   * to create a new SSO session where necessary.
    *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
@@ -287,38 +285,62 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
+    foundUser.registration_complete = true;
+    await foundUser.save();
+
+    let shouldCreateSSOSession = true;
+    let redirectCASService = null;
+    if (req.cookies.cas_state) {
+      try {
+        const cas_state = JSON.parse(req.cookies.cas_state);
+        if (cas_state.redirectCASServiceURI) {
+          shouldCreateSSOSession = false;
+          redirectCASService = cas_state.redirectCASServiceURI;
+        }
+      } catch (e) {
+        console.warn('Error parsing cookie value as JSON.');
+      }
+    }
+
     // create SSO session tokens
-    const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
-    const casEncryptSecret = new TextEncoder().encode(process.env.CAS_JWT_ENCRYPT_SECRET);
-    const casJWT = await new SignJWT({ sub: foundUser.uuid })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setIssuer(SESSION_DOMAIN)
-      .setAudience(CAS_BASE || SESSION_DOMAIN)
-      .setExpirationTime('1m')
-      .sign(casSignSecret);
-    const casJWE = await new CompactEncrypt(new TextEncoder().encode(casJWT))
-      .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
-      .encrypt(casEncryptSecret);
-    const state = JSON.stringify({
-      redirectURI: `${SESSION_DOMAIN}/registration-complete`,
-    });
+    let casJWE: string | null = null;
+    if (shouldCreateSSOSession) {
+      const casSignSecret = new TextEncoder().encode(process.env.CAS_JWT_SIGN_SECRET);
+      const casEncryptSecret = new TextEncoder().encode(process.env.CAS_JWT_ENCRYPT_SECRET);
+      const casJWT = await new SignJWT({ sub: foundUser.uuid })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setIssuer(SESSION_DOMAIN)
+        .setAudience(CAS_BASE || SESSION_DOMAIN)
+        .setExpirationTime('1m')
+        .sign(casSignSecret);
+      casJWE = await new CompactEncrypt(new TextEncoder().encode(casJWT))
+        .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
+        .encrypt(casEncryptSecret);
+      const state = JSON.stringify({
+        redirectURI: `${SESSION_DOMAIN}/registration-complete`,
+      });
+      const prodCookieConfig: CookieOptions = {
+        sameSite: 'strict',
+        domain: COOKIE_DOMAIN,
+        secure: true,
+      };
+      res.cookie('cas_state', state, {
+        httpOnly: true,
+        ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+      });
+    }
 
-    const prodCookieConfig: CookieOptions = {
-      sameSite: 'strict',
-      domain: COOKIE_DOMAIN,
-      secure: true,
-    };
-    res.cookie('cas_state', state, {
-      httpOnly: true,
-      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
-    });
-
-    const casParams = new URLSearchParams({
-      service: CAS_CALLBACK,
-      token: casJWE,
-    });
-    const initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
+    let initSessionURL: string | null = null;
+    if (redirectCASService) {
+      initSessionURL = redirectCASService;
+    } else {
+      const casParams = new URLSearchParams({
+        service: CAS_CALLBACK,
+        ...(casJWE && { token: casJWE }),
+      });
+      initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
+    }
 
     return res.send({
       data: {
@@ -417,6 +439,68 @@ export class AuthController {
     return res.status(200).send({});
   }
 
+  public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
+    const { username } = req.query as CheckCASInterruptQuery;
+    
+    // Decide which attribute to match a record with
+    const getAttrMatchKey = (username: string) => {
+      if (username.includes('@')) {
+        return 'email';
+      }
+      if (UUID_V4_REGEX.test(username)) {
+        return 'uuid';
+      }
+      return 'external_subject_id';
+    };
+    const attrMatch = { [getAttrMatchKey(username)]: username };
+
+    const foundUser = await User.findOne({
+      where: attrMatch,
+    });
+    if (!foundUser) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please contact <a href="mailto:support@libretexts.org>support@libretexts.org</a> for assistance.',
+        links: {},
+      });
+    }
+
+    if (foundUser.disabled) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'This account has been disabled. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> to regain access.',
+        links: {},
+      });
+    }
+
+    if (!foundUser.registration_complete) {
+      const redirectParams = new URLSearchParams({
+        redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
+      });
+
+      return res.send({
+        interrupt: true,
+        block: false,
+        ssoEnabled: true,
+        message: 'Thanks for registering with LibreOne. Lets finish setting up your account.',
+        autoRedirect: true,
+        links: {
+          'Lets Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+        },
+      });
+    }
+
+    return res.send({
+      interrupt: false,
+      block: false,
+      ssoEnabled: true,
+    });
+  }
+
   /**
    * Redirects the browser to the CAS login server after generating state and nonce parameters.
    *
@@ -425,9 +509,10 @@ export class AuthController {
    * @returns The fulfilled API response (302 redirect).
    */
   public async initLogin(req: Request, res: Response): Promise<void> {
-    const { redirectURI } = req.query as InitLoginQuery;
+    const { redirectURI, redirectCASServiceURI } = req.query as InitLoginQuery;
     const state = JSON.stringify({
       ...(redirectURI && { redirectURI }),
+      ...(redirectCASServiceURI && { redirectCASServiceURI }),
     });
 
     const prodCookieConfig: CookieOptions = {
@@ -480,8 +565,16 @@ export class AuthController {
     const uuid = validData.serviceResponse.authenticationSuccess.user;
     await this.createAndAttachLocalSession(res, uuid);
 
-    let redirectURI = '/profile';
-    if (req.cookies.cas_state) {
+    // check registration status
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.badRequest(res);
+    }
+
+    let redirectURI = '/dashboard';
+    if (!foundUser.registration_complete) {
+      redirectURI = '/complete-registration';
+    } else if (req.cookies.cas_state) {
       try {
         const cas_state = JSON.parse(req.cookies.cas_state);
         if (cas_state.redirectURI) {

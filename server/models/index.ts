@@ -4,6 +4,7 @@ import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Domain } from './Domain';
+import { EmailVerification } from './EmailVerification';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
@@ -33,6 +34,7 @@ sequelize.addModels([
   APIUser,
   APIUserPermissionConfig,
   Domain,
+  EmailVerification,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
@@ -102,6 +104,7 @@ export {
   APIUser,
   APIUserPermissionConfig,
   Domain,
+  EmailVerification,
   Organization,
   OrganizationAlias,
   OrganizationDomain,

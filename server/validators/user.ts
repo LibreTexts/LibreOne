@@ -1,6 +1,8 @@
 import joi from 'joi';
+import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { orgIDValidator } from './organizations';
 import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
+import { passwordStrengthOptions } from '../../passwordstrength';
 
 const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
 
@@ -18,6 +20,10 @@ export const createUserOrganizationSchema = joi.object({
   add_organization_name: joi.string().max(100),
 });
 
+export const createUserEmailChangeRequestSchema = joi.object({
+  email: joi.string().email().required(),
+});
+
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
@@ -31,6 +37,23 @@ export const updateUserSchema = joi.object({
   verify_status: joi.string().trim(),
 });
 
+export const updateUserEmailSchema = joi.object({
+  code: joi.number().integer().min(100000).max(999999).required(),
+  email: joi.string().email().required(),
+});
+
 export const updateUserOrganizationAdminRoleSchema = joi.object({
   admin_role: joi.string().valid(...Object.keys(UserOrganizationAdminRoleEnum)).required(),
+});
+
+export const updateUserPasswordSchema = joi.object({
+  old_password: joi.string().min(1).required(),
+  new_password: joi.string().custom((password, helper) => {
+    zxcvbnOptions.setOptions(passwordStrengthOptions);
+    const results = zxcvbn(password);
+    if (results.score < 3) {
+      return helper.error('any.invalid');
+    }
+    return password;
+  }),
 });

@@ -61,6 +61,9 @@ export class User extends Model {
   declare expired: boolean;
 
   @Column(DataType.BOOLEAN)
+  declare registration_complete: boolean;
+
+  @Column(DataType.BOOLEAN)
   declare legacy: boolean;
 
   @Column(DataType.STRING)
@@ -81,9 +84,6 @@ export class User extends Model {
 
   @Column(DataType.ENUM('not_attempted', 'pending', 'needs_review', 'denied', 'verified'))
   declare verify_status: string;
-
-  @Column(DataType.INTEGER)
-  declare email_verify_code?: number | null;
 
   @Column(DataType.DATE)
   declare last_password_change: Date;

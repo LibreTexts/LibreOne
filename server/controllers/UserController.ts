@@ -4,19 +4,25 @@ import { Op } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
+import bcrypt from 'bcryptjs';
 import errors from '../errors';
+import { EmailVerificationController } from './EmailVerificationController';
+import { MailController } from './MailController';
+import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
 import type {
+  CreateUserEmailChangeRequestBody,
   CreateUserOrganizationBody,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
+  UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
+  UpdateUserPasswordBody,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
-const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
+export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
 
 export class UserController {
   private avatarUploadStorage: multer.StorageEngine;
@@ -45,6 +51,52 @@ export class UserController {
         return errors.badRequest(res);
       }
       return next();
+    });
+  }
+
+  /**
+   * Creates a new EmailVerification opportunity for a user to change their email address.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async createUserEmailChangeRequest(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { email } = req.body as CreateUserEmailChangeRequestBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return errors.badRequest(res);
+    }
+
+    const verificationController = new EmailVerificationController();
+    const mailSender = new MailController();
+    if (!mailSender.isReady()) {
+      throw new Error('No mail sender available to issue email verification!');
+    }
+
+    const verifyCode = await verificationController.createVerification(uuid, email);
+    const emailRes = await verificationController.sendEmailVerificationMessage(
+      mailSender,
+      email,
+      verifyCode,
+    );
+    mailSender.destroy();
+    if (!emailRes) {
+      throw new Error('Unable to send email verification!');
+    }
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        email,
+      },
     });
   }
   
@@ -270,8 +322,11 @@ export class UserController {
       return errors.notFound(res);
     }
   
+    const isExternalUser = foundUser.external_subject_id !== null;
     const updateObj: Record<string, string | number> = {};
-    const allowedKeys = ['first_name', 'last_name', 'bio_url', 'user_type'];
+    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type'];
+    const unallowedExternalKeys = ['first_name', 'last_name'];
+    const allowedKeys = isExternalUser ? updatableKeys.filter((k) => !unallowedExternalKeys.includes(k)) : updatableKeys;
     Object.entries(props).forEach(([key, value]) => {
       if (allowedKeys.includes(key)) {
         updateObj[key] = value;
@@ -359,6 +414,41 @@ export class UserController {
       },
     });
   }
+
+  /**
+   * Updates a User's email given a valid verification code is provided.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserEmail(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { code, email } = req.body as UpdateUserEmailBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const verification = await new EmailVerificationController().checkVerification(email, code);
+    if (!verification || !verification.uuid || !verification.email) {
+      return errors.badRequest(res);
+    }
+
+    const existingUser = await User.findOne({ where: { email: verification.email } });
+    if (existingUser) {
+      return errors.badRequest(res);
+    }
+
+    await foundUser.update({ email: verification.email });
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        email: verification.email,
+      },
+    });
+  }
   
   /**
    * Updates a User's admin role in a specified Organization.
@@ -392,6 +482,41 @@ export class UserController {
         uuid: foundUser.get('uuid'),
         organization_id: orgID,
         admin_role,
+      },
+    });
+  }
+
+  /**
+   * Updates a User's password given the correct current password is provided.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserPassword(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { old_password, new_password } = req.body as UpdateUserPasswordBody;
+
+    const foundUser = await User.unscoped().findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    if (!foundUser.password) {
+      return errors.badRequest(res); // likely an external IdP user
+    }
+
+    const passMatch = await bcrypt.compare(old_password, foundUser.password);
+    if (!passMatch) {
+      return errors.unauthorized(res);
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await foundUser.update({ password: hashed });
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
       },
     });
   }

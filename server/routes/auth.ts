@@ -29,6 +29,13 @@ authRouter.route('/external-provision').post(
   catchInternal((req, res) => controller.createUserFromExternalIdentityProvider(req, res)),
 );
 
+authRouter.route('/cas-interrupt-check').get(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:read']),
+  catchInternal((req, res) => controller.checkCASInterrupt(req, res)),
+);
+
 authRouter.route('/login').get(
   validate(AuthValidator.initLoginQuerySchema, 'query'),
   catchInternal((req, res) => controller.initLogin(req, res)),
