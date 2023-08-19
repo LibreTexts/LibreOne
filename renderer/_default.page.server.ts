@@ -44,14 +44,14 @@ export async function render(pageContext: PageContextServer) {
   const desc = (documentProps && documentProps.description) || 'LibreOne identity management interface.';
 
   let normalizedLocale = pageContext.locale;
-  const splitLocale = pageContext.locale.split('-');
-  if (splitLocale.length > 1) {
+  const splitLocale = pageContext.locale?.split('-');
+  if (splitLocale?.length > 1) {
     normalizedLocale = `${splitLocale[0]}-${splitLocale[1].toUpperCase()}`;
   }
 
   const documentHtml = escapeInject`
     <!DOCTYPE html>
-    <html lang="${normalizedLocale}">
+    <html lang="${normalizedLocale || 'en-US'}">
       <head>
         <meta charset="UTF-8" />
         <link rel="icon" href="${faviconURL}" />
