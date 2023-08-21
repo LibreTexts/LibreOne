@@ -26,6 +26,7 @@ export type CreateUserFromExternalIdPHeaders = IncomingHttpHeaders & {
 };
 
 export type CheckCASInterruptQuery = {
+  registeredService: string;
   username: string;
 };
 

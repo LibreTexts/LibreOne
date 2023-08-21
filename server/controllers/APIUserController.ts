@@ -15,6 +15,8 @@ import errors from '../errors';
 export const API_USERS_PERMISSIONS = [
   'api_users:read',
   'api_users:write',
+  'applications:read',
+  'applications:write',
   'domains:read',
   'domains:write',
   'organizations:read',

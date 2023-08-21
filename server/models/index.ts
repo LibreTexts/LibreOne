@@ -3,6 +3,7 @@ import { AdminRole } from './AdminRole';
 import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
+import { Application } from './Application';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
 import { Organization } from './Organization';
@@ -12,6 +13,7 @@ import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
 import { OrganizationSystem } from './OrganizationSystem';
 import { User } from './User';
+import { UserApplication } from './UserApplication';
 import { UserOrganization } from './UserOrganization';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
@@ -33,6 +35,7 @@ sequelize.addModels([
   Alias,
   APIUser,
   APIUserPermissionConfig,
+  Application,
   Domain,
   EmailVerification,
   Organization,
@@ -42,6 +45,7 @@ sequelize.addModels([
   Service,
   OrganizationSystem,
   User,
+  UserApplication,
   UserOrganization,
 ]);
 
@@ -103,6 +107,7 @@ export {
   Alias,
   APIUser,
   APIUserPermissionConfig,
+  Application,
   Domain,
   EmailVerification,
   Organization,
@@ -112,5 +117,6 @@ export {
   Service,
   OrganizationSystem,
   User,
+  UserApplication,
   UserOrganization,
 };

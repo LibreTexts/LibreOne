@@ -4,7 +4,16 @@ import request from 'supertest';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { server } from '..';
-import { APIUser, APIUserPermissionConfig, Organization, OrganizationSystem, Service, User, UserOrganization } from '../models';
+import {
+  APIUser,
+  Application,
+  APIUserPermissionConfig,
+  Organization,
+  OrganizationSystem,
+  Service,
+  User,
+  UserOrganization,
+} from '../models';
 
 describe('Permissions', async () => {
   let mainAPIUser: APIUser;
@@ -13,6 +22,7 @@ describe('Permissions', async () => {
   const mainAPIUserPassword = 'test-password';
 
   let apiUser1: APIUser;
+  let application1: Application;
   let user1: User;
   let libreTexts: Organization;
   let org1: Organization;
@@ -34,6 +44,14 @@ describe('Permissions', async () => {
       username: 'apiuser',
       password: 'ASuperStrongPassword!123',
     });
+    application1 = await Application.create({
+      name: 'AppOne',
+      app_type: 'standalone',
+      main_url: 'https://libretexts.org',
+      cas_service_url: 'https://libretexts.org/cas',
+      default_access: 'all',
+      primary_color: '#127BC4',
+    });
     user1 = await User.create({
       uuid: uuidv4(),
       email: 'user1@libretexts.org',
@@ -51,6 +69,7 @@ describe('Permissions', async () => {
   });
   after(async () => {
     await APIUser.destroy({ where: {} });
+    await Application.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
     await OrganizationSystem.destroy({ where: {} });
@@ -175,6 +194,32 @@ describe('Permissions', async () => {
           .auth(mainAPIUserUsername, mainAPIUserPassword);
         expect(response2.status).to.equal(200);
         expect(response2.body?.data).to.deep.equal({ effect: 'DENY' });
+      });
+      it('should allow user to read Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: user1.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'READ',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'ALLOW' });
+      });
+      it('should not allow user to write Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: user1.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'WRITE',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'DENY' });
       });
       it('should not allow user to read or write Service', async () => {  
         const response1 = await request(server)
@@ -331,6 +376,32 @@ describe('Permissions', async () => {
           .auth(mainAPIUserUsername, mainAPIUserPassword);
         expect(response2.status).to.equal(200);
         expect(response2.body?.data).to.deep.equal({ effect: 'DENY' });
+      });
+      it('should allow org admin to read Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: orgAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'READ',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'ALLOW' });
+      });
+      it('should not allow org admin to write Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: orgAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'WRITE',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'DENY' });
       });
       it('should not allow org admin to read or write Service', async () => {
         const response1 = await request(server)
@@ -516,6 +587,32 @@ describe('Permissions', async () => {
         expect(response2.status).to.equal(200);
         expect(response2.body?.data).to.deep.equal({ effect: 'DENY' });
       });
+      it('should allow org system admin to read Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: orgSysAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'READ',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'ALLOW' });
+      });
+      it('should not allow org system admin to write Application', async () => {
+        const response1 = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: orgSysAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'WRITE',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response1.status).to.equal(200);
+        expect(response1.body?.data).to.deep.equal({ effect: 'DENY' });
+      });
       it('should not allow org system admin to read or write Service', async () => {  
         const response1 = await request(server)
           .post('/api/v1/permissions/check')
@@ -657,6 +754,34 @@ describe('Permissions', async () => {
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'DENY' });
       });
+      it('should allow super admin to read Application', async () => {
+        const response = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: superAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'READ',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+      
+        expect(response.status).to.equal(200);
+        expect(response.body?.data).to.deep.equal({ effect: 'ALLOW' });
+      });
+      it('should not allow super admin to write Application', async () => {  
+        const response = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: superAdmin.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'WRITE',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+      
+        expect(response.status).to.equal(200);
+        expect(response.body?.data).to.deep.equal({ effect: 'DENY' });
+      });
       it('should not allow super admin to read or write Service', async () => {  
         const response1 = await request(server)
           .post('/api/v1/permissions/check')
@@ -712,6 +837,20 @@ describe('Permissions', async () => {
           })
           .auth(mainAPIUserUsername, mainAPIUserPassword);
       
+        expect(response.status).to.equal(200);
+        expect(response.body?.data).to.deep.equal({ effect: 'ALLOW' });
+      });
+      it('should allow omnipotent to write Application', async () => {
+        const response = await request(server)
+          .post('/api/v1/permissions/check')
+          .send({
+            userUUID: omnipotent.uuid,
+            resourceType: 'Application',
+            resourceID: application1.id,
+            action: 'WRITE',
+          })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
         expect(response.status).to.equal(200);
         expect(response.body?.data).to.deep.equal({ effect: 'ALLOW' });
       });

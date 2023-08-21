@@ -8,8 +8,16 @@ import bcrypt from 'bcryptjs';
 import errors from '../errors';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
-import { Organization, OrganizationSystem, User, UserOrganization } from '../models';
+import {
+  Application,
+  Organization,
+  OrganizationSystem,
+  User,
+  UserApplication,
+  UserOrganization,
+} from '../models';
 import type {
+  CreateUserApplicationBody,
   CreateUserEmailChangeRequestBody,
   CreateUserOrganizationBody,
   ResolvePrincipalAttributesQuery,
@@ -17,6 +25,7 @@ import type {
   UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
   UpdateUserPasswordBody,
+  UserApplicationIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
@@ -51,6 +60,42 @@ export class UserController {
         return errors.badRequest(res);
       }
       return next();
+    });
+  }
+
+  /**
+   * Creates a new UserApplication record, indicating the user has access to that application.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async createUserApplication(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { application_id } = req.body as CreateUserApplicationBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const foundApp = await Application.findOne({ where: { id: application_id } });
+    if (!foundApp) {
+      return errors.badRequest(res);
+    }
+
+    // TODO: handle library user management
+
+    await UserApplication.create({
+      user_id: uuid,
+      application_id,
+    });
+
+    return res.send({
+      data: {
+        uuid: foundUser.get('uuid'),
+        application_id: foundApp.get('id'),
+      },
     });
   }
 
@@ -219,6 +264,33 @@ export class UserController {
         total: count,
       },
       data: rows,
+    });
+  }
+
+  /**
+   * Retrieves a list of all Applications that a User has access to.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async getAllUserApplications(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const foundApps = await Application.findAll({
+      include: [
+        {
+          model: User,
+          through: { attributes: [] },
+          where: { uuid },
+          attributes: [],
+        },
+      ],
+    });
+
+    return res.send({
+      data: {
+        applications: foundApps.map((a) => a.get()) || [],
+      },
     });
   }
   
@@ -519,6 +591,39 @@ export class UserController {
         uuid: foundUser.uuid,
       },
     });
+  }
+
+  /**
+   * Deletes a User's association with a specified Application, indicating they should no
+   * longer have access to that application.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async deleteUserApplication(req: Request, res: Response): Promise<Response> {
+    const { uuid, applicationID } = (req.params as unknown) as UserApplicationIDParams;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const foundUserApp = await UserApplication.findOne({
+      where: {
+        user_id: uuid,
+        application_id: applicationID,
+      },
+    });
+    if (!foundUserApp) {
+      return errors.notFound(res);
+    }
+
+    // TODO: handle library user management
+
+    await foundUserApp.destroy();
+
+    return res.send({});
   }
   
   /**

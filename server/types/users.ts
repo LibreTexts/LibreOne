@@ -5,7 +5,13 @@ export type UserUUIDParams = {
   uuid: string;
 };
 
+export type UserApplicationIDParams = UserUUIDParams & { applicationID: number };
+
 export type UserOrganizationIDParams = UserUUIDParams & OrganizationIDParams;
+
+export type CreateUserApplicationBody = {
+  application_id: number;
+};
 
 export type CreateUserEmailChangeRequestBody = {
   email: string;

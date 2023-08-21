@@ -7,12 +7,33 @@ import Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { Op } from 'sequelize';
 import { server } from '..';
-import { EmailVerification, ResetPasswordToken, User } from '../models';
+import { Application, EmailVerification, ResetPasswordToken, User, UserApplication } from '../models';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
 import { createSessionCookiesForTest } from './test-helpers';
 
 describe('Authentication and Authorization', async () => {
+  let defaultApp1: Application;
+  let defaultApp2: Application;
+
+  const testAppData = (override?) => ({
+    name: 'AppOne',
+    app_type: 'standalone',
+    main_url: 'https://libretexts.org',
+    cas_service_url: 'https://libretexts.org/cas',
+    default_access: 'all',
+    primary_color: '#127BC4',
+    ...override,
+  });
+
+  before(async () => {
+    [defaultApp1, defaultApp2] = await Application.bulkCreate([
+      testAppData(),
+      testAppData({ name: 'AppTwo' }),
+    ]);
+  });
+
   after(async () => {
+    await Application.destroy({ where: {} });
     await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
     if (server?.listening) {
@@ -131,6 +152,14 @@ describe('Authentication and Authorization', async () => {
 
       const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
       expect(updatedUser?.get('expired')).to.be.false;
+
+      const defaultUserApps = await UserApplication.findAll({ where: { user_id: updatedUser?.uuid } });
+      expect(defaultUserApps).to.have.lengthOf(2);
+      expect(defaultUserApps.map((a) => a.get('application_id'))).to.have.deep.members([
+        defaultApp1.get('id'),
+        defaultApp2.get('id'),
+      ]);
+
       await user1.destroy();
     });
   });

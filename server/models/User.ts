@@ -12,8 +12,10 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { Application } from './Application';
 import { Organization } from './Organization';
 import { UserOrganization } from './UserOrganization';
+import { UserApplication } from './UserApplication';
 
 @DefaultScope(() => ({
   attributes: {
@@ -46,6 +48,9 @@ export class User extends Model {
 
   @Column(DataType.STRING)
   declare password?: string;
+
+  @BelongsToMany(() => Application, () => UserApplication)
+  applications?: Array<Application & { UserApplication: UserApplication }>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

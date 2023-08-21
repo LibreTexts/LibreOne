@@ -35,6 +35,28 @@ usersRouter.route('/:uuid')
     catchInternal((req, res) => controller.updateUser(req, res)),
   );
 
+usersRouter.route('/:uuid/applications')
+  .all(
+    verifyAPIAuthentication,
+    validate(UserValidator.uuidParamSchema, 'params'),
+  ).get(
+    ensureUserResourcePermission(false),
+    catchInternal((req, res) => controller.getAllUserApplications(req, res)),
+  ).post(
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['applications:write', 'users:write']),
+    validate(UserValidator.createUserApplicationSchema, 'body'),
+    catchInternal((req, res) => controller.createUserApplication(req, res)),
+  );
+
+usersRouter.route('/:uuid/applications/:applicationID').delete(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['applications:write', 'users:write']),
+  validate(UserValidator.uuidApplicationIDParamsSchema, 'params'),
+  catchInternal((req, res) => controller.deleteUserApplication(req, res)),
+);
+
 usersRouter.route('/:uuid/organizations')
   .all(
     verifyAPIAuthentication,

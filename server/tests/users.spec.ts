@@ -13,10 +13,12 @@ import { server } from '..';
 import {
   APIUser,
   APIUserPermissionConfig,
+  Application,
   EmailVerification,
   Organization,
   OrganizationSystem,
   User,
+  UserApplication,
   UserOrganization,
 } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
@@ -26,11 +28,28 @@ import { createSessionCookiesForTest } from './test-helpers';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 describe('Users', async () => {
+  let application1: Application;
+  let application2: Application;
   let mainAPIUser: APIUser;
   let mainAPIUserUsername: string;
   let mainAPIUserHashedPassword: string;
   const mainAPIUserPassword = 'test-password';
+
+  const testAppData = (override?) => ({
+    name: 'AppOne',
+    app_type: 'standalone',
+    main_url: 'https://libretexts.org',
+    primary_color: '#127BC4',
+    cas_service_url: 'https://libretexts.org/cas',
+    default_access: 'all',
+    ...override,
+  });
+
   before(async () => {
+    [application1, application2] = await Application.bulkCreate([
+      testAppData(),
+      testAppData({ name: 'AppTwo' }),
+    ]);
     mainAPIUserHashedPassword = await bcrypt.hash(mainAPIUserPassword, 10);
     mainAPIUser = await APIUser.create({
       username: 'apiuser1',
@@ -41,14 +60,20 @@ describe('Users', async () => {
       api_user_id: mainAPIUser.id,
       api_users_read: true,
       api_users_write: true,
+      applications_read: true,
+      applications_write: true,
       organizations_read: true,
       organizations_write: true,
       users_read: true,
       users_write: true,
     });
   });
+  afterEach(async () => {
+    await User.destroy({ where: {} });
+  });
   after(async () => {
     await APIUser.destroy({ where: {} });
+    await Application.destroy({ where: {} });
     await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
@@ -85,10 +110,9 @@ describe('Users', async () => {
       expect(emailVerify1).to.exist;
       expect(emailVerify1?.get('code')).to.be.greaterThan(99999);
       await emailVerify1?.destroy();
-      await user1.destroy();
     });
     it('should prevent email change to existing address', async () => {
-      const user1 = await User.create({
+      await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
         disabled: false,
@@ -117,8 +141,34 @@ describe('Users', async () => {
         },
       });
       expect(emailVerify1).to.not.exist;
-      await user1.destroy();
-      await user2.destroy();
+    });
+    it('should create user application', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/applications`)
+        .send({ application_id: application1.id })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.deep.equal({
+        uuid: user1.uuid,
+        application_id: application1.id,
+      });
+    });
+    it('should not allow user to create user application', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/applications`)
+        .send({ application_id: application1.id })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(403);
     });
   });
 
@@ -140,7 +190,6 @@ describe('Users', async () => {
         uuid: user1.uuid,
         email: user1.email,
       });
-      await user1.destroy();
     });
     it('should retrieve user (with organization)', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
@@ -167,7 +216,6 @@ describe('Users', async () => {
         }],
       });
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should retrieve user (with multiple organizations)', async () => {
@@ -206,7 +254,6 @@ describe('Users', async () => {
         ],
       });
 
-      await user1.destroy();
       await org1.destroy();
       await org2.destroy();
     });
@@ -235,7 +282,6 @@ describe('Users', async () => {
         status: '403',
         code: 'forbidden',
       });
-      await Promise.all([user1.destroy(), user2.destroy()]);
     });
     it('should retrieve all users', async () => {
       const [org1, org2] = await Organization.bulkCreate([
@@ -284,8 +330,34 @@ describe('Users', async () => {
           }],
         },
       ]);
-      await Promise.all([user1.destroy(), user2.destroy()]);
       await Promise.all([org1.destroy(), org2.destroy()]);
+    });
+    it('should retrieve all user applications', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const [userApp1, userApp2] = await UserApplication.bulkCreate([
+        { user_id: user1.uuid, application_id: application1.id },
+        { user_id: user1.uuid, application_id: application2.id },
+      ]);
+
+      const response = await request(server)
+        .get(`/api/v1/users/${user1.uuid}/applications`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.applications).to.be.an('array').with.length(2);
+      const apps = response.body?.data?.applications?.map((a) => _.omit(a, ['created_at', 'updated_at']));
+      apps.forEach((a) => expect(a?.id).to.be.a('number'));
+      expect(apps.map((a) => _.omit(a, ['id']))).to.have.deep.members([
+        testAppData(),
+        testAppData({ name: 'AppTwo' }),
+      ]);
+
+      await Promise.all([userApp1.destroy(), userApp2.destroy()]);
     });
     it('should retrieve all user organizations', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
@@ -313,7 +385,6 @@ describe('Users', async () => {
         { id: org2.id, name: 'LibreTexts+1' },
       ]);
 
-      await user1.destroy();
       await org1.destroy();
       await org2.destroy();
     });
@@ -358,7 +429,6 @@ describe('Users', async () => {
         verify_status: 'not_attempted',
         picture: DEFAULT_AVATAR,
       });
-      await user1.destroy();
       await org1.destroy();
       await orgSystem1.destroy();
     });
@@ -403,7 +473,6 @@ describe('Users', async () => {
         verify_status: 'not_attempted',
         picture: DEFAULT_AVATAR,
       });
-      await user1.destroy();
       await org1.destroy();
       await orgSystem1.destroy();
     });
@@ -441,7 +510,6 @@ describe('Users', async () => {
         email: user1.email,
         ...updateObj,
       });
-      await user1.destroy();
     });
     it('should not allow update if not self', async () => {
       const user1 = await User.create({
@@ -465,7 +533,6 @@ describe('Users', async () => {
         status: '403',
         code: 'forbidden',
       });
-      await Promise.all([user1.destroy(), user2.destroy()]);
     });
     it('should allow API User to update user attributes', async () => {
       const user1 = await User.create({
@@ -485,7 +552,6 @@ describe('Users', async () => {
         'email',
         ...Object.keys(updateObj),
       ]);
-      await user1.destroy();
     });
     it('should prevent API User to update if permission not granted', async () => {
       const apiUser2 = await APIUser.create({
@@ -511,7 +577,6 @@ describe('Users', async () => {
         status: '403',
         code: 'forbidden',
       });
-      await user1.destroy();
       await apiUser2.destroy();
     });
     it('should update user email with valid code', async () => {
@@ -534,7 +599,6 @@ describe('Users', async () => {
       expect(response.status).to.equal(200);
       const updatedUser = await User.findOne({ where: { uuid: user1.uuid }});
       expect(updatedUser?.get('email')).to.equal('info+new@libretexts.org');
-      await user1.destroy();
     });
     it('should not allow user email update with expired code', async () => {
       const user1 = await User.create({
@@ -563,7 +627,6 @@ describe('Users', async () => {
         code: 'bad_request',
       });
       await emailVerify1.destroy();
-      await user1.destroy();
     });
     it('should not allow user email update to existing address (race verifications)', async () => {
       const user1 = await User.create({
@@ -572,7 +635,7 @@ describe('Users', async () => {
         disabled: false,
         expired: false,
       });
-      const user2 = await User.create({
+      await User.create({
         uuid: uuidv4(),
         email: 'info2@libretexts.org',
         disabled: false,
@@ -592,8 +655,6 @@ describe('Users', async () => {
         status: '400',
         code: 'bad_request',
       });
-      await user1.destroy();
-      await user2.destroy();
     });
     it('should add user to existing organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
@@ -619,7 +680,6 @@ describe('Users', async () => {
       });
       expect(orgMembership).to.exist;
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should add user to new organization', async () => {
@@ -642,7 +702,6 @@ describe('Users', async () => {
       expect(createdOrg).to.exist;
       expect(createdOrg?.get('name')).to.equal('LibreTexts');
 
-      await user1.destroy();
       await createdOrg?.destroy();
     });
     it('should remove user from organization', async () => {
@@ -670,7 +729,6 @@ describe('Users', async () => {
       });
       expect(orgMembership).to.not.exist;
 
-      await user1.destroy();
       await org1.destroy();
     });
 
@@ -691,7 +749,6 @@ describe('Users', async () => {
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.equal('org_admin');
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should give user admin role in organization (not yet a member)', async () => {
@@ -710,7 +767,6 @@ describe('Users', async () => {
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.equal('org_sys_admin');
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should change user admin role in organization', async () => {
@@ -730,7 +786,6 @@ describe('Users', async () => {
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.equal('org_sys_admin');
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should not give reserved admin role in organization', async () => {
@@ -764,7 +819,6 @@ describe('Users', async () => {
         code: 'bad_request',
       });
 
-      await user1.destroy();
       await org1.destroy();
     });
     it('should allow user to update password', async () => {
@@ -783,7 +837,6 @@ describe('Users', async () => {
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
 
       expect(response.status).to.equal(200);
-      await user1.destroy();
     });
     it('should prevent password update when current is incorrect', async () => {
       const user1 = await User.create({
@@ -807,7 +860,6 @@ describe('Users', async () => {
         status: '401',
         code: 'unauthorized',
       });
-      await user1.destroy();
     });
     it('should prevent password update when user is from an external IdP', async () => {
       const user1 = await User.create({
@@ -830,7 +882,6 @@ describe('Users', async () => {
         status: '400',
         code: 'bad_request',
       });
-      await user1.destroy();
     });
     it('should prevent updating verification status by user', async () => {
       const user1 = await User.create({
@@ -850,7 +901,6 @@ describe('Users', async () => {
         status: '403',
         code: 'forbidden',
       });
-      await user1.destroy();
     });
     it('should update user avatar', async () => {
       const s3Mock = mockClient(S3Client).on(PutObjectCommand).resolves({
@@ -871,12 +921,59 @@ describe('Users', async () => {
       expect(response.status).to.equal(200);
       const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
       expect(updatedUser?.avatar).to.exist;
-      await user1.destroy();
       s3Mock.restore();
     });
   });
 
   describe('DELETE', () => {
+    it('should remove user application', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      await UserApplication.create({
+        user_id: user1.uuid,
+        application_id: application1.id,
+      });
+
+      const response = await request(server)
+        .delete(`/api/v1/users/${user1.uuid}/applications/${application1.id}`)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      expect(response.status).to.equal(200);
+
+      const foundUserApp = await UserApplication.findOne({
+        where: {
+          user_id: user1.uuid,
+          application_id: application1.id,
+        },
+      });
+      expect(foundUserApp).to.not.exist;
+    });
+    it('should prevent user from removing user application', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      await UserApplication.create({
+        user_id: user1.uuid,
+        application_id: application1.id,
+      });
+
+      const response = await request(server)
+        .delete(`/api/v1/users/${user1.uuid}/applications/${application1.id}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(403);
+
+      const foundUserApp = await UserApplication.findOne({
+        where: {
+          user_id: user1.uuid,
+          application_id: application1.id,
+        },
+      });
+      expect(foundUserApp).to.exist;
+
+      await foundUserApp?.destroy();
+    });
     it('should remove user admin role in organization', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -893,7 +990,6 @@ describe('Users', async () => {
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.be.null;
 
-      await user1.destroy();
       await org1.destroy();
     });
   });

@@ -9,6 +9,7 @@ export enum PermissionsActionsEnum {
 }
 export enum PermissionsResourcesEnum {
   APIUser = 'APIUser',
+  Application = 'Application',
   Organization = 'Organization',
   OrganizationSystem = 'OrganizationSystem',
   Service = 'Service',
@@ -89,6 +90,9 @@ export class PermissionsController {
         case 'APIUser':
           hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
           break;
+        case 'Application':
+          hasPermission = true; // all roles
+          break;
         case 'Organization':
           hasPermission = true; // all roles
           break;
@@ -104,6 +108,9 @@ export class PermissionsController {
     } else if (action === PermissionsActionsEnum.WRITE) {
       switch (resourceType) {
         case 'APIUser':
+          hasPermission = this.isOmnipotent(foundUser);
+          break;
+        case 'Application':
           hasPermission = this.isOmnipotent(foundUser);
           break;
         case 'Organization':

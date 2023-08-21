@@ -7,7 +7,7 @@ import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
 import { UniqueConstraintError } from 'sequelize';
-import { ResetPasswordToken, sequelize, User } from '../models';
+import { Application, ResetPasswordToken, sequelize, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
@@ -288,6 +288,17 @@ export class AuthController {
     foundUser.registration_complete = true;
     await foundUser.save();
 
+    const defaultApps = await Application.findAll({ where: { default_access: 'all' } });
+    const userAppsToCreate = defaultApps.map((app) => ({
+      user_id: foundUser.get('uuid'),
+      application_id: app.get('id'),
+    }));
+    try {
+      await UserApplication.bulkCreate(userAppsToCreate);
+    } catch (e) {
+      console.error('Error creating default user applications!', e);
+    }
+
     let shouldCreateSSOSession = true;
     let redirectCASService = null;
     if (req.cookies.cas_state) {
@@ -440,7 +451,7 @@ export class AuthController {
   }
 
   public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
-    const { username } = req.query as CheckCASInterruptQuery;
+    const { registeredService, username } = req.query as CheckCASInterruptQuery;
     
     // Decide which attribute to match a record with
     const getAttrMatchKey = (username: string) => {
@@ -475,6 +486,45 @@ export class AuthController {
         message: 'This account has been disabled. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> to regain access.',
         links: {},
       });
+    }
+
+    if (!registeredService) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'We\'ve encountered an error establishing your session. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+        links: {},
+      });
+    }
+
+    if (registeredService !== CAS_CALLBACK) {
+      const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
+      if (!foundApp) {
+        return res.send({
+          interrupt: true,
+          block: true,
+          ssoEnabled: false,
+          message: 'Sorry, we don\'t recognize the application you\'re trying to access. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+          links: {},
+        });
+      }
+
+      const foundUserApp = await UserApplication.findOne({
+        where: {
+          user_id: foundUser.get('uuid'),
+          application_id: foundApp.get('id'),
+        },
+      });
+      if (!foundUserApp) {
+        return res.send({
+          interrupt: true,
+          block: true,
+          ssoEnabled: false,
+          message: 'Sorry, you don\'t have access to this application. Please request access in <a href="https://commons.libretexts.org">LibreTexts Conductor</a> or contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+          links: {},
+        });
+      }
     }
 
     if (!foundUser.registration_complete) {

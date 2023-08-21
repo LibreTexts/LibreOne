@@ -1,8 +1,9 @@
 import joi from 'joi';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
+import { applicationIDValidator } from './applications';
 import { orgIDValidator } from './organizations';
-import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
 import { passwordStrengthOptions } from '../../passwordstrength';
+import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
 
 const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
 
@@ -10,9 +11,18 @@ export const uuidParamSchema = joi.object({
   uuid: uuidValidator,
 });
 
+export const uuidApplicationIDParamsSchema = joi.object({
+  uuid: uuidValidator,
+  applicationID: applicationIDValidator,
+});
+
 export const uuidOrgIDParamsSchema = joi.object({
   uuid: uuidValidator,
   orgID: orgIDValidator,
+});
+
+export const createUserApplicationSchema = joi.object({
+  application_id: applicationIDValidator,
 });
 
 export const createUserOrganizationSchema = joi.object({
