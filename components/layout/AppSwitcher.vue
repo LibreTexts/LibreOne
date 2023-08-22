@@ -29,25 +29,25 @@
     >
       <li
         class="switcher-item"
-        v-for="(item, idx) in tempMenuItems"
+        v-for="(item, idx) in apps"
         :key="idx"
         role="button"
         tabindex="0"
-        @click="openAppSwitcherLink(item.href)"
-        @keydown.prevent.enter="openAppSwitcherLink(item.href)"
+        @click="openAppSwitcherLink(item.main_url)"
+        @keydown.prevent.enter="openAppSwitcherLink(item.main_url)"
         @focusout="handleFocusOut(idx)"
       >
         <div class="switcher-item-icon-container">
           <img
-            :src="item.img"
-            :alt="item.title"
+            :src="item.icon"
+            :alt="item.name"
             width="25"
             height="25"
           >
         </div>
         <div class="switcher-item-text-container">
           <p class="switcher-item-header">
-            {{ item.title }}
+            {{ item.name }}
           </p>
           <p class="switcher-item-descrip">
             {{ item.description }}
@@ -59,9 +59,9 @@
         key="all-apps"
         role="button"
         tabindex="0"
-        @click="openAppSwitcherLink('/apps')"
-        @keydown.prevent.enter="openAppSwitcherLink('/apps')"
-        @focusout="handleFocusOut(tempMenuItems.length - 1)"
+        @click="openAppSwitcherLink('/home')"
+        @keydown.prevent.enter="openAppSwitcherLink('/home')"
+        @focusout="handleFocusOut(apps.length - 1)"
       >
         <div class="switcher-view-all mx-auto">
           <p class="switcher-item-header">
@@ -76,47 +76,34 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-
-  const tempMenuItems: {
-    img: string;
-    title: string;
-    href: string;
-    description: string;
-  }[] = [
-    {
-      img: '',
-      title: 'ADAPT',
-      href: 'https://adapt.libretexts.org',
-      description: 'Create and share interactive content',
-    },
-    {
-      img: '',
-      title: 'Commons',
-      href: 'https://commons.libretexts.org',
-      description: 'Find, remix, and share content',
-    },
-    {
-      img: '',
-      title: 'Conductor',
-      href: 'https://commons.libretexts.org/conductor',
-      description: 'Manage your OER projects',
-    },
-    {
-      img: '',
-      title: 'LibreTexts Website',
-      href: 'https://libretexts.org',
-      description: 'Learn more about LibreTexts',
-    },
-  ];
+  import { useAxios } from '@renderer/useAxios';
+  import { Application } from '@server/types/applications';
+  
+  const axios = useAxios();
 
   const isOpen = ref<boolean>(false);
+  const apps = ref<Application[]>([]);
+
+  loadApps();
+  async function loadApps(){
+    try {
+      const appRes = await axios.get('/applications');
+      if(!appRes || !appRes.data || !appRes.data.data || !Array.isArray(appRes.data.data)){
+        throw new Error('badres');
+      }
+      apps.value = appRes.data.data;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  
 
   function openAppSwitcherLink(href: string) {
     window.open(href, '_blank');
   }
 
   function handleFocusOut(idx: number) {
-    if (idx === tempMenuItems.length - 1) {
+    if (idx === apps.value.length - 1) {
       isOpen.value = false;
     }
   }
