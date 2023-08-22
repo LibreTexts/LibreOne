@@ -8,6 +8,8 @@ export type CreateApplicationBody = {
   main_url: string;
   cas_service_url: string;
   default_access: 'all' | 'instructors' | 'none';
+  icon: string;
+  description: string;
   primary_color: string;
 };
 

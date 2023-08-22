@@ -29,6 +29,8 @@ describe('Applications', async () => {
     main_url: 'https://libretexts.org',
     cas_service_url: 'https://libretexts.org/cas',
     default_access: 'all',
+    icon: 'https://libretexts.org/icon.png',
+    description: 'An awesome application.',
     primary_color: '#127BC4',
     ...override,
   });

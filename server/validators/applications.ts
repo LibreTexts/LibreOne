@@ -12,6 +12,8 @@ export const createApplicationSchema = joi.object({
   main_url: joi.string().uri().required(),
   cas_service_url: joi.string().uri().required(),
   default_access: joi.string().valid('all', 'instructors', 'none').required(),
+  icon: joi.string().uri().required(),
+  description: joi.string().min(2).max(100).required(),
   primary_color: joi.string().regex(/^#[A-Fa-f0-9]{6}/).required(), // hex color
 });
 
@@ -26,5 +28,7 @@ export const updateApplicationSchema = joi.object({
   app_type: joi.string().valid('standalone', 'library'),
   main_url: joi.string().uri(),
   cas_service_url: joi.string().uri(),
+  icon: joi.string().uri(),
+  description: joi.string().min(2).max(100),
   primary_color: joi.string().regex(/^#[A-Fa-f0-9]{6}/), // hex color
 });

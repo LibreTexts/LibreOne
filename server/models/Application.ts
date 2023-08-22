@@ -41,6 +41,14 @@ export class Application extends Model {
 
   @AllowNull(false)
   @Column(DataType.STRING)
+  declare icon: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare description: string;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
   declare primary_color: string;
 
   @BelongsToMany(() => User, () => UserApplication)
