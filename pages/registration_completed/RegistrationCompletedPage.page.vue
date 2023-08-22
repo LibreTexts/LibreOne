@@ -39,9 +39,18 @@
         </div>
         <div
           v-else
-          class="mx-auto my-4 px-2 py-4 w-full sm:w-3/4"
+          class="mt-4"
         >
-          <ApplicationsGrid />
+          <a
+            href="/home"
+            class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
+          >
+            <span>{{ $t('common.continue') }}</span>
+            <FontAwesomeIcon
+              icon="fa-solid fa-circle-arrow-right"
+              class="ml-2"
+            />
+          </a>
         </div>
       </div>
     </div>
@@ -51,7 +60,6 @@
 <script lang="ts" setup>
   import { computed, onMounted } from 'vue';
   import { usePageContext } from '@renderer/usePageContext';
-  import ApplicationsGrid from '@components/ApplicationsGrid.vue';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
 
   const props = defineProps<{
