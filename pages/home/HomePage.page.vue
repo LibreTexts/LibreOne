@@ -9,24 +9,26 @@
           {{ $t("home.yourlibreversetagline") }}
         </p>
       </div>
-      <div class="apps-grid px-4">
+      <div class="apps-grid px-4"
+      v-if="apps.length > 0"
+      >
         <div
           class="app-item-container"
-          v-for="app in tempApps"
-          @click="openAppLink(app.href)"
-          :key="app.title"
+          v-for="app in apps"
+          @click="openAppLink(app.main_url)"
+          :key="app.id ?? app.name"
         >
           <div class="app-item-icon-container">
             <img
-              :src="app.img"
-              :alt="app.title"
+              :src="app.icon"
+              :alt="app.name"
               width="25"
               height="25"
             >
           </div>
           <div class="app-item-text-container">
             <p class="app-item-header">
-              {{ app.title }}
+              {{ app.name }}
             </p>
             <p class="app-item-descrip">
               {{ app.description }}
@@ -39,39 +41,31 @@
 </template>
 
 <script lang="ts" setup>
+  import { ref } from 'vue';
   import StandardPageLayout from '../../components/layout/StandardPageLayout.vue';
+  import { Application } from '@server/models';
+  import { useAxios } from '@renderer/useAxios';
 
-  const tempApps: {
-    img: string;
-    title: string;
-    href: string;
-    description: string;
-  }[] = [
-    {
-      img: '',
-      title: 'ADAPT',
-      href: 'https://adapt.libretexts.org',
-      description: 'Create and share interactive content',
-    },
-    {
-      img: '',
-      title: 'Commons',
-      href: 'https://commons.libretexts.org',
-      description: 'Find, remix, and share content',
-    },
-    {
-      img: '',
-      title: 'Conductor',
-      href: 'https://commons.libretexts.org/conductor',
-      description: 'Manage your OER projects',
-    },
-    {
-      img: '',
-      title: 'LibreTexts Website',
-      href: 'https://libretexts.org',
-      description: 'Learn more about LibreTexts',
-    },
-  ];
+  const axios = useAxios();
+
+  const loading = ref(false);
+  const apps = ref<Application[]>([]);
+
+  loadApps();
+  async function loadApps(){
+    try {
+      loading.value = true;
+      const appRes = await axios.get('/applications');
+      if(!appRes || !appRes.data || !appRes.data.data || !Array.isArray(appRes.data.data)){
+        throw new Error('badres');
+      }
+      apps.value = appRes.data.data;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+  }
 
   function openAppLink(href: string) {
     window.open(href, '_blank');
