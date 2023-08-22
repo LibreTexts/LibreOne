@@ -19,10 +19,10 @@
         </div>
         <div class="flex flex-row mr-2">
           <button
-            href="/api/v1/auth/logout"
-            class="hidden md:block text-sm font-semibold leading-6 text-gray-900"
+            @click="handleLogout()"
+            class="hidden md:block text-sm font-semibold leading-6 text-gray-500"
           >
-            {{ $t("common.logout") }} <span aria-hidden="true">&rarr;</span>
+            {{ $t("common.logout") }}
           </button>
           <FontAwesomeIcon
             class="md:hidden clicked-animation"
@@ -57,10 +57,10 @@
               {{ item.title }}
             </a>
             <button
-              href="/api/v1/auth/logout"
-              class="text-sm font-semibold leading-6 text-gray-900 my-2"
+              @click="handleLogout()"
+              class="text-sm font-semibold leading-6 text-gray-500 mt-6"
             >
-              {{ $t("common.logout") }} <span aria-hidden="true">&rarr;</span>
+              {{ $t("common.logout") }}
             </button>
           </div>
         </section>
@@ -70,26 +70,30 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import AppSwitcher from './AppSwitcher.vue';
+import { ref } from "vue";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import AppSwitcher from "./AppSwitcher.vue";
 
-  const menuOpen = ref<boolean>(false);
+const menuOpen = ref<boolean>(false);
 
-  const navItems: { title: string; link: string }[] = [
-    {
-      title: 'Home',
-      link: '/home',
-    },
-    {
-      title: 'Profile',
-      link: '/profile',
-    },
-    {
-      title: 'Security',
-      link: '/security',
-    },
-  ];
+const navItems: { title: string; link: string }[] = [
+  {
+    title: "Home",
+    link: "/home",
+  },
+  {
+    title: "Profile",
+    link: "/profile",
+  },
+  {
+    title: "Security",
+    link: "/security",
+  },
+];
+
+function handleLogout() {
+  window.location.href = '/api/v1/auth/logout';
+}
 </script>
 
 <style lang="css">
