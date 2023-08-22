@@ -584,7 +584,7 @@ export class UserController {
     }
 
     const hashed = await bcrypt.hash(new_password, 10);
-    await foundUser.update({ password: hashed });
+    await foundUser.update({ password: hashed, last_password_change: new Date() });
 
     return res.send({
       data: {

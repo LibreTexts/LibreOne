@@ -17,7 +17,8 @@
     "updating": "Updating",
     "edit": "Edit",
     "save": "Save",
-    "submit": "Submit"
+    "submit": "Submit",
+    "loading": "Loading..."
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -100,6 +101,10 @@
     "completedtagline": "Nice! You can now log in to LibreTexts services using the password you just set.",
     "redirecting": "We're redirecting you to the login screen."
   },
+  "home": {
+    "yourlibreverse": "Your LibreVerse",
+    "yourlibreversetagline": "Access all of your LibreTexts applications from one place."
+  },
   "profile": {
     "header": "Profile Management",
     "infoline": "Manage your LibreOne Account details here. Changes to your account here will be reflected across all LibreTexts services.",
@@ -113,14 +118,27 @@
     "header": "Account Security Management",
     "infoline": "Manage your security settings here. Changes to your account here will be reflected across all LibreTexts services.",
     "security": "Security",
+    "securityinfo": "Security Information",
     "lastchanged": "Last Password Change",
     "changeemail": "Change Email Address",
     "newemail": "New Email Address",
     "verify_message":"We just sent a six-digit verification code to your new email. Please enter the code here to finish changing your email address.",
+    "newemailexists": "Oops, an account with that email already exists. Please try again.",
+    "newemailerror": "Oops, something went wrong. Please try again.",
+    "newemailsuccess": "Great! Your email address has been updated.",
+    "newemailinvalid": "Oops, that doesn't look like a valid email address. Please try again.",
+    "verifyinvalid": "Invalid code, please check your input.",
     "changepassword": "Change Password",
     "currentpassword": "Current Password",
     "newpassword": "New Password",
     "confirmnewpassword": "Confirm New Password",
-    "never": "Never"
+    "never": "Never",
+    "nomatch": "Passwords do not match.",
+    "notstrongenough": "Password is not strong enough.",
+    "passwordupdatefailed": "Password update failed. Please check your current password and try again.",
+    "cannotbecurrent": "New password cannot be the same as the current password.",
+    "passwordchanged": "Password changed successfully!",
+    "redirecting": "We're redirecting you back to the security management page...",
+    "external": "It looks like you're using an external login provider. You can change your email or password with them."
   }
 }
