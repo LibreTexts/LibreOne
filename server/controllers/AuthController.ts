@@ -621,7 +621,7 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
-    let redirectURI = '/dashboard';
+    let redirectURI = '/home';
     if (!foundUser.registration_complete) {
       redirectURI = '/complete-registration';
     } else if (req.cookies.cas_state) {
