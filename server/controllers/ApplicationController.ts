@@ -62,16 +62,29 @@ export class ApplicationController {
    * @returns The fulfilled API response.
    */
   public async getAllApplications(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query } = (req.query as unknown) as GetAllApplicationsQuery;
+    const { offset, limit, query, type } = (req.query as unknown) as GetAllApplicationsQuery;
+
+    const criteria: unknown[] = [];
+    if (query) {
+      criteria.push({
+        name: { [Op.like]: `%${query}%` },
+      });
+    }
+    if (type) {
+      criteria.push({ app_type: type });
+    }
+
+    let whereSearch;
+    if (criteria.length > 1) {
+      whereSearch = {
+        [Op.and]: criteria,
+      };
+    } else if (criteria.length === 1) {
+      whereSearch = criteria[0];
+    }
 
     const { count, rows } = await Application.findAndCountAll({
-      ...(query && {
-        where: {
-          name: {
-            [Op.like]: `%${query}%`,
-          },
-        },
-      }),
+      ...(whereSearch && { where: whereSearch }),
       offset,
       limit,
       order: sequelize.literal('name'),

@@ -11,6 +11,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
+import { ApplicationType } from '../types/applications';
 
 @Table({
   timestamps: true,
@@ -24,7 +25,7 @@ export class Application extends Model {
 
   @AllowNull(false)
   @Column(DataType.ENUM('standalone', 'library'))
-  declare app_type: 'standalone' | 'library';
+  declare app_type: ApplicationType;
 
   @AllowNull(false)
   @Column(DataType.STRING)
