@@ -70,30 +70,30 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import AppSwitcher from "./AppSwitcher.vue";
+  import { ref } from 'vue';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import AppSwitcher from './AppSwitcher.vue';
 
-const menuOpen = ref<boolean>(false);
+  const menuOpen = ref<boolean>(false);
 
-const navItems: { title: string; link: string }[] = [
-  {
-    title: "Home",
-    link: "/home",
-  },
-  {
-    title: "Profile",
-    link: "/profile",
-  },
-  {
-    title: "Security",
-    link: "/security",
-  },
-];
+  const navItems: { title: string; link: string }[] = [
+    {
+      title: 'Home',
+      link: '/home',
+    },
+    {
+      title: 'Profile',
+      link: '/profile',
+    },
+    {
+      title: 'Security',
+      link: '/security',
+    },
+  ];
 
-function handleLogout() {
-  window.location.href = '/api/v1/auth/logout';
-}
+  function handleLogout() {
+    window.location.href = '/api/v1/auth/logout';
+  }
 </script>
 
 <style lang="css">
