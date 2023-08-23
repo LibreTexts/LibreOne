@@ -50,7 +50,7 @@ describe('Users', async () => {
   before(async () => {
     [application1, application2] = await Application.bulkCreate([
       testAppData(),
-      testAppData({ name: 'AppTwo' }),
+      testAppData({ name: 'AppTwo', app_type: 'library' }),
     ]);
     mainAPIUserHashedPassword = await bcrypt.hash(mainAPIUserPassword, 10);
     mainAPIUser = await APIUser.create({
@@ -356,7 +356,34 @@ describe('Users', async () => {
       apps.forEach((a) => expect(a?.id).to.be.a('number'));
       expect(apps.map((a) => _.omit(a, ['id']))).to.have.deep.members([
         testAppData(),
-        testAppData({ name: 'AppTwo' }),
+        testAppData({ name: 'AppTwo', app_type: 'library' }),
+      ]);
+
+      await Promise.all([userApp1.destroy(), userApp2.destroy()]);
+    });
+    it('should filter user applications by type', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const [userApp1, userApp2] = await UserApplication.bulkCreate([
+        { user_id: user1.uuid, application_id: application1.id },
+        { user_id: user1.uuid, application_id: application2.id },
+      ]);
+
+      const params = new URLSearchParams({ type: 'library' });
+      const response = await request(server)
+        .get(`/api/v1/users/${user1.uuid}/applications?${params.toString()}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.applications).to.be.an('array').with.length(1);
+      const apps = response.body?.data?.applications?.map((a) => _.omit(a, ['created_at', 'updated_at']));
+      apps.forEach((a) => expect(a?.id).to.be.a('number'));
+      expect(apps.map((a) => _.omit(a, ['id']))).to.have.deep.members([
+        testAppData({ name: 'AppTwo', app_type: 'library' }),
       ]);
 
       await Promise.all([userApp1.destroy(), userApp2.destroy()]);
