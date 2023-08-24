@@ -20,6 +20,7 @@ import type {
   CreateUserApplicationBody,
   CreateUserEmailChangeRequestBody,
   CreateUserOrganizationBody,
+  GetAllUserApplicationsQuery,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
   UpdateUserEmailBody,
@@ -228,6 +229,9 @@ export class UserController {
         model: Organization,
         attributes: ['id', 'name', 'logo'],
         through: { attributes: [] },
+        include: [
+          { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
+        ],
       }],
     });
     if (!foundUser) {
@@ -276,7 +280,11 @@ export class UserController {
    */
   public async getAllUserApplications(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
+    const { type } = req.query as GetAllUserApplicationsQuery;
     const foundApps = await Application.findAll({
+      ...(type && {
+        where: { app_type: type },
+      }),
       include: [
         {
           model: User,

@@ -1,3 +1,4 @@
+import { ApplicationType } from './applications';
 import { OrganizationIDParams } from './organizations';
 import { UserOrganizationAdminRole } from '../controllers/PermissionsController';
 
@@ -25,6 +26,10 @@ export type CreateUserOrganizationBody = {
 export type GetAllUsersQuery = {
   offset: number;
   limit: number;
+};
+
+export type GetAllUserApplicationsQuery = {
+  type: ApplicationType;
 };
 
 export type UpdateUserBody = {

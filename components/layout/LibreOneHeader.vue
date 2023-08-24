@@ -19,10 +19,10 @@
         </div>
         <div class="flex flex-row mr-2">
           <button
-            href="/api/v1/auth/logout"
-            class="hidden md:block text-sm font-semibold leading-6 text-gray-900"
+            @click="handleLogout()"
+            class="hidden md:block text-sm font-semibold leading-6 text-gray-500"
           >
-            {{ $t("common.logout") }} <span aria-hidden="true">&rarr;</span>
+            {{ $t("common.logout") }}
           </button>
           <FontAwesomeIcon
             class="md:hidden clicked-animation"
@@ -57,10 +57,10 @@
               {{ item.title }}
             </a>
             <button
-              href="/api/v1/auth/logout"
-              class="text-sm font-semibold leading-6 text-gray-900 my-2"
+              @click="handleLogout()"
+              class="text-sm font-semibold leading-6 text-gray-500 mt-6"
             >
-              {{ $t("common.logout") }} <span aria-hidden="true">&rarr;</span>
+              {{ $t("common.logout") }}
             </button>
           </div>
         </section>
@@ -90,6 +90,10 @@
       link: '/security',
     },
   ];
+
+  function handleLogout() {
+    window.location.href = '/api/v1/auth/logout';
+  }
 </script>
 
 <style lang="css">

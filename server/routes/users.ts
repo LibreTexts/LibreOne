@@ -40,6 +40,7 @@ usersRouter.route('/:uuid/applications')
     verifyAPIAuthentication,
     validate(UserValidator.uuidParamSchema, 'params'),
   ).get(
+    validate(UserValidator.getAllUserApplicationsSchema, 'query'),
     ensureUserResourcePermission(false),
     catchInternal((req, res) => controller.getAllUserApplications(req, res)),
   ).post(

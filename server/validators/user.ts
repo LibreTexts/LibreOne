@@ -1,6 +1,6 @@
 import joi from 'joi';
 import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
-import { applicationIDValidator } from './applications';
+import { applicationIDValidator, applicationTypeValidator } from './applications';
 import { orgIDValidator } from './organizations';
 import { passwordStrengthOptions } from '../../passwordstrength';
 import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
@@ -37,6 +37,10 @@ export const createUserEmailChangeRequestSchema = joi.object({
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
+});
+
+export const getAllUserApplicationsSchema = joi.object({
+  type: applicationTypeValidator,
 });
 
 export const updateUserSchema = joi.object({
