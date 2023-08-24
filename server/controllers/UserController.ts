@@ -229,6 +229,9 @@ export class UserController {
         model: Organization,
         attributes: ['id', 'name', 'logo'],
         through: { attributes: [] },
+        include: [
+          { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
+        ],
       }],
     });
     if (!foundUser) {

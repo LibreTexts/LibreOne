@@ -194,7 +194,8 @@ describe('Users', async () => {
       });
     });
     it('should retrieve user (with organization)', async () => {
-      const org1 = await Organization.create({ name: 'LibreTexts' });
+      const orgSystem1 = await OrganizationSystem.create({ name: 'LibreTextsMain', logo: '' });
+      const org1 = await Organization.create({ name: 'LibreTexts', system_id: orgSystem1.id });
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
@@ -215,13 +216,20 @@ describe('Users', async () => {
           id: org1.id,
           name: 'LibreTexts',
           logo: null,
+          system: {
+            id: orgSystem1.id,
+            name: 'LibreTextsMain',
+            logo: '',
+          },
         }],
       });
 
       await org1.destroy();
+      await orgSystem1.destroy();
     });
     it('should retrieve user (with multiple organizations)', async () => {
-      const org1 = await Organization.create({ name: 'LibreTexts' });
+      const orgSystem1 = await OrganizationSystem.create({ name: 'LibreTextsMain', logo: '' });
+      const org1 = await Organization.create({ name: 'LibreTexts', system_id: orgSystem1.id });
       const org2 = await Organization.create({ name: 'LibreTexts+1' });
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -247,17 +255,24 @@ describe('Users', async () => {
             id: org1.id,
             name: 'LibreTexts',
             logo: null,
+            system: {
+              id: orgSystem1.id,
+              name: 'LibreTextsMain',
+              logo: '',
+            },
           },
           {
             id: org2.id,
             name: 'LibreTexts+1',
             logo: null,
+            system: null,
           },
         ],
       });
 
       await org1.destroy();
       await org2.destroy();
+      await orgSystem1.destroy();
     });
     it('should not return user if not self', async () => {
       const user1 = await User.create({
