@@ -46,7 +46,7 @@
           >
         </div>
         <div class="switcher-item-text-container">
-          <p class="switcher-item-header">
+          <p class="switcher-item-header text-muted">
             {{ item.name }}
           </p>
           <p class="switcher-item-descrip">
@@ -76,27 +76,32 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import { useAxios } from '@renderer/useAxios';
   import { Application } from '@server/types/applications';
-  
-  const axios = useAxios();
+  import { usePageContext } from '@renderer/usePageContext';
+  import { getUserAppsAndLibraries } from '@renderer/utils/apps';
+
+  const pageContext = usePageContext();
 
   const isOpen = ref<boolean>(false);
   const apps = ref<Application[]>([]);
 
   loadApps();
-  async function loadApps(){
+  async function loadApps() {
     try {
-      const appRes = await axios.get('/applications');
-      if(!appRes || !appRes.data || !appRes.data.data || !Array.isArray(appRes.data.data)){
-        throw new Error('badres');
+      if (!pageContext?.user?.uuid) {
+        throw new Error('nouuid');
       }
-      apps.value = appRes.data.data;
+
+      const [appRes, libRes] = await getUserAppsAndLibraries(
+        pageContext.user.uuid,
+      );
+
+      apps.value = appRes.filter((app) => app.app_type === 'standalone');
+      apps.value.push(...libRes);
     } catch (err) {
       console.error(err);
     }
   }
-  
 
   function openAppSwitcherLink(href: string) {
     window.open(href, '_blank');
@@ -120,10 +125,13 @@
   left: 0;
   top: calc(100% + 0.8rem);
   width: 15rem;
+  max-height: 27rem;
+  overflow-y: auto;
   background-color: #fff;
   border-radius: 5px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 .switcher-icon {
   padding-top: 6px;
@@ -133,7 +141,19 @@
   padding: 0.5rem;
   cursor: pointer;
   display: flex;
+  flex-direction: row;
   align-items: center;
+}
+.switcher-item-small {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.7rem;
+  font-style: italic;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
 }
 .switcher-item:hover {
   background-color: #f9fafb;
@@ -144,6 +164,7 @@
   border-radius: 5px;
   background-color: #e5e7eb;
   display: flex;
+  flex-basis: 17.5%;
   align-items: center;
   justify-content: center;
   margin-right: 0.5rem;
@@ -152,6 +173,8 @@
   display: flex;
   flex-direction: column;
   text-align: left;
+  flex-wrap: wrap;
+  flex-basis: 82.5%;
 }
 .switcher-item-header {
   font-size: 0.9rem;
