@@ -5,7 +5,7 @@
   >
     <div
       :class="
-        `w-11/12 bg-white mt-16 py-10 px-8 shadow-md shadow-gray-400 rounded-md overflow-auto` +
+        `w-11/12 bg-white mt-16 py-10 px-8 shadow-md shadow-gray-400 h-fit rounded-md` +
           sizeClasses
       "
     >
