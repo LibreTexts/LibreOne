@@ -149,9 +149,10 @@
 </script>
 <style lang="css" scoped>
 .apps-list {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 12rem);
+  justify-content: space-between;
+  grid-gap: 1rem;
   padding-top: 1rem;
 }
 .app-item-container {
@@ -212,4 +213,18 @@
   font-size: 0.7rem;
   color: #6b7280;
 }
+
+@media only screen and (max-width: 480px) {
+  .apps-list {
+    grid-template-columns: none;
+    grid-template-rows: repeat(auto-fill, 12rem);
+    justify-content: center;
+  }
+
+  .app-item-container {
+    margin: 0;
+    width: 14rem;
+  }
+}
+
 </style>
