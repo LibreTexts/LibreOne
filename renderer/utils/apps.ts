@@ -13,7 +13,11 @@ async function getUserAppsAndLibraries(
   const libs: Application[] = [];
   try {
     const axiosClient = useAxios();
-    const appPromise = axiosClient.get(`/users/${uuid}/applications`);
+    const appPromise = axiosClient.get(`/users/${uuid}/applications`, {
+      params: {
+        type: 'standalone',
+      },
+    });
 
     const libPromise = axiosClient.get('/applications', {
       params: {
