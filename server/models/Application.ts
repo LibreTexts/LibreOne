@@ -52,6 +52,16 @@ export class Application extends Model {
   @Column(DataType.STRING)
   declare primary_color: string;
 
+  /** Hide record from Applications API results */
+  @AllowNull(false)
+  @Column(DataType.BOOLEAN)
+  declare hide_from_apps: boolean;
+
+  /** Hide record from Users API application results */
+  @AllowNull(false)
+  @Column(DataType.BOOLEAN)
+  declare hide_from_user_apps: boolean;
+
   @BelongsToMany(() => User, () => UserApplication)
   users?: Array<User & { UserApplication: UserApplication }>;
 

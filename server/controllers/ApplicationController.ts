@@ -1,4 +1,4 @@
-import { Op, UniqueConstraintError } from 'sequelize';
+import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
 import { Request, Response } from 'express';
 import { Application, UserApplication, sequelize } from '../models';
 import {
@@ -43,7 +43,12 @@ export class ApplicationController {
   public async getApplication(req: Request, res: Response): Promise<Response> {
     const { applicationID } = (req.params as unknown) as ApplicationIDParams;
     const foundApp = await Application.findOne({
-      where: { id: applicationID },
+      where: {
+        [Op.and]: [
+          { id: applicationID },
+          { hide_from_apps: false },
+        ],
+      },
     });
     if (!foundApp) {
       return errors.notFound(res);
@@ -64,7 +69,7 @@ export class ApplicationController {
   public async getAllApplications(req: Request, res: Response): Promise<Response> {
     const { offset, limit, query, type } = (req.query as unknown) as GetAllApplicationsQuery;
 
-    const criteria: unknown[] = [];
+    const criteria: WhereOptions[] = [{ hide_from_apps: false }];
     if (query) {
       criteria.push({
         name: { [Op.like]: `%${query}%` },
@@ -74,17 +79,8 @@ export class ApplicationController {
       criteria.push({ app_type: type });
     }
 
-    let whereSearch;
-    if (criteria.length > 1) {
-      whereSearch = {
-        [Op.and]: criteria,
-      };
-    } else if (criteria.length === 1) {
-      whereSearch = criteria[0];
-    }
-
     const { count, rows } = await Application.findAndCountAll({
-      ...(whereSearch && { where: whereSearch }),
+      where: criteria.length > 1 ? { [Op.and]: criteria } : criteria[0],
       offset,
       limit,
       order: sequelize.literal('name'),

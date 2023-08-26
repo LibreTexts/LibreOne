@@ -9,23 +9,11 @@ import { Op } from 'sequelize';
 import { server } from '..';
 import { Application, EmailVerification, ResetPasswordToken, User, UserApplication } from '../models';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
-import { createSessionCookiesForTest } from './test-helpers';
+import { createSessionCookiesForTest, testAppData } from './test-helpers';
 
 describe('Authentication and Authorization', async () => {
   let defaultApp1: Application;
   let defaultApp2: Application;
-
-  const testAppData = (override?) => ({
-    name: 'AppOne',
-    app_type: 'standalone',
-    main_url: 'https://libretexts.org',
-    cas_service_url: 'https://libretexts.org/cas',
-    default_access: 'all',
-    icon: 'https://libretexts.org/icon.png',
-    description: 'An awesome application.',
-    primary_color: '#127BC4',
-    ...override,
-  });
 
   before(async () => {
     [defaultApp1, defaultApp2] = await Application.bulkCreate([
