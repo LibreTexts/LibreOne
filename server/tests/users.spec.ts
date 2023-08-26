@@ -23,7 +23,7 @@ import {
 } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
-import { createSessionCookiesForTest } from './test-helpers';
+import { createSessionCookiesForTest, testAppData } from './test-helpers';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -34,18 +34,6 @@ describe('Users', async () => {
   let mainAPIUserUsername: string;
   let mainAPIUserHashedPassword: string;
   const mainAPIUserPassword = 'test-password';
-
-  const testAppData = (override?) => ({
-    name: 'AppOne',
-    app_type: 'standalone',
-    main_url: 'https://libretexts.org',
-    primary_color: '#127BC4',
-    cas_service_url: 'https://libretexts.org/cas',
-    default_access: 'all',
-    icon: 'https://libretexts.org/icon.png',
-    description: 'An awesome application.',
-    ...override,
-  });
 
   before(async () => {
     [application1, application2] = await Application.bulkCreate([
@@ -402,6 +390,31 @@ describe('Users', async () => {
       ]);
 
       await Promise.all([userApp1.destroy(), userApp2.destroy()]);
+    });
+    it('should not show hidden user applications', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const hiddenApp = await Application.create(
+        testAppData({ name: 'AppThree', hide_from_user_apps: true }),
+      );
+      const userApp1 = await UserApplication.create({
+        user_id: user1.uuid,
+        application_id: hiddenApp.id,
+      });
+
+      const response = await request(server)
+        .get(`/api/v1/users/${user1.uuid}/applications`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.applications).to.be.an('array').with.length(0);
+
+      await userApp1.destroy();
+      await hiddenApp.destroy();
     });
     it('should retrieve all user organizations', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });

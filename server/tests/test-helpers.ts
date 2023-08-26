@@ -11,3 +11,19 @@ export async function createSessionCookiesForTest(uuid: string): Promise<[string
   const [access, signed] = AuthController.splitSessionJWT(sessionJWT);
   return [`one_access=${access}`, `one_signed=${signed}`];
 }
+
+export function testAppData(override?) {
+  return {
+    name: 'AppOne',
+    app_type: 'standalone',
+    main_url: 'https://libretexts.org',
+    primary_color: '#127BC4',
+    cas_service_url: 'https://libretexts.org/cas',
+    hide_from_apps: false,
+    hide_from_user_apps: false,
+    default_access: 'all',
+    icon: 'https://libretexts.org/icon.png',
+    description: 'An awesome application.',
+    ...override,
+  };
+}

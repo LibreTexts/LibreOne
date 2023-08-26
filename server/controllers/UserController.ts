@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -281,10 +281,14 @@ export class UserController {
   public async getAllUserApplications(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
     const { type } = req.query as GetAllUserApplicationsQuery;
+
+    const criteria: WhereOptions[] = [{ hide_from_user_apps: false }];
+    if (type) {
+      criteria.push({ app_type: type });
+    }
+
     const foundApps = await Application.findAll({
-      ...(type && {
-        where: { app_type: type },
-      }),
+      where: criteria.length > 1 ? { [Op.and]: criteria } : criteria[0],
       include: [
         {
           model: User,

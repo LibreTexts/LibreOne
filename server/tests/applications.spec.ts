@@ -12,7 +12,7 @@ import {
   User,
   UserApplication,
 } from '../models';
-import { createSessionCookiesForTest } from './test-helpers';
+import { createSessionCookiesForTest, testAppData } from './test-helpers';
 
 describe('Applications', async () => {
   let mainAPIUser: APIUser;
@@ -23,17 +23,6 @@ describe('Applications', async () => {
 
   const omitID = (data) => _.omit(data, ['id']);
   const omitTimestamps = (data) => _.omit(data, ['created_at', 'updated_at']);
-  const testAppData = (override?) => ({
-    name: 'AppOne',
-    app_type: 'standalone',
-    main_url: 'https://libretexts.org',
-    cas_service_url: 'https://libretexts.org/cas',
-    default_access: 'all',
-    icon: 'https://libretexts.org/icon.png',
-    description: 'An awesome application.',
-    primary_color: '#127BC4',
-    ...override,
-  });
 
   before(async () => {
     mainAPIUserHashedPassword = await bcrypt.hash(mainAPIUserPassword, 10);
@@ -109,6 +98,15 @@ describe('Applications', async () => {
       expect(response.body?.data?.id).to.be.a('number');
       expect(omitID(omitTimestamps(response.body?.data))).to.deep.equal(testAppData());
     });
+    it('should not retrieve hidden application', async () => {
+      const app1 = await Application.create(testAppData({ hide_from_apps: true }));
+
+      const response = await request(server)
+        .get(`/api/v1/applications/${app1.id}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(404);
+    });
     it('should retrieve all applications', async () => {
       await Application.bulkCreate([
         testAppData(),
@@ -179,6 +177,17 @@ describe('Applications', async () => {
       expect(response.body?.data).to.have.length(1);
       const apps = await response.body.data.map((a) => omitID(omitTimestamps(a)));
       expect(apps).to.have.deep.members([testAppData()]);
+    });
+    it('should not return hidden applications', async () => {
+      await Application.create(testAppData({ hide_from_apps: true }));
+
+      const response = await request(server)
+        .get('/api/v1/applications')
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.meta).to.exist;
+      expect(response.body?.data).to.have.length(0);
     });
   });
 

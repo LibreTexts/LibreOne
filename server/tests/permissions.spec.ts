@@ -14,6 +14,7 @@ import {
   User,
   UserOrganization,
 } from '../models';
+import { testAppData } from './test-helpers';
 
 describe('Permissions', async () => {
   let mainAPIUser: APIUser;
@@ -44,16 +45,7 @@ describe('Permissions', async () => {
       username: 'apiuser',
       password: 'ASuperStrongPassword!123',
     });
-    application1 = await Application.create({
-      name: 'AppOne',
-      app_type: 'standalone',
-      main_url: 'https://libretexts.org',
-      cas_service_url: 'https://libretexts.org/cas',
-      default_access: 'all',
-      icon: 'https://libretexts.org/icon.png',
-      description: 'An awesome application.',
-      primary_color: '#127BC4',
-    });
+    application1 = await Application.create(testAppData());
     user1 = await User.create({
       uuid: uuidv4(),
       email: 'user1@libretexts.org',
