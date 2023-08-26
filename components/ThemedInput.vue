@@ -5,11 +5,20 @@
   >
     <label
       :for="id"
-      class="block text-sm font-medium"
+      :class="`block text-sm font-medium ${instructions ? 'mb-1' : 'mb-2'}`"
       v-if="label"
     >
-      {{ label }}
+      {{ label }}<span
+        v-if="required"
+        class="text-red-500"
+      >*</span>
     </label>
+    <p
+      v-if="instructions"
+      class="text-xs mb-2 text-slate-500 italic"
+    >
+      {{ instructions }}
+    </p>
     <input
       :id="id"
       :value="modelValue"
@@ -24,12 +33,10 @@
         'border',
         'block',
         'h-10',
-        'mt-2',
         'w-full',
         'rounded-md',
         'px-2',
         'placeholder:text-slate-400',
-        'placeholder:font-light',
       ]"
     >
   </div>
@@ -37,12 +44,13 @@
 
 <script lang="ts" setup>
   import { defineProps } from 'vue';
-  const emits = defineEmits(['update:modelValue']);
-  const props = withDefaults(
+  defineEmits(['update:modelValue']);
+  withDefaults(
     defineProps<{
       id: string;
       label?: string;
       placeholder?: string;
+      instructions?: string;
       modelValue?: string;
       type?: string;
       required?: boolean;
@@ -51,6 +59,7 @@
       id: '',
       label: '',
       placeholder: '',
+      instructions: '',
       modelValue: '',
       type: 'text',
       required: false,

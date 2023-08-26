@@ -89,6 +89,10 @@
       title: 'Security',
       link: '/security',
     },
+    {
+      title: 'Instructor',
+      link: '/instructor',
+    },
   ];
 
   function handleLogout() {

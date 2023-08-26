@@ -5,7 +5,7 @@
         <p class="text-3xl font-medium">
           {{ $t("home.yourlibreverse") }}
         </p>
-        <p class="mt-2 text-gray-400">
+        <p class="mt-2 text-slate-500">
           {{ $t("home.yourlibreversetagline") }}
         </p>
         <div
@@ -45,7 +45,7 @@
           <i18n-t
             keypath="home.libraryeditrequest"
             tag="p"
-            class="mt-2 text-gray-400"
+            class="mt-2 text-slate-500"
           >
             <template #requestaccesslink>
               <!-- New Instructor Verification Req URL-->

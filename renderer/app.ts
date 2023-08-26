@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
   faCircleArrowLeft,
   faCircleArrowRight,
+  faCircleCheck,
   faCircleInfo,
   faEye,
   faEyeSlash,
@@ -68,6 +69,7 @@ export function createApp(pageContext: PageContext): App<Element> {
     faEye,
     faEyeSlash,
     faCircleArrowRight,
+    faCircleCheck,
     faCircleInfo,
     faCircleArrowLeft,
     faBars,
