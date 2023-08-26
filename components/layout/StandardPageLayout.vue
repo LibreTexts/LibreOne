@@ -1,11 +1,11 @@
 <template>
   <LibreOneHeader />
   <div
-    class="bg-zinc-100 flex flex-column justify-center items-start h-screen shadow-inner pr-2 pb-10"
+    class="bg-zinc-100 flex flex-column justify-center items-start min-h-screen shadow-inner pr-2 pb-10"
   >
     <div
       :class="
-        `w-11/12 bg-white mt-16 py-10 px-8 shadow-md shadow-gray-400 rounded-md overflow-auto` +
+        `w-11/12 bg-white mt-16 py-10 px-8 shadow-md shadow-gray-400 h-fit rounded-md` +
           sizeClasses
       "
     >

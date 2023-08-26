@@ -11,6 +11,7 @@ import {
   faBars,
   faBolt,
   faRocket,
+  faKey,
 } from '@fortawesome/free-solid-svg-icons';
 import { setPageContext } from './usePageContext';
 import { initAxios } from './useAxios';
@@ -71,6 +72,7 @@ export function createApp(pageContext: PageContext): App<Element> {
     faCircleArrowLeft,
     faBars,
     faBolt,
+    faKey,
     faRocket,
   );
   app.component('FontAwesomeIcon', FontAwesomeIcon);

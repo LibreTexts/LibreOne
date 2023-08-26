@@ -5,32 +5,97 @@
         <p class="text-3xl font-medium">
           {{ $t("home.yourlibreverse") }}
         </p>
-        <p class="mt-2 italic text-gray-400">
+        <p class="mt-2 text-gray-400">
           {{ $t("home.yourlibreversetagline") }}
         </p>
-      </div>
-      <div class="apps-grid px-4">
         <div
-          class="app-item-container"
-          v-for="app in tempApps"
-          @click="openAppLink(app.href)"
-          :key="app.title"
+          class="apps-list px-2"
+          v-if="apps.length > 0"
         >
-          <div class="app-item-icon-container">
-            <img
-              :src="app.img"
-              :alt="app.title"
-              width="25"
-              height="25"
-            >
+          <div
+            class="app-item-container"
+            v-for="app in apps.filter((app) => app.app_type === 'standalone')"
+            @click="openAppLink(app.main_url)"
+            :key="app.id ?? app.name"
+          >
+            <div class="app-item-icon-container">
+              <img
+                :src="app.icon"
+                :alt="app.name"
+                width="90"
+                height="90"
+              >
+            </div>
+            <div class="app-item-text-container">
+              <p class="app-item-header">
+                {{ app.name }}
+              </p>
+              <p class="app-item-descrip">
+                {{ app.description }}
+              </p>
+            </div>
           </div>
-          <div class="app-item-text-container">
-            <p class="app-item-header">
-              {{ app.title }}
-            </p>
-            <p class="app-item-descrip">
-              {{ app.description }}
-            </p>
+        </div>
+      </div>
+      <div>
+        <div class="mt-2">
+          <p class="text-3xl font-medium">
+            {{ $t("home.libraries") }}
+          </p>
+          <i18n-t
+            keypath="home.libraryeditrequest"
+            tag="p"
+            class="mt-2 text-gray-400"
+          >
+            <template #requestaccesslink>
+              <!-- New Instructor Verification Req URL-->
+              <a
+                href="https://commons.libretexts.org/verification/instructor"
+                target="_blank"
+                rel="noreferer"
+                class="text-accent"
+              >
+                {{ $t("home.requestaccess") }}.
+              </a>
+              {{ $t("home.libraryeditinfo") }}
+            </template>
+          </i18n-t>
+          <div
+            class="apps-list px-2"
+            v-if="libs.length > 0"
+          >
+            <div
+              class="app-item-container"
+              v-for="lib in libs"
+              @click="openAppLink(lib.main_url)"
+              :key="lib.id ?? lib.name"
+            >
+              <div class="app-item-icon-container">
+                <img
+                  :src="lib.icon"
+                  :alt="lib.name"
+                  width="90"
+                  height="90"
+                >
+                <div
+                  class="app-item-key-overlay"
+                  v-if="hasEditAccess(lib.name)"
+                >
+                  <FontAwesomeIcon
+                    class="app-item-key-icon"
+                    icon="fa-solid fa-key"
+                  />
+                </div>
+              </div>
+              <div class="app-item-text-container">
+                <p class="app-item-header">
+                  {{ lib.name }}
+                </p>
+                <p class="app-item-descrip">
+                  {{ lib.description }}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -39,50 +104,56 @@
 </template>
 
 <script lang="ts" setup>
+  import { ref } from 'vue';
   import StandardPageLayout from '../../components/layout/StandardPageLayout.vue';
+  import { Application } from '@server/types/applications';
+  import { usePageContext } from '@renderer/usePageContext';
+  import { getUserAppsAndLibraries } from '@renderer/utils/apps';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-  const tempApps: {
-    img: string;
-    title: string;
-    href: string;
-    description: string;
-  }[] = [
-    {
-      img: '',
-      title: 'ADAPT',
-      href: 'https://adapt.libretexts.org',
-      description: 'Create and share interactive content',
-    },
-    {
-      img: '',
-      title: 'Commons',
-      href: 'https://commons.libretexts.org',
-      description: 'Find, remix, and share content',
-    },
-    {
-      img: '',
-      title: 'Conductor',
-      href: 'https://commons.libretexts.org/conductor',
-      description: 'Manage your OER projects',
-    },
-    {
-      img: '',
-      title: 'LibreTexts Website',
-      href: 'https://libretexts.org',
-      description: 'Learn more about LibreTexts',
-    },
-  ];
+  const pageContext = usePageContext();
+
+  const loading = ref(false);
+  const apps = ref<Application[]>([]);
+  const libs = ref<Application[]>([]);
+
+  loadApps();
+  async function loadApps() {
+    try {
+      loading.value = true;
+      if (!pageContext?.user?.uuid) {
+        throw new Error('nouuid');
+      }
+
+      [apps.value, libs.value] = await getUserAppsAndLibraries(
+        pageContext.user.uuid,
+      );
+    } catch (err) {
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+  }
 
   function openAppLink(href: string) {
     window.open(href, '_blank');
   }
+
+  // User has edit access to a library if they
+  function hasEditAccess(name: string): boolean {
+    if (apps.value.map((app) => app.name).includes(name)) {
+      return true;
+    }
+    return false;
+  }
 </script>
 <style lang="css" scoped>
-.apps-grid {
+.apps-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, 12rem);
+  justify-content: space-between;
   grid-gap: 1rem;
-  margin-top: 2rem;
+  padding-top: 1rem;
 }
 .app-item-container {
   display: flex;
@@ -92,26 +163,47 @@
   text-align: center;
   width: 12rem;
   height: 12rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.2rem;
+  margin-right: 1.5rem;
+  margin-bottom: 1.25rem;
   cursor: pointer;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+.app-item-container:hover {
+  box-shadow: 0 6px 10px 0px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 .app-item-icon-container {
+  position: relative;
   display: flex;
-  width: 75%;
+  width: 95%;
   height: 60%;
   border-radius: 5px;
   background-color: #e5e7eb;
   align-items: center;
   justify-content: center;
 }
-.app-item-icon-container:hover {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+.app-item-key-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2rem;
+  height: 2rem;
+  background-color: #f8fafc;
+  border-top-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding-top: 2px;
+}
+.app-item-key-icon {
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 .app-item-text-container {
   display: flex;
   flex-direction: column;
   text-align: center;
-  margin-top: 0.75rem;
+  margin-top: 0.25rem;
 }
 .app-item-header {
   font-size: 0.9rem;
@@ -121,4 +213,18 @@
   font-size: 0.7rem;
   color: #6b7280;
 }
+
+@media only screen and (max-width: 480px) {
+  .apps-list {
+    grid-template-columns: none;
+    grid-template-rows: repeat(auto-fill, 12rem);
+    justify-content: center;
+  }
+
+  .app-item-container {
+    margin: 0;
+    width: 14rem;
+  }
+}
+
 </style>

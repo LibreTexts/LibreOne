@@ -29,25 +29,25 @@
     >
       <li
         class="switcher-item"
-        v-for="(item, idx) in tempMenuItems"
+        v-for="(item, idx) in apps"
         :key="idx"
         role="button"
         tabindex="0"
-        @click="openAppSwitcherLink(item.href)"
-        @keydown.prevent.enter="openAppSwitcherLink(item.href)"
+        @click="openAppSwitcherLink(item.main_url)"
+        @keydown.prevent.enter="openAppSwitcherLink(item.main_url)"
         @focusout="handleFocusOut(idx)"
       >
         <div class="switcher-item-icon-container">
           <img
-            :src="item.img"
-            :alt="item.title"
+            :src="item.icon"
+            :alt="item.name"
             width="25"
             height="25"
           >
         </div>
         <div class="switcher-item-text-container">
-          <p class="switcher-item-header">
-            {{ item.title }}
+          <p class="switcher-item-header text-muted">
+            {{ item.name }}
           </p>
           <p class="switcher-item-descrip">
             {{ item.description }}
@@ -59,9 +59,9 @@
         key="all-apps"
         role="button"
         tabindex="0"
-        @click="openAppSwitcherLink('/apps')"
-        @keydown.prevent.enter="openAppSwitcherLink('/apps')"
-        @focusout="handleFocusOut(tempMenuItems.length - 1)"
+        @click="openAppSwitcherLink('/home')"
+        @keydown.prevent.enter="openAppSwitcherLink('/home')"
+        @focusout="handleFocusOut(apps.length - 1)"
       >
         <div class="switcher-view-all mx-auto">
           <p class="switcher-item-header">
@@ -76,47 +76,38 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { Application } from '@server/types/applications';
+  import { usePageContext } from '@renderer/usePageContext';
+  import { getUserAppsAndLibraries } from '@renderer/utils/apps';
 
-  const tempMenuItems: {
-    img: string;
-    title: string;
-    href: string;
-    description: string;
-  }[] = [
-    {
-      img: '',
-      title: 'ADAPT',
-      href: 'https://adapt.libretexts.org',
-      description: 'Create and share interactive content',
-    },
-    {
-      img: '',
-      title: 'Commons',
-      href: 'https://commons.libretexts.org',
-      description: 'Find, remix, and share content',
-    },
-    {
-      img: '',
-      title: 'Conductor',
-      href: 'https://commons.libretexts.org/conductor',
-      description: 'Manage your OER projects',
-    },
-    {
-      img: '',
-      title: 'LibreTexts Website',
-      href: 'https://libretexts.org',
-      description: 'Learn more about LibreTexts',
-    },
-  ];
+  const pageContext = usePageContext();
 
   const isOpen = ref<boolean>(false);
+  const apps = ref<Application[]>([]);
+
+  loadApps();
+  async function loadApps() {
+    try {
+      if (!pageContext?.user?.uuid) {
+        throw new Error('nouuid');
+      }
+
+      const [appRes, libRes] = await getUserAppsAndLibraries(
+        pageContext.user.uuid,
+      );
+
+      apps.value = [...appRes, ...libRes];
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   function openAppSwitcherLink(href: string) {
     window.open(href, '_blank');
   }
 
   function handleFocusOut(idx: number) {
-    if (idx === tempMenuItems.length - 1) {
+    if (idx === apps.value.length - 1) {
       isOpen.value = false;
     }
   }
@@ -133,10 +124,13 @@
   left: 0;
   top: calc(100% + 0.8rem);
   width: 15rem;
+  max-height: 27rem;
+  overflow-y: auto;
   background-color: #fff;
   border-radius: 5px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 .switcher-icon {
   padding-top: 6px;
@@ -146,7 +140,19 @@
   padding: 0.5rem;
   cursor: pointer;
   display: flex;
+  flex-direction: row;
   align-items: center;
+}
+.switcher-item-small {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.7rem;
+  font-style: italic;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
 }
 .switcher-item:hover {
   background-color: #f9fafb;
@@ -157,6 +163,7 @@
   border-radius: 5px;
   background-color: #e5e7eb;
   display: flex;
+  flex-basis: 17.5%;
   align-items: center;
   justify-content: center;
   margin-right: 0.5rem;
@@ -165,6 +172,8 @@
   display: flex;
   flex-direction: column;
   text-align: left;
+  flex-wrap: wrap;
+  flex-basis: 82.5%;
 }
 .switcher-item-header {
   font-size: 0.9rem;
