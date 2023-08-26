@@ -5,7 +5,7 @@
         <h1 class="text-left text-3xl font-medium">
           {{ $t("profile.profile") }}
         </h1>
-        <p class="mt-2 text-left">
+        <p class="mt-2 text-left text-slate-500">
           {{ $t("profile.infoline") }}
         </p>
       </div>

@@ -19,7 +19,8 @@
     "save": "Save",
     "submit": "Submit",
     "loading": "Loading...",
-    "more": "More"
+    "more": "More",
+    "status": "Status"
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -145,5 +146,39 @@
     "passwordchanged": "Password changed successfully!",
     "redirecting": "We're redirecting you back to the security management page...",
     "external": "It looks like you're using an external login provider. You can change your email or password with them."
+  },
+  "instructor": {
+    "yourprofile": "Your Instructor Profile",
+    "yourprofiletagline": "Verified instructors can edit and contribute to the LibreTexts libraries.",
+    "status_not_attempted": "Not Attempted",
+    "status_pending": "Pending",
+    "status_needs_review": "Needs Review",
+    "status_verified": "Verified",
+    "status_denied": "Denied",
+    "status_not_attempted_desc": "You have not yet attempted to verify your instructor status.",
+    "status_pending_desc": "Your instructor verification is pending. You will be notified by email when your request has been reviewed. This may take up to 48 hours.",
+    "status_needs_review_desc": "Oops, it looks like we didn't have enough information to complete your verification. Please resubmit your information.",
+    "status_verified_desc": "You're all set. Your instructor status has been verified.",
+    "status_denied_desc": "Oops, it looks like we couldn't verify your instructor status. Please resubmit your information.",
+    "startrequest": "Start Verification Request",
+    "startrequestcta": "Click the button below to start the instructor verification process.",
+    "restartrequest": "Restart Verification Request",
+    "biourl": "Bio URL",
+    "biourl_desc": "To verify instructor status you must provide a link to a web page showing your faculty status. Links to your institution's web page are NOT sufficient. A URL that shows that you are an instructor is needed.",
+    "biourl_invalid": "Invalid Bio URL, please check your input.",
+    "registrationcode": "Registration Code",
+    "registrationcode_desc": "If you have were provided a registration code, enter it here. This is not required.",
+    "applications": "Applications",
+    "applications_placeholder": "Select applications",
+    "applications_desc": "Select the LibreTexts applications you would intially like access to. You may request more applications later.",
+    "libraries": "Libraries",
+    "libraries_placeholder": "Select libraries",
+    "libraries_desc": "Select up to three LibreTexts libraries you would like to contribute to. You may request more libraries later.",
+    "apps_or_libs_invalid": "You must select at least one application or library.",
+    "one_app_or_lib": "You must select at least one application or library."
+  },
+  "instructor_getting_started": {
+    "header": "Getting Started Tutorials",
+    "infoline": "Learn how to use the LibreTexts libraries and applications. Here are some tutorials to get you started."
   }
 }

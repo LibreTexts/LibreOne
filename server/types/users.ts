@@ -57,3 +57,10 @@ export type UpdateUserPasswordBody = {
 export type ResolvePrincipalAttributesQuery = {
   username: string;
 };
+
+export type InstructorVerificationStatus = 
+  'not_attempted' |
+  'pending' |
+  'needs_review' |
+  'denied' |
+  'verified';

@@ -42,3 +42,8 @@ export type { PageContextServer };
 export type { PageContextClient };
 export type { PageContext };
 export type { PageProps };
+
+export type Item = {
+  text: string;
+  value: unknown;
+}

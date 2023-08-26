@@ -3,6 +3,7 @@
     v-bind="$attrs"
     :class="variantClasses"
     :aria-busy="$props.loading"
+    :disabled="$props.disabled || $props.loading"
   >
     <slot v-if="!$props.loading" />
     <template v-else>

@@ -26,6 +26,7 @@
     "@vitejs/plugin-vue": "^3.0.3",
     "@vue/compiler-sfc": "^3.2.33",
     "@vue/server-renderer": "^3.2.33",
+    "@vueform/multiselect": "^2.6.2",
     "@zxcvbn-ts/core": "^2.1.0",
     "@zxcvbn-ts/language-common": "^2.0.1",
     "@zxcvbn-ts/language-en": "^2.1.0",
