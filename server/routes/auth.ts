@@ -1,11 +1,24 @@
+import createCasClientExpressMiddleware from 'http-cas-client/wrap/express';
 import express from 'express';
 import { AuthController } from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
-import { ensureActorIsAPIUser, ensureAPIUserHasPermission, validate, verifyAPIAuthentication } from '../middleware';
+import {
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission,
+  useLibreTextsCORS,
+  validate,
+  verifyAPIAuthentication,
+} from '../middleware';
 import { catchInternal } from '../helpers';
 
 const authRouter = express.Router();
 const controller = new AuthController();
+
+const _selfDomain = process.env.DOMAIN || 'localhost:5001';
+const _selfDomainSafe = _selfDomain.startsWith('https://') ? _selfDomain : `https://${_selfDomain}`;
+const CAS_BRIDGE_SERVER_URL = process.env.CAS_BRIDGE_SERVER_URL || 'http://localhost:8443/cas';
+const SELF_URL = `${_selfDomainSafe}/api/v1/auth/cas-bridge`;
+
 
 authRouter.route('/register').post(
   validate(AuthValidator.registerSchema, 'body'),
@@ -57,7 +70,18 @@ authRouter.route('/passwordrecovery').post(
 
 authRouter.route('/passwordrecovery/complete').post(
   validate(AuthValidator.resetPasswordSchema, 'body'),
-  catchInternal((req, res) =>  controller.resetPassword(req, res)),
+  catchInternal((req, res) => controller.resetPassword(req, res)),
+);
+
+authRouter.route('/cas-bridge').get(
+  (req, _res, next) => { req.url = req.originalUrl; return next(); }, // force proper endpoint
+  createCasClientExpressMiddleware({ casServerUrlPrefix: CAS_BRIDGE_SERVER_URL, serverName: SELF_URL }),
+  catchInternal((req, res) => controller.handleCASBridgeAuthentication(req, res)),
+);
+
+authRouter.route('/cas-bridge/jwks').get(
+  useLibreTextsCORS,
+  catchInternal((req, res) => controller.retrieveCASBridgePublicKey(req, res)),
 );
 
 export {

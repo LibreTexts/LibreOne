@@ -178,3 +178,20 @@ export function ensureUserResourcePermission(write = false): Middleware {
     return next();
   };
 }
+
+/**
+ * Sets the 'Access-Control-Allow-Origin' header if the request origin is a LibreTexts site/application.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @param next - The next function to run in the middleware chain.
+ * @returns The result of the next middleware with the 'Access-Control-Allow-Origin' header set if
+ * the necessary conditions were met.
+ */
+export function useLibreTextsCORS(req: Request, res: Response, next: NextFunction): MiddlewareResult {
+  if (/\.libretexts\.org$/.test(req.headers?.origin || '')) {
+    res.set('Access-Control-Allow-Origin', req.headers.origin);
+    res.set('Vary', 'Origin');
+  }
+  return next();
+}

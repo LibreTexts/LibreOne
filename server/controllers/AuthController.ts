@@ -2,11 +2,22 @@ import axios from 'axios';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
-import { CompactEncrypt, createRemoteJWKSet, SignJWT, jwtVerify } from 'jose';
+import {
+  CompactEncrypt,
+  createRemoteJWKSet,
+  exportJWK,
+  importPKCS8,
+  importSPKI,
+  JWK,
+  jwtVerify,
+  KeyLike,
+  SignJWT,
+} from 'jose';
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
 import { UniqueConstraintError } from 'sequelize';
+import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { Application, ResetPasswordToken, sequelize, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
@@ -41,6 +52,21 @@ const CAS_VALIDATE = `${CAS_BASE}/cas/p3/serviceValidate`;
 const CAS_LOGOUT = `${CAS_BASE}/cas/logout`;
 
 export class AuthController {
+  private ssm: SSMClient;
+  private casBridgePrivKey: KeyLike;
+  private casBridgePubKey: JWK;
+  private casBridgePubKeyID: string;
+
+  constructor() {
+    this.ssm = new SSMClient({
+      credentials: {
+        accessKeyId: process.env.AWS_SSM_ACCESS_KEY || 'unknown',
+        secretAccessKey: process.env.AWS_SSM_SECRET_KEY || 'unknown',
+      },
+      region: process.env.AWS_SSM_REGION,
+    });
+  }
+
   /**
    * Determines whether an API request contains authentication cookies.
    *
@@ -172,6 +198,191 @@ export class AuthController {
       httpOnly: true,
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
+  }
+
+  /**
+   * Retrieves the private JWK for CAS Bridge (used by the libraries). Internal use only.
+   */
+  private async retrieveCASBridgePrivateKey() {
+    // "cache"
+    if (this.casBridgePrivKey) {
+      return this.casBridgePrivKey;
+    }
+
+    try {
+      const paramsRes = await this.ssm.send(new GetParametersByPathCommand({
+        Path: process.env.AWS_SSM_LIBRE_ONE_CAS_BRIDGE_SSM_PATH || '/libreone/cas-bridge',
+        Recursive: true,
+        WithDecryption: true,
+      }));
+      const privKeyParam = paramsRes.Parameters?.find((param) => param?.Name?.endsWith('private'));
+      if (!privKeyParam || !privKeyParam.Value) {
+        throw new Error('CAS Bridge private key not found!');
+      }
+      const privKeyStr = privKeyParam.Value;
+      const key = await importPKCS8(privKeyStr, 'RS256');
+
+      this.casBridgePrivKey = key;
+      return key;
+    } catch (e) {
+      console.error({
+        msg: 'Error loading CAS Bridge private key!',
+        name: `${process.env.AWS_SSM_LIBRE_ONE_CAS_BRIDGE_SSM_PATH}/public`,
+        error: e,
+      });
+      throw new Error('Unable to retrieve CAS Bridge private key!');
+    }
+  }
+
+  /**
+   * Retrieves the public JWKS for CAS Bridge (used by the libraries).
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async retrieveCASBridgePublicKey(_req: Request, res: Response): Promise<Response> {
+    const genKeySetResponse = (key: JWK, keyID: string) => {
+      return {
+        keys: [
+          {
+            alg: 'RS256',
+            key_ops: ['verify'],
+            kid: keyID,
+            use: 'sig',
+            ...key,
+          },
+        ],
+      };
+    };
+
+    res.set('Cache-Control', 'public,  max-age=604800, immutable, must-revalidate, no-transform');
+    // "cache"
+    if (this.casBridgePubKey && this.casBridgePubKeyID) {
+      return res.send(genKeySetResponse(this.casBridgePubKey, this.casBridgePubKeyID));
+    }
+
+    try {
+      const paramsRes = await this.ssm.send(new GetParametersByPathCommand({
+        Path: process.env.AWS_SSM_LIBRE_ONE_CAS_BRIDGE_SSM_PATH || '/libreone/cas-bridge',
+        Recursive: true,
+        WithDecryption: true,
+      }));
+      const pubKeyParam = paramsRes.Parameters?.find((param) => param?.Name?.endsWith('public'));
+      const pubKeyIDParam = paramsRes.Parameters?.find((param) => param?.Name?.endsWith('pub-kid'));
+      if (!pubKeyParam || !pubKeyParam.Value) {
+        throw new Error('CAS Bridge public key not found!');
+      }
+      if (!pubKeyIDParam || !pubKeyIDParam.Value) {
+        throw new Error('CAS Bridge public key identifier not found!');
+      }
+      const pubKeyStr = pubKeyParam.Value;
+      const pubKeyID = pubKeyIDParam.Value;
+      const key = await importSPKI(pubKeyStr, 'RS256');
+      const asJWK = await exportJWK(key);
+
+      this.casBridgePubKey = asJWK;
+      this.casBridgePubKeyID = pubKeyID;
+      return res.send(genKeySetResponse(asJWK, pubKeyID));
+    } catch (e) {
+      console.error({
+        msg: 'Error loading CAS Bridge public key!',
+        name: `${process.env.AWS_SSM_LIBRE_ONE_CAS_BRIDGE_SSM_PATH}/public`,
+        error: e,
+      });
+      throw new Error('Unable to retrieve CAS Bridge public key!');
+    }
+  }
+
+  public async handleCASBridgeAuthentication(req: Request, res: Response) {
+    // @ts-ignore
+    const { principal } = req; // added by CAS client middleware
+    if (!principal) {
+      console.error({ msg: 'CAS Bridge authentication failed: no principal returned!' });
+      return errors.badRequest(res);
+    }
+
+    if (!principal?.attributes?.uuid) {
+      console.error({
+        msg: 'CAS Bridge authentication failed: no user identifier available!',
+        principal,
+      });
+      return errors.badRequest(res);
+    }
+
+    const cookies = req.cookies;
+    const redirect = cookies?.cas_bridge_redirect;
+    const source = cookies?.cas_bridge_source;
+    if (!source) {
+      console.warn({
+        msg: 'No source found in CAS Bridge authentication request.',
+        principal,
+        cookies,
+      });
+    }
+    const foundUser = await User.findByPk(principal.attributes.uuid, {
+      include: [
+        {
+          model: Application,
+          attributes: ['main_url'],
+        },
+      ],
+    });
+    if (!foundUser) {
+      console.error({
+        msg: 'CAS Bridge authentication failed: user not found!',
+        principal,
+        cookies,
+      });
+      return errors.unauthorized(res);
+    }
+
+    const userLibs = foundUser.get('applications')?.filter((l) => l.get('app_type') === 'library')
+      .map((l) => l.get('main_url'));
+    const foundLib = userLibs?.find((u) => u === `https://${source}`);
+
+    const payload = {
+      first_name: principal.attributes?.first_name,
+      last_name: principal.attributes?.last_name,
+      email: principal.attributes?.email,
+      picture: principal.attributes?.picture,
+    };
+
+    const privKey = await this.retrieveCASBridgePrivateKey();
+    const token = await new SignJWT(payload)
+      .setSubject(principal.attributes.uuid)
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuedAt()
+      .setIssuer(SESSION_DOMAIN)
+      .setAudience('libretexts.org')
+      .setExpirationTime('7d')
+      .sign(privKey);
+    
+    res.cookie('overlayJWT', token, {
+      path: '/',
+      secure: true,
+      domain: 'libretexts.org',
+      sameSite: 'lax',
+      maxAge: 604800,
+    });
+    if (foundLib) {
+      res.cookie(
+        `cas_bridge_authorized_${source}`,
+        'true',
+        {
+          path: '/',
+          secure: true,
+          domain: 'libretexts.org',
+          sameSite: 'lax',
+          maxAge: 43200,
+        },
+      ); 
+    }
+
+    if (redirect) {
+      return res.redirect(redirect);
+    }
+    return res.send({});
   }
 
   /**

@@ -376,6 +376,7 @@ export class UserController {
     if (!foundUser) {
       return errors.notFound(res);
     }
+    await foundUser.update({ last_access: new Date() });
   
     return res.send({
       uuid: foundUser.uuid,
