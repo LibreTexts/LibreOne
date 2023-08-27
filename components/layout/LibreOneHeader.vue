@@ -93,6 +93,10 @@
       title: 'Instructor',
       link: '/instructor',
     },
+    {
+      title: 'My Apps',
+      link: '/my-apps', 
+    },
   ];
 
   function handleLogout() {

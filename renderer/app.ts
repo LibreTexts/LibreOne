@@ -3,6 +3,7 @@ import { createI18n } from 'vue-i18n';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {
+  faCartShopping,
   faCircleArrowLeft,
   faCircleArrowRight,
   faCircleCheck,
@@ -68,6 +69,7 @@ export function createApp(pageContext: PageContext): App<Element> {
   library.add(
     faEye,
     faEyeSlash,
+    faCartShopping,
     faCircleArrowRight,
     faCircleCheck,
     faCircleInfo,

@@ -20,7 +20,8 @@
     "submit": "Submit",
     "loading": "Loading...",
     "more": "More",
-    "status": "Status"
+    "status": "Status",
+    "here": "here"
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -180,5 +181,20 @@
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",
     "infoline": "Learn how to use the LibreTexts libraries and applications. Here are some tutorials to get you started."
+  },
+  "my_apps": {
+    "managemyapps": "Manage My Applications",
+    "yourapps": "Your Applications",
+    "yourappstagline": "The LibreTexts applications you have access to are listed below. Libraries listed here indicate the libraries you have edit access to. All accounts have access to view the LibreTexts libraries.",
+    "availableapps": "Available Applications",
+    "availableappstagline": "The LibreTexts applications you do not yet have access to are listed below. You can request access to these applications by clicking the Add To Request button.",
+    "add": "Add To Request",
+    "remove": "Remove From Request",
+    "itemcount": "Items in Request",
+    "submit": "Submit Request",
+    "activerequest": "Pending Request",
+    "activerequesttagline": "You have an access request currently pending. You will be notified by email when your request has been reviewed. This may take up to 48 hours.",
+    "notinstructor": "Oops, it looks like you haven't verified your instructor status yet.",
+    "notinstructortagline": "You must verify your instructor status before you can request access to applications. Click {link} to get started."
   }
 }
