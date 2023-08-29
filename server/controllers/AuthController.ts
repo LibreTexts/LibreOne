@@ -324,7 +324,7 @@ export class AuthController {
       include: [
         {
           model: Application,
-          attributes: ['main_url'],
+          attributes: ['app_type', 'main_url'],
         },
       ],
     });
