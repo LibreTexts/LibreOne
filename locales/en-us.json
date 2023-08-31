@@ -172,12 +172,9 @@
     "registrationcode_desc": "If you have were provided a registration code, enter it here. This is not required.",
     "applications": "Applications",
     "applications_placeholder": "Select applications",
-    "applications_desc": "Select the LibreTexts applications you would intially like access to. You may request more applications later.",
+    "applications_desc": "Select any LibreTexts applications you would intially like access to. You may request more applications later.",
     "libraries": "Libraries",
-    "libraries_placeholder": "Select libraries",
-    "libraries_desc": "Select up to three LibreTexts libraries you would like to contribute to. You may request more libraries later.",
-    "apps_or_libs_invalid": "You must select at least one application or library.",
-    "one_app_or_lib": "You must select at least one application or library."
+    "libraries_desc": "Instructors will automatically receive edit access to the LibreTexts libraries."
   },
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",

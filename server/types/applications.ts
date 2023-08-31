@@ -1,5 +1,5 @@
 export type Application = {
-  id: string;
+  id: number;
   name: string;
   app_type: 'standalone' | 'library';
   main_url: string;

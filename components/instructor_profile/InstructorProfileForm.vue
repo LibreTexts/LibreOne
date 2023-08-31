@@ -58,46 +58,26 @@
           class="my-4"
         />
         -->
+        <p class="block text-md font-medium mb-1">
+          {{ $t("instructor.libraries") }}
+        </p>
+        <p>
+          {{ $t("instructor.libraries_desc") }}
+        </p>
         <ThemedSelectInput
           id="apps_select_input"
           :label="$t('instructor.applications')"
           :placeholder="$t('instructor.applications_placeholder')"
-          :instructions="
-            $t('instructor.applications_desc') +
-              ' ' +
-              $t('instructor.one_app_or_lib')
-          "
+          :instructions="$t('instructor.applications_desc')"
           :options="
             availableApps.map((app) => {
               return {
                 label: app.name,
-                value: app.id,
+                value: app.id.toString(),
               };
             })
           "
           v-model:value="selectedApps"
-          multiple
-          class="my-4"
-        />
-        <ThemedSelectInput
-          id="libs_select_input"
-          :label="$t('instructor.libraries')"
-          :placeholder="$t('instructor.libraries_placeholder')"
-          :instructions="
-            $t('instructor.libraries_desc') +
-              ' ' +
-              $t('instructor.one_app_or_lib')
-          "
-          :options="
-            availableLibs.map((app) => {
-              return {
-                label: app.name,
-                value: app.id,
-              };
-            })
-          "
-          v-model:value="selectedLibs"
-          :max="3"
           multiple
           class="my-4"
         />
@@ -134,6 +114,7 @@
   import ThemedSelectInput from '../ThemedSelectInput.vue';
   import { Application } from '../../server/types/applications';
   import { isInstructorVerificationStatus } from '@renderer/utils/typeHelpers';
+  import { usePageContext } from '@renderer/usePageContext';
   import { useI18n } from 'vue-i18n';
   import { useAxios } from '@renderer/useAxios';
   import joi from 'joi';
@@ -151,6 +132,7 @@
       status: 'not_attempted',
     },
   );
+  const pageContext = usePageContext();
 
   // Init
   loadApps();
@@ -161,9 +143,7 @@
   const bioURL = ref('');
   //const registrationCode = ref('');
   const selectedApps = ref<string[]>([]);
-  const selectedLibs = ref<string[]>([]);
   const availableApps = ref<Application[]>([]);
-  const availableLibs = ref<Application[]>([]);
   const requestError = ref('');
   const validationErrors = ref<string[]>([]);
   const isLoading = ref(false);
@@ -209,7 +189,7 @@
 
   // Watchers
   watch(
-    () => [selectedApps.value, selectedLibs.value, bioURL.value],
+    () => [selectedApps.value, bioURL.value],
     () => {
       formValid.value = validateForm(false);
     },
@@ -228,9 +208,6 @@
           app.app_type === 'standalone' &&
           !TEMP_APP_EXCLUSION_NAMES.includes(app.name)
         );
-      });
-      availableLibs.value = res.data.data.filter((app: Application) => {
-        return app.app_type === 'library';
       });
     } catch (err) {
       console.error(err);
@@ -256,20 +233,13 @@
    */
   function validateForm(setErrors = false) {
     validationErrors.value = [];
-    let isValid = true;
     if (!isValidUrl(bioURL.value)) {
       if (setErrors) {
         validationErrors.value.push(t('instructor.biourl_invalid'));
       }
-      isValid = false;
+      return false;
     }
-    if (selectedApps.value.length === 0 && selectedLibs.value.length === 0) {
-      if (setErrors) {
-        validationErrors.value.push(t('instructor.apps_or_libs_invalid'));
-      }
-      isValid = false;
-    }
-    return isValid;
+    return true;
   }
 
   async function submitVerificationRequest() {
@@ -277,9 +247,22 @@
       isLoading.value = true;
       requestError.value = '';
       if (!validateForm(true)) return;
+      if (!pageContext?.user?.uuid) {
+        throw new Error('nouuid');
+      }
 
-      // TODO: Implement API call
-      if (1 > 5) throw new Error('badres');
+      const submitRes = await axios.post(
+        `/users/${pageContext.user.uuid}/verification-request`,
+        {
+          bio_url: bioURL.value,
+          //registration_code: registrationCode.value,
+          applications: selectedApps.value.map((id) => parseInt(id)),
+        },
+      );
+
+      if (!submitRes || !submitRes.data || !submitRes.data.data) {
+        throw new Error('badres');
+      }
 
       window.location.reload();
     } catch (err) {
