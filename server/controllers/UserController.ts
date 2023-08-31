@@ -257,7 +257,7 @@ export class UserController {
       limit,
       include: [{
         model: Organization,
-        attributes: ['id', 'name', 'logo'],
+        attributes: ['id', 'name', 'logo', 'system_id'],
         through: { attributes: [] },
       }],
     });

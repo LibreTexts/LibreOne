@@ -289,8 +289,9 @@ describe('Users', async () => {
       });
     });
     it('should retrieve all users', async () => {
+      const orgSystem1 = await OrganizationSystem.create({ name: 'TestSystem1', logo: '' });
       const [org1, org2] = await Organization.bulkCreate([
-        { name: 'Test1' },
+        { name: 'Test1', system_id: orgSystem1.id },
         { name: 'Test2' },
       ]);
       const [user1, user2] = await User.bulkCreate([
@@ -323,6 +324,7 @@ describe('Users', async () => {
             id: org1.id,
             name: 'Test1',
             logo: null,
+            system_id: orgSystem1.id,
           }],
         },
         {
@@ -332,6 +334,7 @@ describe('Users', async () => {
             id: org2.id,
             name: 'Test2',
             logo: null,
+            system_id: null,
           }],
         },
       ]);
