@@ -118,6 +118,8 @@
     "security": "Security",
     "firstname": "First Name",
     "lastname": "Last Name",
+    "avatar": "Avatar",
+    "uploadavatar": "Upload Avatar",
     "personalinfo": "Personal Information"
   },
   "security": {
