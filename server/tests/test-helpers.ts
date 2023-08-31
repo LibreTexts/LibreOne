@@ -21,6 +21,7 @@ export function testAppData(override?) {
     cas_service_url: 'https://libretexts.org/cas',
     hide_from_apps: false,
     hide_from_user_apps: false,
+    is_default_library: false,
     default_access: 'all',
     icon: 'https://libretexts.org/icon.png',
     description: 'An awesome application.',

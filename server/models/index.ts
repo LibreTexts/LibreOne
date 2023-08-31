@@ -1,4 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
+import { AccessRequest } from './AccessRequest';
+import { AccessRequestApplication } from './AccessRequestApplication';
 import { AdminRole } from './AdminRole';
 import { Alias } from './Alias';
 import { APIUser } from './APIUser';
@@ -15,6 +17,8 @@ import { OrganizationSystem } from './OrganizationSystem';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 import { UserOrganization } from './UserOrganization';
+import { VerificationRequest } from './VerificationRequest';
+import { VerificationRequestHistory } from './VerificationRequestHistory';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -36,6 +40,8 @@ sequelize.addModels([
   APIUser,
   APIUserPermissionConfig,
   Application,
+  AccessRequest,
+  AccessRequestApplication,
   Domain,
   EmailVerification,
   Organization,
@@ -47,6 +53,8 @@ sequelize.addModels([
   User,
   UserApplication,
   UserOrganization,
+  VerificationRequest,
+  VerificationRequestHistory,
 ]);
 
 /**
@@ -103,6 +111,8 @@ export async function connectDatabase(): Promise<boolean> {
 
 export {
   sequelize,
+  AccessRequest,
+  AccessRequestApplication,
   AdminRole,
   Alias,
   APIUser,
@@ -119,4 +129,6 @@ export {
   User,
   UserApplication,
   UserOrganization,
+  VerificationRequest,
+  VerificationRequestHistory,
 };

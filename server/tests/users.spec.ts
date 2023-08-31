@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { server } from '..';
 import {
+  AccessRequest,
   APIUser,
   APIUserPermissionConfig,
   Application,
@@ -20,6 +21,7 @@ import {
   User,
   UserApplication,
   UserOrganization,
+  VerificationRequest,
 } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
@@ -62,6 +64,8 @@ describe('Users', async () => {
     await User.destroy({ where: {} });
   });
   after(async () => {
+    await VerificationRequest.destroy({ where: { } });
+    await AccessRequest.destroy({ where: {} });
     await APIUser.destroy({ where: {} });
     await Application.destroy({ where: {} });
     await EmailVerification.destroy({ where: {} });
@@ -159,6 +163,52 @@ describe('Users', async () => {
         .send({ application_id: application1.id })
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
       expect(response.status).to.equal(403);
+    });
+    it('should create user verification request (without applications)', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'instructor',
+        verify_status: 'not_attempted',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verification-request`)
+        .send({ bio_url: 'https://libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(201);
+
+      const foundRequest = await VerificationRequest.findOne({ where: { user_id: user1.uuid } });
+      expect(foundRequest).to.not.be.null;
+    });
+    it('should create user verification request (with applications)', async () => {
+      const restrictedApp = await Application.create(testAppData({ name: 'RestrictedApp', default_access: 'none' }));
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'instructor',
+        verify_status: 'not_attempted',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verification-request`)
+        .send({ bio_url: 'https://libretexts.org', applications: [restrictedApp.get('id')] })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(201);
+
+      const foundRequest = await VerificationRequest.findOne({
+        where: { user_id: user1.uuid },
+        include: [{
+          model: AccessRequest,
+          include: [{ model: Application }],
+        }],
+      });
+      expect(foundRequest).to.not.be.null;
+      const reqApps = foundRequest?.get('access_request')?.get('applications');
+      expect(reqApps).to.have.lengthOf(1);
+      expect(reqApps?.map((a) => a.get('id'))).to.have.deep.members([restrictedApp.get('id')]);
+      await foundRequest?.destroy();
+      await restrictedApp.destroy();
     });
   });
 
@@ -791,7 +841,6 @@ describe('Users', async () => {
 
       await org1.destroy();
     });
-
     it('should give user admin role in organization', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -880,6 +929,76 @@ describe('Users', async () => {
       });
 
       await org1.destroy();
+    });
+    it('should allow user to update verification request in open state', async () => {
+      const updateURL = 'https://one.libretexts.org';
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'instructor',
+      });
+      await VerificationRequest.create({
+        user_id: user1.uuid,
+        status: 'open',
+        bio_url: 'https://libretexts.org',
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}/verification-request`)
+        .send({ bio_url: updateURL })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(200);
+
+      const updatedReq = await VerificationRequest.findOne({ where: { user_id: user1.uuid } });
+      expect(updatedReq).to.not.be.null;
+      expect(updatedReq?.get('bio_url')).to.equal(updateURL);
+    });
+    it('should allow user to update verification request in needs_change state', async () => {
+      const updateURL = 'https://one.libretexts.org';
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'instructor',
+      });
+      await VerificationRequest.create({
+        user_id: user1.uuid,
+        status: 'needs_change',
+        bio_url: 'https://libretexts.org',
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}/verification-request`)
+        .send({ bio_url: updateURL })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(200);
+
+      const updatedReq = await VerificationRequest.findOne({ where: { user_id: user1.uuid } });
+      expect(updatedReq).to.not.be.null;
+      expect(updatedReq?.get('bio_url')).to.equal(updateURL);
+    });
+    it('should not allow user to update verification request in denied state', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'instructor',
+      });
+      await VerificationRequest.create({
+        user_id: user1.uuid,
+        status: 'denied',
+        bio_url: 'https://libretexts.org',
+      });
+
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}/verification-request`)
+        .send({ bio_url: 'https://one.libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(400);
+      const error1 = response.body?.errors[0];
+      expect(error1).to.exist;
+      expect(_.pick(error1, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
     });
     it('should allow user to update password', async () => {
       const user1 = await User.create({

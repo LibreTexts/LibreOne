@@ -6,6 +6,8 @@ import {
   DataType,
   Default,
   DefaultScope,
+  HasMany,
+  HasOne,
   Index,
   Model,
   PrimaryKey,
@@ -13,9 +15,11 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 import { Application } from './Application';
+import { AccessRequest } from './AccessRequest';
 import { Organization } from './Organization';
 import { UserOrganization } from './UserOrganization';
 import { UserApplication } from './UserApplication';
+import { VerificationRequest } from './VerificationRequest';
 
 @DefaultScope(() => ({
   attributes: {
@@ -52,8 +56,14 @@ export class User extends Model {
   @BelongsToMany(() => Application, () => UserApplication)
   applications?: Array<Application & { UserApplication: UserApplication }>;
 
+  @HasMany(() => AccessRequest)
+  access_requests?: Array<AccessRequest>;
+
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;
+
+  @HasOne(() => VerificationRequest)
+  verification_request?: VerificationRequest;
 
   @Column(DataType.ENUM('student', 'instructor'))
   declare user_type?: string;

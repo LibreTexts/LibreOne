@@ -23,6 +23,11 @@ export type CreateUserOrganizationBody = {
   add_organization_name?: string;
 };
 
+export type CreateUserVerificationRequestBody = {
+  bio_url: string;
+  applications?: number[];
+};
+
 export type GetAllUsersQuery = {
   offset: number;
   limit: number;
@@ -52,6 +57,10 @@ export type UpdateUserOrganizationAdminRoleBody = {
 export type UpdateUserPasswordBody = {
   old_password: string;
   new_password: string;
+};
+
+export type UpdateUserVerificationRequestBody = {
+  bio_url: string;
 };
 
 export type ResolvePrincipalAttributesQuery = {

@@ -13,6 +13,8 @@ import { CreationAttributes, UniqueConstraintError } from 'sequelize';
 import errors from '../errors';
 
 export const API_USERS_PERMISSIONS = [
+  'access_requests:read',
+  'access_requests:write',
   'api_users:read',
   'api_users:write',
   'applications:read',
@@ -27,6 +29,8 @@ export const API_USERS_PERMISSIONS = [
   'services:write',
   'users:read',
   'users:write',
+  'verification_requests:read',
+  'verification_requests:write',
 ] as const;
 
 export class APIUserController {

@@ -30,6 +30,11 @@ export const createUserOrganizationSchema = joi.object({
   add_organization_name: joi.string().max(100),
 });
 
+export const createUserVerificationRequestSchema = joi.object({
+  bio_url: joi.string().uri().required(),
+  applications: joi.array().items(joi.number().integer()).optional(),
+});
+
 export const createUserEmailChangeRequestSchema = joi.object({
   email: joi.string().email().required(),
 });
@@ -70,4 +75,8 @@ export const updateUserPasswordSchema = joi.object({
     }
     return password;
   }),
+});
+
+export const updateUserVerificationRequestSchema = joi.object({
+  bio_url: joi.string().uri().required(),
 });

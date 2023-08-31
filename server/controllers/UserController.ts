@@ -6,8 +6,10 @@ import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import bcrypt from 'bcryptjs';
 import errors from '../errors';
+import { AccessRequestController } from './AccessRequestController';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
+import { VerificationRequestController } from './VerificationRequestController';
 import {
   Application,
   Organization,
@@ -15,17 +17,20 @@ import {
   User,
   UserApplication,
   UserOrganization,
+  VerificationRequest,
 } from '../models';
 import type {
   CreateUserApplicationBody,
   CreateUserEmailChangeRequestBody,
   CreateUserOrganizationBody,
+  CreateUserVerificationRequestBody,
   GetAllUserApplicationsQuery,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
   UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
   UpdateUserPasswordBody,
+  UpdateUserVerificationRequestBody,
   UserApplicationIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
@@ -199,6 +204,46 @@ export class UserController {
         organization_id: orgID,
       },
     });
+  }
+
+  /**
+   * Creates a new Verification Request, if the user is not yet verified.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API request.
+   * @returns The fulfilled API response.
+   */
+  public async createUserVerificationRequest(req: Request, res: Response): Promise<Response> {
+    const { uuid } = (req.params as unknown) as UserUUIDParams;
+    const props = req.body as CreateUserVerificationRequestBody;
+
+    const foundUser = await User.findByPk(uuid);
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+    if (foundUser.get('user_type') !== 'instructor') {
+      return errors.badRequest(res);
+    }
+    const foundRequests = await VerificationRequest.findAll({ where: { user_id: req.userUUID } });
+    if (foundUser.get('verify_status') !== 'not_attempted' || foundRequests.length > 0) {
+      return errors.badRequest(res);
+    }
+
+    if (props.applications) {
+      const allValid = await new AccessRequestController().validateRequestedApplications(props.applications);
+      if (!allValid) {
+        return errors.badRequest(res);
+      }
+    }
+
+    const verificationRequest = await new VerificationRequestController().createVerificationRequest(uuid, props);
+    if (!verificationRequest) {
+      return errors.internalServerError(res);
+    }
+
+    await foundUser.update({ verify_status: 'pending' });
+
+    return res.status(201).send({ data: verificationRequest.get() });
   }
   
   /**
@@ -604,6 +649,45 @@ export class UserController {
         uuid: foundUser.uuid,
       },
     });
+  }
+
+  /**
+   * Updates a user's existing Verification Request when in an unlocked state.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserVerificationRequest(req: Request, res: Response): Promise<Response> {
+    const { uuid } = (req.params as unknown) as UserUUIDParams;
+    const props = req.body as UpdateUserVerificationRequestBody;
+
+    const foundUser = await User.findByPk(uuid);
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+    const foundVerificationReq = await VerificationRequest.findOne({ where: { user_id: uuid } });
+    if (!foundVerificationReq) {
+      return errors.notFound(res);
+    }
+    if (!['open', 'needs_change'].includes(foundVerificationReq.get('status'))) {
+      return errors.badRequest(res);
+    }
+
+    const updateRes = await new VerificationRequestController().updateVerificationRequestByUser(
+      foundVerificationReq.id,
+      {
+        ...props,
+        ...(foundVerificationReq.get('status') === 'needs_change' && {
+          status: 'open',
+        }),
+      },
+    );
+    if (!updateRes) {
+      return errors.internalServerError(res);
+    }
+
+    return res.send({ data: updateRes.get() });
   }
 
   /**

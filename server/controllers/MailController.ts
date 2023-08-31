@@ -11,6 +11,7 @@ export type SendEmailParams = {
 };
 
 export class MailController {
+  public adminNotificationEmailAddress: string;
   private mailClient: SESv2Client | null;
 
   constructor() {
@@ -21,6 +22,7 @@ export class MailController {
       console.error('Missing AWS SES initialization parameters!');
       return;
     }
+    this.adminNotificationEmailAddress = process.env.ADMIN_NOTIFICATION_EMAIL_ADDRESS || 'info@libretexts.org';
     this.mailClient = new SESv2Client({
       region,
       credentials: {

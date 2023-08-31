@@ -8,12 +8,14 @@ export enum PermissionsActionsEnum {
   WRITE = 'WRITE',
 }
 export enum PermissionsResourcesEnum {
+  AccessRequest = 'AccessRequest',
   APIUser = 'APIUser',
   Application = 'Application',
   Organization = 'Organization',
   OrganizationSystem = 'OrganizationSystem',
   Service = 'Service',
   User = 'User',
+  VerificationRequest = 'VerificationRequest',
 }
 export enum ReservedRoleEnum {
   super_admin = 'super_admin',
@@ -87,6 +89,7 @@ export class PermissionsController {
 
     if (action === PermissionsActionsEnum.READ) {
       switch (resourceType) {
+        case 'AccessRequest':
         case 'APIUser':
           hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
           break;
@@ -104,9 +107,16 @@ export class PermissionsController {
           break;
         case 'User':
           hasPermission = true; // all roles
+          break;
+        case 'VerificationRequest':
+          hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
+          break;
       }
     } else if (action === PermissionsActionsEnum.WRITE) {
       switch (resourceType) {
+        case 'AccessRequest':
+          hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
+          break;
         case 'APIUser':
           hasPermission = this.isOmnipotent(foundUser);
           break;
@@ -139,6 +149,9 @@ export class PermissionsController {
             break;
           }
           hasPermission = resourceID === userUUID || this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
+          break;
+        case 'VerificationRequest':
+          hasPermission = this.isSuperAdministrator(foundUser) || this.isOmnipotent(foundUser);
           break;
       }
     }

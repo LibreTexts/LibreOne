@@ -9,9 +9,11 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { AccessRequest } from './AccessRequest';
+import { AccessRequestApplication } from './AccessRequestApplication';
+import { ApplicationType } from '../types/applications';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
-import { ApplicationType } from '../types/applications';
 
 @Table({
   timestamps: true,
@@ -61,6 +63,14 @@ export class Application extends Model {
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
   declare hide_from_user_apps: boolean;
+
+  /** Include in list of "default" libraries for instructors */
+  @AllowNull(false)
+  @Column(DataType.BOOLEAN)
+  declare is_default_library: boolean;
+
+  @BelongsToMany(() => AccessRequest, () => AccessRequestApplication)
+  access_requests?: Array<AccessRequest & { AccessRequestApplication: AccessRequestApplication }>;
 
   @BelongsToMany(() => User, () => UserApplication)
   users?: Array<User & { UserApplication: UserApplication }>;

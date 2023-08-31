@@ -91,6 +91,19 @@ usersRouter.route('/:uuid/organizations/:orgID/admin-role')
     catchInternal((req, res) => controller.deleteUserOrganizationAdminRole(req, res)),
   );
 
+usersRouter.route('/:uuid/verification-request')
+  .all(
+    verifyAPIAuthentication,
+    ensureUserResourcePermission(true),
+    validate(UserValidator.uuidParamSchema, 'params'),
+  ).patch(
+    validate(UserValidator.updateUserVerificationRequestSchema, 'body'),
+    catchInternal((req, res) => controller.updateUserVerificationRequest(req, res)),
+  ).post(
+    validate(UserValidator.createUserVerificationRequestSchema, 'body'),
+    catchInternal((req, res) => controller.createUserVerificationRequest(req, res)),
+  );
+
 usersRouter.route('/:uuid/avatar').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
