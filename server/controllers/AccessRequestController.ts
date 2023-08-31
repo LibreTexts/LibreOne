@@ -1,7 +1,14 @@
 import { Op, UniqueConstraintError } from 'sequelize';
 import { Request, Response } from 'express';
 import { marked } from 'marked';
-import { Application, User, UserApplication, sequelize } from '../models';
+import {
+  AccessRequest,
+  AccessRequestApplication,
+  Application,
+  User,
+  UserApplication,
+  sequelize,
+} from '../models';
 import {
   AccessRequestEffect,
   AccessRequestIDParams,
@@ -10,8 +17,6 @@ import {
   UpdateAccessRequestBody,
 } from '../types/accessrequests';
 import errors from '../errors';
-import { AccessRequestApplication } from '../models/AccessRequestApplication';
-import { AccessRequest } from '../models/AccessRequest';
 import { MailController } from './MailController';
 
 export const accessRequestEffects = ['approve', 'deny', 'partially_approve'];

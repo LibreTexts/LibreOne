@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { marked } from 'marked';
 import {
+  AccessRequest,
   AccessRequestApplication,
   Application,
   sequelize,
@@ -11,7 +12,6 @@ import {
   VerificationRequestHistory,
 } from '../models';
 import errors from '../errors';
-import { AccessRequest } from '../models/AccessRequest';
 import { MailController } from './MailController';
 import {
   CreateVerificationRequestProps,
@@ -23,9 +23,6 @@ import {
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
-
-export const accessRequestEffects = ['approve', 'deny', 'partially_approve'];
-export const accessRequestStatuses = ['open', 'denied', 'approved', 'partially_approved'];
 
 export class VerificationRequestController {
 

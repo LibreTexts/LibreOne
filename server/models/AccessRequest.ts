@@ -12,7 +12,6 @@ import {
 } from 'sequelize-typescript';
 import { AccessRequestApplication } from './AccessRequestApplication';
 import { AccessRequestStatus } from '../types/accessrequests';
-import { accessRequestStatuses } from '../controllers/AccessRequestController';
 import { Application } from './Application';
 import { User } from './User';
 import { VerificationRequest } from './VerificationRequest';
@@ -32,7 +31,7 @@ export class AccessRequest extends Model {
   @Column(DataType.INTEGER)
   declare verification_request_id: number;
 
-  @Column(DataType.ENUM(...accessRequestStatuses))
+  @Column(DataType.ENUM('open', 'denied', 'approved', 'partially_approved'))
   declare status: AccessRequestStatus;
 
   @Column(DataType.TEXT)

@@ -14,7 +14,6 @@ import {
 import { AccessRequest } from './AccessRequest';
 import { User } from './User';
 import { VerificationRequestStatus } from '../types/verificationrequests';
-import { verificationRequestStatuses } from '../controllers/VerificationRequestController';
 import { VerificationRequestHistory } from './VerificationRequestHistory';
 
 @Table({
@@ -29,7 +28,7 @@ export class VerificationRequest extends Model {
   declare user_id: string;
 
   @AllowNull(false)
-  @Column(DataType.ENUM(...verificationRequestStatuses))
+  @Column(DataType.ENUM('approved', 'denied', 'needs_change', 'open'))
   declare status: VerificationRequestStatus;
 
   @AllowNull(false)
