@@ -87,6 +87,7 @@
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
 
+  // Local Types
   type OrganizationResult = {
     id: number;
     name: string;
@@ -95,18 +96,25 @@
     organization_id?: number;
     add_organization_name?: string;
   };
-
+  
+  // Props and Hooks
+  const emit = defineEmits<{
+    (e: 'org-update'): void;
+  }>();
   const props = defineProps<{
     uuid: string;
   }>();
   const axios = useAxios();
 
+  // UI & Data
   const loading = ref(false);
   const query = ref('');
   const firstQuery = ref(false);
 
   const results: Ref<OrganizationResult[]> = ref([]);
   const numResults = computed(() => results.value.length);
+
+  // Methods
 
   /**
    * Watches changes to the search query and retrieves updated results from the server.
@@ -135,14 +143,13 @@
    * @param data - Organization information to submit.
    */
   async function submitOrganization(data: OrganizationPatch) {
-    loading.value = true;
     try {
+      loading.value = true;
       await axios.post(`/users/${props.uuid}/organizations`, data);
-      const finishResult = await axios.post('/auth/complete-registration');
-      if (finishResult.data.data?.initSessionURL) {
-        window.location.assign(finishResult.data.data.initSessionURL);
-      }
+      emit('org-update');
     } catch (e) {
+      loading.value = false;
+    } finally {
       loading.value = false;
     }
   }

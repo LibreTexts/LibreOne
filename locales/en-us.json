@@ -20,7 +20,8 @@
     "submit": "Submit",
     "loading": "Loading...",
     "more": "More",
-    "status": "Status"
+    "status": "Status",
+    "select": "Select"
   },
   "welcome": {
     "getstarted": "Get Started"
@@ -60,7 +61,7 @@
     "instructor_info": "If you're a Teaching/Research Assistant or otherwise working with an instructor, you can also use the Instructor option."
   },
   "complete_registration_org": {
-    "header": "One last thing.",
+    "header": "About your institution.",
     "tagline": "What institution/organization are you part of?",
     "tagline_note": "This will help us to better tailor your LibreTexts experience. Select your primary institution; if you're involved with multiple, you can add them later.",
     "search_label": "Search for an Institution",
@@ -70,6 +71,18 @@
     "select": "Select",
     "add": "Add",
     "add_institution": "Add \"{query}\" as new institution"
+  },
+  "complete_registration_student": {
+    "header": "Just a few more details...",
+    "tagline": "What is your student ID?",
+    "tagline_note": "This will help us to better tailor your LibreTexts experience. This data is protected and never shared.",
+    "student_id": "Student ID"
+  },
+  "complete_registration_timezone": {
+    "header": "One last thing...",
+    "tagline": "What is your timezone?",
+    "tagline_note": "This will help us to better tailor your LibreTexts experience. This data is not used for tracking purposes.",
+    "timezone": "Timezone"
   },
   "registration_complete": {
     "header": "Registration Complete!",

@@ -20,12 +20,12 @@
       {{ instructions }}
     </p>
     <VueMultiSelect
+      v-bind="msprops"
       v-model="_value"
       :options="options"
       :mode="multiple ? 'tags' : 'single'"
       :max="max"
       :placeholder="placeholder"
-      :close-on-select="false"
       class="!shadow-none"
       :classes="{
         tag: '!bg-sky-700',
@@ -72,6 +72,7 @@
       options?: { label: string; value: string }[];
       multiple?: boolean;
       max?: number;
+      msprops?: any;
     }>(),
     {
       id: '',
@@ -84,6 +85,7 @@
       options: () => [],
       multiple: false,
       max: undefined,
+      msprops: {},
     },
   );
 

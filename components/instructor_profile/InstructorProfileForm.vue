@@ -78,6 +78,7 @@
           v-model:value="selectedApps"
           multiple
           class="my-4"
+          :msprops="{closeOnSelect: true}"
         />
         <ThemedSelectInput
           id="libs_select_input"
