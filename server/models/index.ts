@@ -15,7 +15,7 @@ import { OrganizationDomain } from './OrganizationDomain';
 import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
 import { OrganizationSystem } from './OrganizationSystem';
-import { TimeZone } from './Timezone';
+import { TimeZone } from './TimeZone';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 import { UserOrganization } from './UserOrganization';
