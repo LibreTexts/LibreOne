@@ -84,7 +84,7 @@
   /**
    * Submits the timezone update to the server and redirects to init an SSO session.
    *
-   * @param {TimezonePatch} data - Student ID information to submit.
+   * @param {TimezonePatch} data - Timezone information to submit.
    */
   async function submitTimezone(data: TimezonePatch) {
     try {

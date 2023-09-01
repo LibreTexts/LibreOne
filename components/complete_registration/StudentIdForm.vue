@@ -24,7 +24,7 @@
     <ThemedButton
       type="submit"
       @click="handleSubmit"
-      :disabled="studentId.length < 1 || studentId.length > 255"
+      :disabled="studentId.length < 3 || studentId.length > 50"
       class="mt-6"
       :loading="loading"
     >
