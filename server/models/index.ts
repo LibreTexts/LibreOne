@@ -6,6 +6,7 @@ import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Application } from './Application';
+import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
 import { Organization } from './Organization';
@@ -14,6 +15,7 @@ import { OrganizationDomain } from './OrganizationDomain';
 import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
 import { OrganizationSystem } from './OrganizationSystem';
+import { TimeZone } from './Timezone';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 import { UserOrganization } from './UserOrganization';
@@ -49,6 +51,7 @@ sequelize.addModels([
   OrganizationDomain,
   ResetPasswordToken,
   Service,
+  TimeZone,
   OrganizationSystem,
   User,
   UserApplication,
@@ -80,12 +83,29 @@ async function createDefaultAdminRoles() {
 }
 
 /**
+ * Creates default Time Zones where necessary.
+ */
+async function createDefaultTimeZones() {
+  try {
+    console.log('[DB] Creating default time zones...');
+    const existing = await TimeZone.findAll();
+    const existingZones = existing.map((r) => r.value);
+    const newZones = defaultTimeZones.filter((r) => !existingZones.includes(r.value));
+    await TimeZone.bulkCreate(newZones);
+    console.log('[DB] Created default time zones.');
+  } catch (e) {
+    console.error('[DB] Error creating default time zones:', e);
+  }
+}
+
+/**
  * Initializes the database with default values.
  */
 export async function initDatabase() {
   try {
     console.log('[DB] Initializing database...');
     await createDefaultAdminRoles();
+    await createDefaultTimeZones();
     console.log('[DB] Database initialized with default values.');
   } catch (e) {
     console.error('[DB] Error initializing database:', e);
@@ -125,6 +145,7 @@ export {
   OrganizationDomain,
   ResetPasswordToken,
   Service,
+  TimeZone,
   OrganizationSystem,
   User,
   UserApplication,

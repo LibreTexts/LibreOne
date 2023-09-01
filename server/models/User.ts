@@ -6,6 +6,7 @@ import {
   DataType,
   Default,
   DefaultScope,
+  ForeignKey,
   HasMany,
   HasOne,
   Index,
@@ -17,6 +18,7 @@ import {
 import { Application } from './Application';
 import { AccessRequest } from './AccessRequest';
 import { Organization } from './Organization';
+import { TimeZone } from './Timezone';
 import { UserOrganization } from './UserOrganization';
 import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
@@ -53,20 +55,17 @@ export class User extends Model {
   @Column(DataType.STRING)
   declare password?: string;
 
-  @BelongsToMany(() => Application, () => UserApplication)
-  applications?: Array<Application & { UserApplication: UserApplication }>;
-
-  @HasMany(() => AccessRequest)
-  access_requests?: Array<AccessRequest>;
-
-  @BelongsToMany(() => Organization, () => UserOrganization)
-  organizations?: Array<Organization & { UserOrganization: UserOrganization }>;
-
-  @HasOne(() => VerificationRequest)
-  verification_request?: VerificationRequest;
-
   @Column(DataType.ENUM('student', 'instructor'))
   declare user_type?: string;
+
+  @ForeignKey(() => TimeZone)
+  @Default('America/Los_Angeles')
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare time_zone: string;
+
+  @Column(DataType.STRING)
+  declare student_id: string;
 
   @Column(DataType.BOOLEAN)
   declare disabled: boolean;
@@ -102,6 +101,18 @@ export class User extends Model {
 
   @Column(DataType.DATE)
   declare last_password_change: Date;
+
+  @BelongsToMany(() => Application, () => UserApplication)
+  applications?: Array<Application & { UserApplication: UserApplication }>;
+
+  @HasMany(() => AccessRequest)
+  access_requests?: Array<AccessRequest>;
+
+  @BelongsToMany(() => Organization, () => UserOrganization)
+  organizations?: Array<Organization & { UserOrganization: UserOrganization }>;
+
+  @HasOne(() => VerificationRequest)
+  verification_request?: VerificationRequest;
 
   @CreatedAt
   declare created_at: Date;

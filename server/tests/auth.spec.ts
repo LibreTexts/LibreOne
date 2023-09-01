@@ -152,6 +152,27 @@ describe('Authentication and Authorization', async () => {
 
       await user1.destroy();
     });
+    it('should not complete registration if user_type is student and student ID is missing', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        user_type: 'student',
+      });
+
+      const response = await request(server)
+        .post('/api/v1/auth/complete-registration')
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+
+      await user1.destroy();
+    });
   });
 
   describe('Session Management', () =>  {

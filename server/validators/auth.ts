@@ -1,17 +1,9 @@
 import joi from 'joi';
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
-import { passwordStrengthOptions } from '../../passwordstrength';
+import { passwordValidator } from './shared';
 
 export const registerSchema = joi.object({
   email: joi.string().email().required(),
-  password: joi.string().custom((password, helper) => {
-    zxcvbnOptions.setOptions(passwordStrengthOptions);
-    const results = zxcvbn(password);
-    if (results.score < 3) {
-      return helper.error('any.invalid');
-    }
-    return password;
-  }),
+  password: passwordValidator,
 });
 
 export const verifyEmailSchema = joi.object({
@@ -36,12 +28,5 @@ export const initResetPasswordSchema = joi.object({
 
 export const resetPasswordSchema = joi.object({
   token: joi.string().length(64).required(),
-  password: joi.string().custom((password, helper) => {
-    zxcvbnOptions.setOptions(passwordStrengthOptions);
-    const results = zxcvbn(password);
-    if (results.score < 3) {
-      return helper.error('any.invalid');
-    }
-    return password;
-  }),
+  password: passwordValidator,
 });

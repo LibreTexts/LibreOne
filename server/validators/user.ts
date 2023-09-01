@@ -1,8 +1,7 @@
 import joi from 'joi';
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core';
 import { applicationIDValidator, applicationTypeValidator } from './applications';
 import { orgIDValidator } from './organizations';
-import { passwordStrengthOptions } from '../../passwordstrength';
+import { passwordValidator, timeZoneValidator } from './shared';
 import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
 
 const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
@@ -54,6 +53,8 @@ export const updateUserSchema = joi.object({
   bio_url: joi.string().uri(), // TODO: stricter validation?
   user_type: joi.string().valid('student', 'instructor'),
   verify_status: joi.string().trim(),
+  time_zone: timeZoneValidator,
+  student_id: joi.string().min(3).max(50),
 });
 
 export const updateUserEmailSchema = joi.object({
@@ -67,14 +68,7 @@ export const updateUserOrganizationAdminRoleSchema = joi.object({
 
 export const updateUserPasswordSchema = joi.object({
   old_password: joi.string().min(1).required(),
-  new_password: joi.string().custom((password, helper) => {
-    zxcvbnOptions.setOptions(passwordStrengthOptions);
-    const results = zxcvbn(password);
-    if (results.score < 3) {
-      return helper.error('any.invalid');
-    }
-    return password;
-  }),
+  new_password: passwordValidator,
 });
 
 export const updateUserVerificationRequestSchema = joi.object({

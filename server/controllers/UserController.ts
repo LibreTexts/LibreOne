@@ -454,7 +454,7 @@ export class UserController {
   
     const isExternalUser = foundUser.external_subject_id !== null;
     const updateObj: Record<string, string | number> = {};
-    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type'];
+    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type', 'time_zone', 'student_id'];
     const unallowedExternalKeys = ['first_name', 'last_name'];
     const allowedKeys = isExternalUser ? updatableKeys.filter((k) => !unallowedExternalKeys.includes(k)) : updatableKeys;
     Object.entries(props).forEach(([key, value]) => {

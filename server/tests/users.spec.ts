@@ -1102,6 +1102,80 @@ describe('Users', async () => {
       expect(updatedUser?.avatar).to.exist;
       s3Mock.restore();
     });
+    it('should update user time zone', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const updateObj = { time_zone: 'America/New_York' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object').that.includes.all.keys([
+        'uuid',
+        'email',
+        ...Object.keys(updateObj),
+      ]);
+
+      const updatedUser = await User.findOne({ where: { uuid: user1.uuid }});
+      expect(updatedUser).to.exist;
+      expect(_.pick(updatedUser?.get(), ['uuid', 'email', ...Object.keys(updateObj)])).to.deep.equal({
+        uuid: user1.uuid,
+        email: user1.email,
+        ...updateObj,
+      });
+    });
+    it('should reject invalid time zone', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const updateObj = { time_zone: 'America' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(error).to.exist;
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+    });
+    it('should update student ID', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const updateObj = { student_id: '123456789' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object').that.includes.all.keys([
+        'uuid',
+        'email',
+        ...Object.keys(updateObj),
+      ]);
+
+      const updatedUser = await User.findOne({ where: { uuid: user1.uuid }});
+      expect(updatedUser).to.exist;
+      expect(_.pick(updatedUser?.get(), ['uuid', 'email', ...Object.keys(updateObj)])).to.deep.equal({
+        uuid: user1.uuid,
+        email: user1.email,
+        ...updateObj,
+      });
+    });
   });
 
   describe('DELETE', () => {
