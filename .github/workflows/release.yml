@@ -17,6 +17,9 @@ jobs:
     needs: check_authorization
     if: needs.check_authorization.outputs.isAuthorized == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      didRelease: ${{ steps.semver.outputs.new_release_published }}
+      newVersion: ${{ steps.semver.outputs.new_release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
