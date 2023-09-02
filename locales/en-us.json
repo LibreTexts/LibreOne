@@ -21,7 +21,8 @@
     "loading": "Loading...",
     "more": "More",
     "status": "Status",
-    "select": "Select"
+    "select": "Select",
+    "comingsoon": "Coming Soon..."
   },
   "welcome": {
     "getstarted": "Get Started"
