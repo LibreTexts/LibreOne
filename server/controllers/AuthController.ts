@@ -688,7 +688,7 @@ export class AuthController {
         interrupt: true,
         block: true,
         ssoEnabled: false,
-        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please contact <a href="mailto:support@libretexts.org>support@libretexts.org</a> for assistance.',
+        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
         links: {},
       });
     }
