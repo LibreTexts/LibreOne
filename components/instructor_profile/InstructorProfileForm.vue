@@ -29,9 +29,11 @@
         @click="handleStartForm"
         type="submit"
         class="mt-6"
+        :disabled="true"
         v-if="shouldShowStartButton"
       >
-        {{ $t(getStartButtonTextKey) }}
+      {{ $t('common.comingsoon') }}
+        <!-- {{ $t(getStartButtonTextKey) }} -->
       </ThemedButton>
     </div>
     <div
