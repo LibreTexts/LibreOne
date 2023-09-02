@@ -5,7 +5,16 @@
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <AppSwitcher class="ml-2 pt-1" />
+        <AppSwitcher
+          class="ml-2 pt-1"
+          v-if="$props.authorized"
+        />
+        <img
+          src="@renderer/libretexts_logo.png"
+          alt="LibreTexts Logo"
+          class="h-9 w-auto mb-1"
+          v-else
+        >
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -19,10 +28,11 @@
         </div>
         <div class="flex flex-row mr-2">
           <button
-            @click="handleLogout()"
-            class="hidden md:block text-sm font-semibold leading-6 text-gray-500"
+            @click="$props.authorized ? handleLogout() : handleGoToLogin()"
+            class="hidden md:block text-sm font-semibold leading-6"
+            :class="$props.authorized ? 'text-gray-500' : 'text-black'"
           >
-            {{ $t("common.logout") }}
+            {{ $t($props.authorized ? "common.logout" : "common.signin") }}
           </button>
           <FontAwesomeIcon
             class="md:hidden clicked-animation"
@@ -57,10 +67,11 @@
               {{ item.title }}
             </a>
             <button
-              @click="handleLogout()"
-              class="text-sm font-semibold leading-6 text-gray-500 mt-6"
+              @click="$props.authorized ? handleLogout() : handleGoToLogin()"
+              class="text-sm font-semibold leading-6 mt-6"
+              :class="$props.authorized ? 'text-gray-500' : 'text-black'"
             >
-              {{ $t("common.logout") }}
+              {{ $t($props.authorized ? "common.logout" : "common.signin") }}
             </button>
           </div>
         </section>
@@ -70,17 +81,35 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, computed } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import AppSwitcher from './AppSwitcher.vue';
 
-  const menuOpen = ref<boolean>(false);
+  // Local Types
+  type NavItem = {
+    title: string;
+    link: string;
+  };
 
-  const navItems: { title: string; link: string }[] = [
+  // Props & Context
+  const props = withDefaults(
+    defineProps<{
+      authorized?: boolean;
+    }>(),
+    {
+      authorized: false,
+    },
+  );
+
+  // Data & UI
+  const menuOpen = ref<boolean>(false);
+  const baseItems: NavItem[] = [
     {
       title: 'Home',
       link: '/home',
     },
+  ];
+  const authItems: NavItem[] = [
     {
       title: 'Profile',
       link: '/profile',
@@ -95,8 +124,17 @@
     },
   ];
 
+  const navItems = computed<NavItem[]>(() => {
+    return [...baseItems, ...(props.authorized ? authItems : [])];
+  });
+
+  // Methods
   function handleLogout() {
     window.location.href = '/api/v1/auth/logout';
+  }
+
+  function handleGoToLogin() {
+    window.location.href = '/api/v1/auth/login';
   }
 </script>
 
