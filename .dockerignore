@@ -1,0 +1,24 @@
+# Configuration and environment
+.env
+
+# Dependencies/modules
+**/node_modules/
+
+# Build/distribution files
+**/build/
+**/dist/
+
+# Version control
+**/.git/
+.gitignore
+.github
+.husky
+
+# IDE files
+.vscode
+
+# macOS files
+**/.DS_Store
+
+# Code Coverage Reports
+coverage

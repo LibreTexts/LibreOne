@@ -31,6 +31,10 @@ app.use(cookieParser());
 
 app.use('/api/v1', APIRouter);
 
+app.use('/health', (_req, res) => {
+  res.send({ healthy: true, msg: 'LibreOne is running.' });
+});
+
 await connectDatabase();
 
 if (isProduction) {
