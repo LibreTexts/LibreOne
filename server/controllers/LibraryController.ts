@@ -163,7 +163,7 @@ export class LibraryController {
       where: {
         [Op.and]: [
           { user_id: uuid },
-          { application_id: foundLibraryApp },
+          { application_id: foundLibraryApp.get('id') },
         ],
       },
     });
