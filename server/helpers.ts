@@ -52,3 +52,6 @@ export function safeJSONParse(input: string): object | boolean {
   }
   return false;
 }
+
+export const DEFAULT_FIRST_NAME = 'LibreTexts';
+export const DEFAULT_LAST_NAME = 'User';

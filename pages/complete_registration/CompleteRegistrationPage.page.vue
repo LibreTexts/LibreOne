@@ -81,7 +81,7 @@
   const componentProps = computed(() => {
     switch (stage.value) {
       case NameForm: {
-        return { uuid: pageContext.user?.uuid };
+        return { uuid: pageContext.user?.uuid, firstName: pageContext.user?.first_name, lastName: pageContext.user?.last_name };
       }
       case OrgForm: {
         return { uuid: pageContext.user?.uuid };
