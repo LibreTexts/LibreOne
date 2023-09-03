@@ -22,7 +22,7 @@ import { Application, ResetPasswordToken, sequelize, User, UserApplication } fro
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
-import { getProductionURL } from '../helpers';
+import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
 import type {
@@ -409,8 +409,8 @@ export class AuthController {
         uuid: uuidv4(),
         email: props.email,
         password: hashed,
-        first_name: 'LibreTexts',
-        last_name: 'User',
+        first_name: DEFAULT_FIRST_NAME,
+        last_name: DEFAULT_LAST_NAME,
         disabled: true,
         expired: false,
         legacy: false,

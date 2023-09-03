@@ -70,20 +70,40 @@
   import { useAxios } from '@renderer/useAxios';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME } from '@server/helpers';
 
+  // Props && Hooks
   const props = defineProps<{
     uuid: string;
+    firstName?: string;
+    lastName?: string;
   }>();
   const emit = defineEmits<{
     (e: 'name-update', firstName: string, lastName: string): void;
   }>();
   const axios = useAxios();
 
+  // Data && UI
   const loading = ref(false);
   const firstName = ref('');
   const lastName = ref('');
   const firstErr = ref(false);
   const lastErr = ref(false);
+
+  // Lifecycle
+  initName();
+
+  // Methods
+
+  /**
+   * Initializes the name fields with the provided props. If props are defined and not the default set by the server.
+   */
+  function initName(){
+    if(!props.firstName || !props.lastName) return;
+    if(props.firstName === DEFAULT_FIRST_NAME || props.lastName === DEFAULT_LAST_NAME) return;
+    firstName.value = props.firstName;
+    lastName.value = props.lastName;
+  }
 
   /**
    * Resets any active error states in the form.
