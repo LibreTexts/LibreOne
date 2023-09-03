@@ -32,9 +32,11 @@ import type {
   UpdateUserPasswordBody,
   UpdateUserVerificationRequestBody,
   UserApplicationIDParams,
+  UserLibraryIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
+import { LibraryController } from './LibraryController';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -90,11 +92,49 @@ export class UserController {
       return errors.badRequest(res);
     }
 
-    // TODO: handle library user management
+    // create or reactivate library user if necessary
+    let sandbox_url;
+    if (foundApp.get('app_type') === 'library') {
+      const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
+      const libController = new LibraryController();
+      try {
+        const libUserID = await libController.createOrActivateLibraryUser(
+          lib,
+          {
+            uuid,
+            email: foundUser.get('email'),
+            name: `${foundUser.get('first_name')} ${foundUser.get('last_name')}`,
+          },
+        );
+        if (!libUserID) {
+          throw new Error('Library user creation did not return a user ID!');
+        }
+
+        sandbox_url = await libController.createLibraryUserSandbox(
+          lib,
+          libUserID,
+          {
+            uuid: foundUser.get('uuid'),
+            first_name: foundUser.get('first_name'),
+            last_name: foundUser.get('last_name'),
+          },
+        );
+      } catch (e) {
+        console.error({
+          msg: 'Library user creation failed!',
+          lib,
+          uuid,
+          error: e,
+        });
+      }      
+    }
 
     await UserApplication.create({
       user_id: uuid,
       application_id,
+      ...(sandbox_url && {
+        library_sandbox_url: sandbox_url,
+      }),
     });
 
     return res.send({
@@ -350,6 +390,47 @@ export class UserController {
       },
     });
   }
+
+  /**
+   * Helper for retrieving a user's 'library' type applications only (internal).
+   *
+   * @param uuid - User identifier to search on.
+   * @returns Array of library applications user has access to.
+   */
+  public async getUserLibraryApplications(uuid: string) {
+    const foundLibs = await Application.findAll({
+      where: { app_type: 'library' },
+      include: [
+        {
+          model: User,
+          through: { attributes: [] },
+          where: { uuid },
+          attributes: [],
+        },
+      ],
+    });
+    return foundLibs.map((l) => l.get()) || [];
+  }
+
+  /**
+   * Retrieves a User's Sandbox URL on a library application.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async getUserLibraryAppSandboxURL(req: Request, res: Response): Promise<Response> {
+    const { uuid, libraryID } = req.params as UserLibraryIDParams;
+    const libController = new LibraryController();
+    const sandboxRes = await libController.getLibraryUserSandboxURL(libraryID, uuid);
+
+    // invalid libraryID
+    if (!sandboxRes) {
+      return errors.notFound(res);
+    }
+
+    return res.send({ data: sandboxRes });
+  }
   
   /**
    * Retrieves a list of all Organizations a User is associated with.
@@ -470,6 +551,24 @@ export class UserController {
     }
   
     await foundUser.update(updateObj);
+
+    // update name on libraries if necessary
+    if (updateObj.first_name || updateObj.last_name) {
+      const userLibRecords = await this.getUserLibraryApplications(uuid);
+      const userLibs = userLibRecords.map((l) => LibraryController.getLibraryIdentifierFromAppURL(l.main_url));
+      if (userLibs.length) {
+        const libController = new LibraryController();
+        await Promise.allSettled(
+          userLibs.map((lib) =>
+            libController.updateLibraryUserName(
+              lib,
+              uuid,
+              `${foundUser.get('first_name')} ${foundUser.get('last_name')}`),
+          ),
+        );
+      }
+    }
+
     return res.send({
       data: foundUser,
     });
@@ -572,6 +671,19 @@ export class UserController {
     }
 
     await foundUser.update({ email: verification.email });
+
+    // update email on libraries if necessary
+    const userLibRecords = await this.getUserLibraryApplications(uuid);
+    const userLibs = userLibRecords.map((l) => LibraryController.getLibraryIdentifierFromAppURL(l.main_url));
+    if (userLibs.length) {
+      const libController = new LibraryController();
+      await Promise.allSettled(
+        userLibs.map((lib) =>
+          libController.updateLibraryUserEmail(lib, uuid, verification.email),
+        ),
+      );
+    }
+
     return res.send({
       data: {
         uuid: foundUser.uuid,
@@ -715,8 +827,17 @@ export class UserController {
     if (!foundUserApp) {
       return errors.notFound(res);
     }
+    const foundApp = await Application.findByPk(applicationID);
+    if (!foundApp) {
+      return errors.notFound(res);
+    }
 
-    // TODO: handle library user management
+    // deactivate library user if necessary
+    if (foundApp.get('app_type') === 'library') {
+      const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
+      const libController = new LibraryController();
+      await libController.deactivateLibraryUser(lib, uuid);
+    }
 
     await foundUserApp.destroy();
 

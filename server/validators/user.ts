@@ -15,6 +15,11 @@ export const uuidApplicationIDParamsSchema = joi.object({
   applicationID: applicationIDValidator,
 });
 
+export const uuidLibraryIDParamsSchema = joi.object({
+  uuid: uuidValidator,
+  libraryID: joi.string().min(3).max(10).required(),
+});
+
 export const uuidOrgIDParamsSchema = joi.object({
   uuid: uuidValidator,
   orgID: orgIDValidator,

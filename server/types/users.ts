@@ -8,6 +8,8 @@ export type UserUUIDParams = {
 
 export type UserApplicationIDParams = UserUUIDParams & { applicationID: number };
 
+export type UserLibraryIDParams = UserUUIDParams & { libraryID: string };
+
 export type UserOrganizationIDParams = UserUUIDParams & OrganizationIDParams;
 
 export type CreateUserApplicationBody = {

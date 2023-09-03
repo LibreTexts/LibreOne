@@ -26,6 +26,9 @@ export class UserApplication extends Model {
   @Column(DataType.INTEGER)
   declare application_id: number;
 
+  @Column(DataType.STRING)
+  declare library_sandbox_url?: string;
+
   @CreatedAt
   declare created_at: Date;
 
