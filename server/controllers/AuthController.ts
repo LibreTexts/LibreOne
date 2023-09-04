@@ -703,17 +703,7 @@ export class AuthController {
       });
     }
 
-    if (!registeredService) {
-      return res.send({
-        interrupt: true,
-        block: true,
-        ssoEnabled: false,
-        message: 'We\'ve encountered an error establishing your session. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
-        links: {},
-      });
-    }
-
-    if (registeredService !== CAS_CALLBACK) {
+    if (registeredService && registeredService !== CAS_CALLBACK) {
       const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
       if (!foundApp) {
         return res.send({
@@ -754,7 +744,20 @@ export class AuthController {
         message: 'Thanks for registering with LibreOne. Lets finish setting up your account.',
         autoRedirect: true,
         links: {
-          'Lets Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+          'Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+        },
+      });
+    }
+
+    if (!registeredService) {
+      return res.send({
+        interrupt: true,
+        block: false,
+        ssoEnabled: true,
+        message: 'Just a moment while we redirect you to Launchpad...',
+        autoRedirect: true,
+        links: {
+          'Go': `${SELF_BASE}/api/v1/auth/login`,
         },
       });
     }
