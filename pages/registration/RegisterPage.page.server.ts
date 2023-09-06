@@ -34,12 +34,12 @@ export async function onBeforeRender(pageContext: PageContextServer) {
     ...(redirectURI && { redirect_uri: redirectURI }),
   });
   const googleParams = new URLSearchParams({
-    client_name: 'Google Workspace',
+    client_name: 'GoogleWorkspace',
     locale: 'en',
     ...origSearchParams,
   });
   const microsoftParams = new URLSearchParams({
-    client_name: 'Microsoft Active Directory',
+    client_name: 'MicrosoftActiveDirectory',
     locale: 'en',
     ...origSearchParams,
   });
