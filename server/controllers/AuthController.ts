@@ -346,6 +346,7 @@ export class AuthController {
       last_name: principal.attributes?.last_name,
       email: principal.attributes?.email,
       picture: principal.attributes?.picture,
+      educational: /(?<=.*?)@.*?\.edu/.test(principal.attributes?.email),
     };
 
     const privKey = await this.retrieveCASBridgePrivateKey();
