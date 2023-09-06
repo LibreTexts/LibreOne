@@ -16,7 +16,7 @@ import {
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
-import { UniqueConstraintError } from 'sequelize';
+import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
 import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { Application, ResetPasswordToken, sequelize, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
@@ -634,12 +634,21 @@ export class AuthController {
       }
     };
 
-    const foundUser = await User.findOne({ where: { external_subject_id: payload.sub } });
+    const email = payload[getEmailPayloadField(userData.clientname)];
+
+    const criteria: WhereOptions[] = [{ external_subject_id: payload.sub }];
+    if (email) {
+      criteria.push({ email });
+    }
+  
+    const foundUser = await User.findOne({
+      where: criteria.length > 1 ? { [Op.or]: criteria } : criteria[0],
+    });
     if (!foundUser) {
       await User.create({
         uuid: uuidv4(),
         external_subject_id: payload.sub,
-        email: payload[getEmailPayloadField(userData.clientname)],
+        email,
         first_name: givenName.trim(),
         last_name: familyName.trim(),
         avatar: payload.picture || DEFAULT_AVATAR,
@@ -653,11 +662,13 @@ export class AuthController {
       });
     } else {
       await foundUser.update({
-        email: payload[getEmailPayloadField(userData.clientname)],
+        external_subject_id: payload.sub,
+        email,
         first_name: givenName.trim(),
         last_name: familyName.trim(),
         avatar: payload.picture || DEFAULT_AVATAR,
         ip_address: payload.ipaddr,
+        external_idp: userData.clientname,
         last_access: new Date(),
       });
     }
@@ -703,6 +714,23 @@ export class AuthController {
       });
     }
 
+    if (!foundUser.registration_complete) {
+      const redirectParams = new URLSearchParams({
+        redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
+      });
+
+      return res.send({
+        interrupt: true,
+        block: false,
+        ssoEnabled: true,
+        message: 'Thanks for registering with LibreOne. Lets finish setting up your account.',
+        autoRedirect: true,
+        links: {
+          'Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+        },
+      });
+    }
+
     if (registeredService && registeredService !== CAS_CALLBACK) {
       const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
       if (!foundApp) {
@@ -730,23 +758,6 @@ export class AuthController {
           links: {},
         });
       }
-    }
-
-    if (!foundUser.registration_complete) {
-      const redirectParams = new URLSearchParams({
-        redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
-      });
-
-      return res.send({
-        interrupt: true,
-        block: false,
-        ssoEnabled: true,
-        message: 'Thanks for registering with LibreOne. Lets finish setting up your account.',
-        autoRedirect: true,
-        links: {
-          'Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
-        },
-      });
     }
 
     if (!registeredService) {
