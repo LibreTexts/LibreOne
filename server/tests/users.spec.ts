@@ -338,57 +338,181 @@ describe('Users', async () => {
         code: 'forbidden',
       });
     });
-    it('should retrieve all users', async () => {
-      const orgSystem1 = await OrganizationSystem.create({ name: 'TestSystem1', logo: '' });
-      const [org1, org2] = await Organization.bulkCreate([
-        { name: 'Test1', system_id: orgSystem1.id },
-        { name: 'Test2' },
-      ]);
-      const [user1, user2] = await User.bulkCreate([
-        {
-          uuid: uuidv4(),
-          email: 'info@libretexts.org',
-        }, {
-          uuid: uuidv4(),
-          email: 'info+1@libretexts.org',
-        },
-      ]);
-      await UserOrganization.bulkCreate([
-        { user_id: user1.uuid, organization_id: org1.id },
-        { user_id: user2.uuid, organization_id: org2.id },
-      ]);
 
-      const response = await request(server)
-        .get('/api/v1/users')
-        .auth(mainAPIUserUsername, mainAPIUserPassword);
-      
-      expect(response.status).to.equal(200);
-      expect(response.body?.meta).to.exist;
-      expect(response.body?.data).to.have.length(2);
-      const users = await response.body.data.map((u) => _.pick(u, ['uuid', 'email', 'organizations']));
-      expect(users).to.have.deep.members([
-        {
-          uuid: user1.uuid,
-          email: user1.email,
-          organizations: [{
-            id: org1.id,
-            name: 'Test1',
-            logo: null,
-            system_id: orgSystem1.id,
-          }],
-        },
-        {
-          uuid: user2.uuid,
-          email: user2.email,
-          organizations: [{
-            id: org2.id,
-            name: 'Test2',
-            logo: null,
-            system_id: null,
-          }],
-        },
-      ]);
-      await Promise.all([org1.destroy(), org2.destroy()]);
+    describe('retrieve all users', async () => {
+      let orgSystem1: OrganizationSystem;
+      let org1: Organization;
+      let org2: Organization;
+      let user1: User;
+      let user2: User;
+      let user3: User;
+
+      const includeFieldsList = ['uuid', 'email', 'first_name', 'last_name', 'student_id'];
+
+      before(async () => {
+        orgSystem1 = await OrganizationSystem.create({ name: 'TestSystem1', logo: '' });
+        [org1, org2] = await Organization.bulkCreate([
+          { name: 'Test1', system_id: orgSystem1.id },
+          { name: 'Test2' },
+        ]);
+      });
+      beforeEach(async () => {
+        [user1, user2, user3] = await User.bulkCreate([
+          {
+            uuid: uuidv4(),
+            email: 'info@libretexts.org',
+            first_name: 'Alice',
+            last_name: 'Johnson',
+            student_id: 'A12345',
+          }, {
+            uuid: uuidv4(),
+            email: 'info+1@libretexts.org',
+            first_name: 'Bob',
+            last_name: 'Smith',
+            student_id: 'Z1Y2X3W4',
+          }, {
+            uuid: uuidv4(),
+            email: 'info+2@libretexts.org',
+            first_name: 'Carol',
+            last_name: 'Williams',
+          },
+        ]);
+        await UserOrganization.bulkCreate([
+          { user_id: user1.uuid, organization_id: org1.id },
+          { user_id: user2.uuid, organization_id: org2.id },
+        ]);
+      });
+      after(async () => {
+        await Promise.all([org1.destroy(), org2.destroy()]);
+        await orgSystem1.destroy();
+      });
+
+      it('should retrieve all users', async () => {
+        const response = await request(server)
+          .get('/api/v1/users')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(3);
+        const users = await response.body.data.map((u) => _.pick(u, [...includeFieldsList, 'organizations']));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user1.uuid,
+            email: user1.email,
+            first_name: user1.first_name,
+            last_name: user1.last_name,
+            student_id: user1.student_id,
+            organizations: [{
+              id: org1.id,
+              name: 'Test1',
+              logo: null,
+              system_id: orgSystem1.id,
+            }],
+          },
+          {
+            uuid: user2.uuid,
+            email: user2.email,
+            first_name: user2.first_name,
+            last_name: user2.last_name,
+            student_id: user2.student_id,
+            organizations: [{
+              id: org2.id,
+              name: 'Test2',
+              logo: null,
+              system_id: null,
+            }],
+          },
+          {
+            uuid: user3.uuid,
+            email: user3.email,
+            first_name: user3.first_name,
+            last_name: user3.last_name,
+            student_id: null,
+            organizations: [],
+          },
+        ]);
+      });
+      it('should search users by first name', async () => {
+        const searchParams = new URLSearchParams({ query: 'Alice' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(1);
+        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user1.uuid,
+            email: user1.email,
+            first_name: user1.first_name,
+            last_name: user1.last_name,
+            student_id: user1.student_id,
+          },
+        ]);
+      });
+      it('should search users by last name', async () => {
+        const searchParams = new URLSearchParams({ query: 'Smith' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(1);
+        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user2.uuid,
+            email: user2.email,
+            first_name: user2.first_name,
+            last_name: user2.last_name,
+            student_id: user2.student_id,
+          },
+        ]);
+      });
+      it('should search users by email', async () => {
+        const searchParams = new URLSearchParams({ query: '+2' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(1);
+        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user3.uuid,
+            email: user3.email,
+            first_name: user3.first_name,
+            last_name: user3.last_name,
+            student_id: null,
+          },
+        ]);
+      });
+      it('should search users by student ID', async () => {
+        const searchParams = new URLSearchParams({ query: 'Y2X3W4' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(1);
+        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user2.uuid,
+            email: user2.email,
+            first_name: user2.first_name,
+            last_name: user2.last_name,
+            student_id: user2.student_id,
+          },
+        ]);
+      });
     });
     it('should retrieve all user applications', async () => {
       const user1 = await User.create({

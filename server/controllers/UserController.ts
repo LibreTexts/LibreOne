@@ -25,6 +25,7 @@ import type {
   CreateUserOrganizationBody,
   CreateUserVerificationRequestBody,
   GetAllUserApplicationsQuery,
+  GetAllUsersQuery,
   ResolvePrincipalAttributesQuery,
   UpdateUserBody,
   UpdateUserEmailBody,
@@ -335,9 +336,22 @@ export class UserController {
    * @returns The fulfilled API response.
    */
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
-    const offset = Number(req.query.offset);
-    const limit = Number(req.query.limit);
+    const { offset, limit, query } = (req.query as unknown) as GetAllUsersQuery;
+
+    const fuzzyQuery = query ? `%${query}%` : null;
+    const queryCriteria = fuzzyQuery ? {
+      [Op.or]: [
+        { first_name: { [Op.like]: fuzzyQuery} },
+        { last_name: { [Op.like]: fuzzyQuery } },
+        { email: { [Op.like]: fuzzyQuery } },
+        { student_id: { [Op.like]: fuzzyQuery } },
+      ],
+    } : null;
+
     const { count, rows } = await User.findAndCountAll({
+      ...(queryCriteria && {
+        where: queryCriteria,
+      }),
       offset,
       limit,
       include: [{

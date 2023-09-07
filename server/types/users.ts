@@ -33,6 +33,7 @@ export type CreateUserVerificationRequestBody = {
 export type GetAllUsersQuery = {
   offset: number;
   limit: number;
+  query?: string;
 };
 
 export type GetAllUserApplicationsQuery = {
