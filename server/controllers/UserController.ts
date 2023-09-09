@@ -549,7 +549,7 @@ export class UserController {
   
     const isExternalUser = foundUser.external_subject_id !== null;
     const updateObj: Record<string, string | number> = {};
-    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type', 'time_zone', 'student_id'];
+    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type', 'time_zone', 'student_id', 'disabled'];
     const unallowedExternalKeys = ['first_name', 'last_name'];
     const allowedKeys = isExternalUser ? updatableKeys.filter((k) => !unallowedExternalKeys.includes(k)) : updatableKeys;
     Object.entries(props).forEach(([key, value]) => {
@@ -562,6 +562,12 @@ export class UserController {
         return errors.forbidden(res);
       }
       updateObj.verify_status = props.verify_status;
+    }
+    if (props.disabled && JSON.parse(props.disabled)) {
+      if (!req.isAPIUser) {
+        return errors.forbidden(res);
+      }
+      updateObj.disabled = 1;
     }
   
     await foundUser.update(updateObj);

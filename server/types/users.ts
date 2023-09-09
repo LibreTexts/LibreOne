@@ -46,6 +46,7 @@ export type UpdateUserBody = {
   bio_url?: string;
   user_type?: string;
   verify_status?: string;
+  disabled?: string;
 };
 
 export type UpdateUserEmailBody = {
