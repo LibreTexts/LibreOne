@@ -7,6 +7,7 @@ import { permissionsRouter } from './permissions';
 import { servicesRouter } from './services';
 import { organizationSystemsRouter } from './organizationsystems';
 import { usersRouter } from './users';
+import { verificationRequestsRouter } from './verificationrequests';
 
 const APIRouter = express.Router();
 
@@ -18,6 +19,7 @@ APIRouter.use('/organization-systems', organizationSystemsRouter);
 APIRouter.use('/permissions', permissionsRouter);
 APIRouter.use('/services', servicesRouter);
 APIRouter.use('/users', usersRouter);
+APIRouter.use('/verification-requests', verificationRequestsRouter);
 
 export {
   APIRouter,
