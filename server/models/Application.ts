@@ -69,6 +69,11 @@ export class Application extends Model {
   @Column(DataType.BOOLEAN)
   declare is_default_library: boolean;
 
+  /** Is integrated with LibreOne CAS */
+  @AllowNull(false)
+  @Column(DataType.BOOLEAN)
+  declare supports_cas: boolean;
+
   @BelongsToMany(() => AccessRequest, () => AccessRequestApplication)
   access_requests?: Array<AccessRequest & { AccessRequestApplication: AccessRequestApplication }>;
 

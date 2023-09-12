@@ -161,6 +161,23 @@ describe('Applications', async () => {
       const apps = await response.body.data.map((a) => omitID(omitTimestamps(a)));
       expect(apps).to.have.deep.members([testAppData({ name: 'AppTwo', app_type: 'library' })]);
     });
+    it('should search for applications supporting CAS', async () => {
+      await Application.bulkCreate([
+        testAppData({ supports_cas: false }),
+        testAppData({ name: 'AppTwo' }),
+      ]);
+
+      const params = new URLSearchParams({ onlyCASSupported: 'true' });
+      const response = await request(server)
+        .get(`/api/v1/applications?${params.toString()}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.meta).to.exist;
+      expect(response.body?.data).to.have.length(1);
+      const apps = await response.body.data.map((a) => omitID(omitTimestamps(a)));
+      expect(apps).to.have.deep.members([testAppData({ name: 'AppTwo' })]);
+    });
     it('should search applications with query and by type', async () => {
       await Application.bulkCreate([
         testAppData(),
@@ -168,6 +185,23 @@ describe('Applications', async () => {
       ]);
 
       const params = new URLSearchParams({ query: 'one', type: 'standalone' });
+      const response = await request(server)
+        .get(`/api/v1/applications?${params.toString()}`)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.meta).to.exist;
+      expect(response.body?.data).to.have.length(1);
+      const apps = await response.body.data.map((a) => omitID(omitTimestamps(a)));
+      expect(apps).to.have.deep.members([testAppData()]);
+    });
+    it('should search applications with query and by type and supporting CAS', async () => {
+      await Application.bulkCreate([
+        testAppData(),
+        testAppData({ name: 'AppTwo', app_type: 'library', supports_cas: false }),
+      ]);
+
+      const params = new URLSearchParams({ query: 'one', type: 'standalone', onlyCASSupported: 'true' });
       const response = await request(server)
         .get(`/api/v1/applications?${params.toString()}`)
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));

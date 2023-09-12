@@ -27,6 +27,8 @@ export type CreateApplicationBody = {
   cas_service_url: string;
   hide_from_apps: boolean;
   hide_from_user_apps: boolean;
+  is_default_library: boolean;
+  supports_cas: boolean;
   default_access: 'all' | 'instructors' | 'none';
   icon: string;
   description: string;
@@ -38,6 +40,7 @@ export type GetAllApplicationsQuery = {
   limit: number;
   query?: string;
   type?: ApplicationType;
+  onlyCASSupported?: boolean;
 };
 
 export type UpdateApplicationBody = Partial<CreateApplicationBody>;
