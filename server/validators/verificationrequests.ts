@@ -14,7 +14,7 @@ export const getAllVerificationRequestsSchema = joi.object({
 });
 
 export const updateVerificationRequestSchema = joi.object({
-  effect: joi.string().valid(verificationRequestEffects).required(),
+  effect: joi.string().valid(...verificationRequestEffects).required(),
   reason: joi.string().max(255),
   approved_applications: joi.array().items(joi.number().integer()),
   library_access_option: joi.string().valid('all', 'default', 'specific').default('default'),
