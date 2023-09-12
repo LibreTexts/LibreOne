@@ -62,11 +62,11 @@
           </i18n-t>
           <div
             class="apps-list px-2"
-            v-if="libs.length > 0"
+            v-if="allLibs.length > 0"
           >
             <div
               class="app-item-container"
-              v-for="lib in libs"
+              v-for="lib in allLibs"
               @click="openAppLink(lib.main_url)"
               :key="lib.id ?? lib.name"
             >
@@ -79,7 +79,7 @@
                 >
                 <div
                   class="app-item-key-overlay"
-                  v-if="hasEditAccess(lib.name)"
+                  v-if="hasEditAccess(lib.id)"
                 >
                   <FontAwesomeIcon
                     class="app-item-key-icon"
@@ -116,6 +116,7 @@
   const loading = ref(false);
   const apps = ref<Application[]>([]);
   const libs = ref<Application[]>([]);
+  const allLibs = ref<Application[]>([]);
 
   loadApps();
   async function loadApps() {
@@ -125,7 +126,7 @@
         throw new Error('nouuid');
       }
 
-      [apps.value, libs.value] = await getUserAppsAndLibraries(
+      [apps.value, libs.value, allLibs.value] = await getUserAppsAndLibraries(
         pageContext.user.uuid,
       );
     } catch (err) {
@@ -140,8 +141,8 @@
   }
 
   // User has edit access to a library if they
-  function hasEditAccess(name: string): boolean {
-    if (apps.value.map((app) => app.name).includes(name)) {
+  function hasEditAccess(id: string | number): boolean {
+    if ([...libs.value.map((app) => app.id.toString())].includes(id.toString())) {
       return true;
     }
     return false;
@@ -226,5 +227,4 @@
     width: 14rem;
   }
 }
-
 </style>

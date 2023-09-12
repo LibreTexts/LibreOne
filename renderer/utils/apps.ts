@@ -4,28 +4,28 @@ import { useAxios } from '@renderer/useAxios';
 /**
  *
  * @param {String} uuid - User's UUID
- * @returns {Promise<[Application[], Application[]]>} - Array of user's [applications and libraries]
+ * @returns {Promise<[Application[], Application[], Application[]]>} - Array of user's [applications, libraries, all libraries]
  */
 async function getUserAppsAndLibraries(
   uuid: string,
-): Promise<[Application[], Application[]]> {
+): Promise<[Application[], Application[], Application[]]> {
   const apps: Application[] = [];
-  const libs: Application[] = [];
+  const libsWithAccess: Application[] = [];
+  const allLibs: Application[] = [];
   try {
     const axiosClient = useAxios();
-    const appPromise = axiosClient.get(`/users/${uuid}/applications`, {
-      params: {
-        type: 'standalone',
-      },
-    });
 
-    const libPromise = axiosClient.get('/applications', {
+    // Get all applications user has access to
+    const allUserAppsPromise = axiosClient.get(`/users/${uuid}/applications`);
+
+    // Get all libraries regardless of access
+    const allLibsPromise = axiosClient.get('/applications', {
       params: {
         type: 'library',
       },
     });
 
-    const [appRes, libRes] = await Promise.all([appPromise, libPromise]);
+    const [appRes, libRes] = await Promise.all([allUserAppsPromise, allLibsPromise]);
 
     if (
       !appRes.data ||
@@ -39,12 +39,18 @@ async function getUserAppsAndLibraries(
       throw new Error('badres');
     }
 
-    apps.push(...appRes.data.data.applications);
-    libs.push(...libRes.data.data);
+    // Filter out libraries that user does not have access to
+    const userApps = appRes.data.data.applications.filter((app: Application) => app.app_type === 'standalone');
+    const userLibs = appRes.data.data.applications.filter((app: Application) => app.app_type === 'library');
+    apps.push(...userApps);
+    libsWithAccess.push(...userLibs);
+
+    // Add all libraries to list of libraries
+    allLibs.push(...libRes.data.data);
   } catch (err) {
     console.error(err);
   }
-  return [apps, libs];
+  return [apps, libsWithAccess, allLibs];
 }
 
 export { getUserAppsAndLibraries };

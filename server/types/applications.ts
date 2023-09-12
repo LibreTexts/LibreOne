@@ -12,6 +12,8 @@ export type Application = {
   icon: string;
   description: string;
   primary_color: string;
+  is_default_library: boolean;
+  supports_cas: boolean;
   created_at: Date;
   updated_at: Date;
 }
