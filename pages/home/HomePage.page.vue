@@ -37,6 +37,42 @@
           </div>
         </div>
       </div>
+      <div class="mt-2">
+        <p class="text-3xl font-medium">
+          {{ $t("home.notsupported") }}
+        </p>
+        <p class="mt-2 text-slate-500">
+          {{ $t("home.notsupportedtagline") }}
+        </p>
+        <div
+          class="apps-list px-2"
+          v-if="unsupported.length > 0"
+        >
+          <div
+            class="app-item-container"
+            v-for="unapp in unsupported"
+            @click="openAppLink(unapp.main_url)"
+            :key="unapp.id ?? unapp.name"
+          >
+            <div class="app-item-icon-container">
+              <img
+                :src="unapp.icon"
+                :alt="unapp.name"
+                width="90"
+                height="90"
+              >
+            </div>
+            <div class="app-item-text-container">
+              <p class="app-item-header">
+                {{ unapp.name }}
+              </p>
+              <p class="app-item-descrip">
+                {{ unapp.description }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div>
         <div class="mt-2">
           <p class="text-3xl font-medium">
@@ -110,13 +146,16 @@
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { useAxios } from '@renderer/useAxios';
 
+  const axios = useAxios();
   const pageContext = usePageContext();
 
   const loading = ref(false);
   const apps = ref<Application[]>([]);
   const libs = ref<Application[]>([]);
   const allLibs = ref<Application[]>([]);
+  const unsupported = ref<Application[]>([]);
 
   loadApps();
   async function loadApps() {
@@ -129,6 +168,15 @@
       [apps.value, libs.value, allLibs.value] = await getUserAppsAndLibraries(
         pageContext.user.uuid,
       );
+
+      const unsupportedRes = await axios.get('/applications');
+
+      // No-op if no data
+      if (unsupportedRes.data && unsupportedRes.data.data && Array.isArray(unsupportedRes.data.data)) {
+        unsupported.value = unsupportedRes.data.data.filter(
+          (app: Application) => app.supports_cas === false && app.app_type === 'standalone',
+        );
+      }
     } catch (err) {
       console.error(err);
     } finally {

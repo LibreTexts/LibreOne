@@ -16,7 +16,11 @@ async function getUserAppsAndLibraries(
     const axiosClient = useAxios();
 
     // Get all applications user has access to
-    const allUserAppsPromise = axiosClient.get(`/users/${uuid}/applications`);
+    const allUserAppsPromise = axiosClient.get(`/users/${uuid}/applications`, {
+      params: {
+        onlyCASSupported: true,
+      },
+    });
 
     // Get all libraries regardless of access
     const allLibsPromise = axiosClient.get('/applications', {

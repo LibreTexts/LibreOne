@@ -123,7 +123,9 @@
     "libraries": "Libraries",
     "libraryeditrequest": "All accounts have access to view the LibreTexts libraries. Instructors who wish to create or edit content on the libraries may need to {requestaccesslink}",
     "libraryeditinfo": "Libraries you have edit access to will be denoted with a key icon.",
-    "requestaccess": "request access"
+    "requestaccess": "request access",
+    "notsupported": "Support Coming Soon",
+    "notsupportedtagline": "These applications are not yet supported by LibreOne. You can still access them by logging in with your existing credentials. We're working on adding support for these applications soon."
   },
   "profile": {
     "header": "Profile Management",
