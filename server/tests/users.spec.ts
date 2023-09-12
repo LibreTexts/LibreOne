@@ -768,6 +768,47 @@ describe('Users', async () => {
         code: 'forbidden',
       });
     });
+    it('should not allow user from external IdP to update reserved attributes', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        external_subject_id: 'test',
+        email: 'info@libretexts.org',
+        first_name: 'Initial',
+        last_name: 'Name',
+      });
+
+      const updateObj = { first_name: 'Info', last_name: 'LibreTexts' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object');
+      expect(_.pick(response.body?.data, ['first_name', 'last_name'])).to.deep.equal({
+        first_name: 'Initial',
+        last_name: 'Name',
+      });
+    });
+    it('should not allow user to disable user', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        first_name: 'Initial',
+        last_name: 'Name',
+        disabled: false,
+      });
+
+      const updateObj = { disabled: true };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object');
+      expect(response.body.data.disabled).to.be.false;
+    });
     it('should allow API User to update user attributes', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -786,6 +827,23 @@ describe('Users', async () => {
         'email',
         ...Object.keys(updateObj),
       ]);
+    });
+    it('should allow API User to disable user', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+      });
+
+      const updateObj = { disabled: true };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object');
+      expect(response.body.data.disabled).to.be.true;
     });
     it('should prevent API User to update if permission not granted', async () => {
       const apiUser2 = await APIUser.create({
