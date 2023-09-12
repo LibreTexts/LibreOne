@@ -845,6 +845,23 @@ describe('Users', async () => {
       expect(response.body?.data).to.be.an('object');
       expect(response.body.data.disabled).to.be.true;
     });
+    it('should allow API User to set verification status', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        verify_status: 'not_attempted',
+      });
+
+      const updateObj = { verify_status: 'verified' };
+      const response = await request(server)
+        .patch(`/api/v1/users/${user1.uuid}`)
+        .send(updateObj)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      
+      expect(response.status).to.equal(200);
+      expect(response.body?.data).to.be.an('object');
+      expect(response.body.data.verify_status).to.equal('verified');
+    });
     it('should prevent API User to update if permission not granted', async () => {
       const apiUser2 = await APIUser.create({
         username: 'apiuser2',
@@ -1248,6 +1265,7 @@ describe('Users', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
+        verify_status: 'not_attempted',
       });
 
       const response = await request(server)
@@ -1255,13 +1273,8 @@ describe('Users', async () => {
         .send({ verify_status: 'verified' })
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
       
-      expect(response.status).to.equal(403);
-      const error = response.body?.errors[0];
-      expect(error).to.exist;
-      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
-        status: '403',
-        code: 'forbidden',
-      });
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.verify_status).to.equal('not_attempted');
     });
     it('should update user avatar', async () => {
       const s3Mock = mockClient(S3Client).on(PutObjectCommand).resolves({

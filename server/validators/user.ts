@@ -58,7 +58,7 @@ export const updateUserSchema = joi.object({
   last_name: joi.string().min(1).max(100).trim(),
   bio_url: joi.string().uri(), // TODO: stricter validation?
   user_type: joi.string().valid('student', 'instructor'),
-  verify_status: joi.string().trim(),
+  verify_status: joi.string().valid('not_attempted', 'denied', 'verified'),
   time_zone: timeZoneValidator,
   student_id: joi.string().min(3).max(50),
   disabled: joi.boolean(),

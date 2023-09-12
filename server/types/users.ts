@@ -45,7 +45,7 @@ export type UpdateUserBody = {
   last_name?: string;
   bio_url?: string;
   user_type?: string;
-  verify_status?: string;
+  verify_status?: 'not_attempted' | 'denied' | 'verified';
   time_zone?: string;
   student_id?: string;
   disabled?: boolean;

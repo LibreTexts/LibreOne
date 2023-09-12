@@ -550,9 +550,18 @@ export class UserController {
     const isExternalUser = foundUser.external_subject_id !== null;
     const isAPIUser = !!req.isAPIUser;
     const updateObj: Record<string, string | boolean> = {};
-    const updatableKeys = ['first_name', 'last_name', 'bio_url', 'user_type', 'time_zone', 'student_id', 'disabled'];
+    const updatableKeys = [
+      'first_name',
+      'last_name',
+      'bio_url',
+      'user_type',
+      'time_zone',
+      'student_id',
+      'disabled',
+      'verify_status',
+    ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
-    const apiUserOnlyKeys = ['disabled'];
+    const apiUserOnlyKeys = ['disabled', 'verify_status'];
     const allowedKeys = updatableKeys.filter((k) => (
       (!isExternalUser || !unallowedExternalKeys.includes(k))
       && (isAPIUser || !apiUserOnlyKeys.includes(k))
@@ -562,13 +571,7 @@ export class UserController {
         updateObj[key] = value;
       }
     });
-    if (props.verify_status) {
-      if (!req.isAPIUser) {
-        return errors.forbidden(res);
-      }
-      updateObj.verify_status = props.verify_status;
-    }
-  
+
     await foundUser.update(updateObj);
 
     // update name on libraries if necessary
