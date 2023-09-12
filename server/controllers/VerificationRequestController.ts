@@ -46,12 +46,12 @@ export class VerificationRequestController {
         status: 'open',
         bio_url,
       }, { validate: true, transaction });
-      const newAccessRequest = await AccessRequest.create({
-        user_id: uuid,
-        verification_request_id: newRequest.id,
-        status: 'open',
-      }, { validate: true, transaction });
       if (applications) {
+        const newAccessRequest = await AccessRequest.create({
+          user_id: uuid,
+          verification_request_id: newRequest.id,
+          status: 'open',
+        }, { validate: true, transaction });
         await AccessRequestApplication.bulkCreate(
           applications.map((app_id) => ({
             access_request_id: newAccessRequest.get('id'),
