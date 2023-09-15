@@ -337,11 +337,18 @@ export class LibraryController {
    */
   public async getLibraryUser(lib: string, uuid: string, headers?: LibraryAPIRequestHeaders) {
     const reqHeaders = headers || await this.generateAPIRequestHeaders(lib);
-    const { data: userData } = await axios.get(
-      `https://${lib}.libretexts.org/@api/deki/users/=${this.doubleEncodeURIComponent(uuid)}?dream.out.format=json`,
-      { headers: reqHeaders },
-    );
-    return userData;
+    try {
+      const { data: userData } = await axios.get(
+        `https://${lib}.libretexts.org/@api/deki/users/=${this.doubleEncodeURIComponent(uuid)}?dream.out.format=json`,
+        { headers: reqHeaders },
+      );
+      return userData;
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        return null;
+      }
+      throw e;
+    }
   }
 
   /**
