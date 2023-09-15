@@ -220,7 +220,7 @@ export class LibraryController {
       }
 
       const thumbnailParams = new URLSearchParams({ 'dream.out.format': 'json' });
-      await axios.post(
+      await axios.put(
         `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/files/=mindtouch.page%2523thumbnail?${thumbnailParams.toString()}`,
         defaultThumbnailRes.data,
         {
