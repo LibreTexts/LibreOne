@@ -67,6 +67,12 @@ export class APIUserPermissionConfig extends Model {
   @Column(DataType.BOOLEAN)
   declare users_write: boolean;
 
+  @Column(DataType.BOOLEAN)
+  declare verification_requests_read: boolean;
+
+  @Column(DataType.BOOLEAN)
+  declare verification_requests_write: boolean;
+
   @CreatedAt
   declare created_at: Date;
 
