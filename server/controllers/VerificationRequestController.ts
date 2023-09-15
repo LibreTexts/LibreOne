@@ -82,7 +82,7 @@ export class VerificationRequestController {
         include: [
           {
             model: AccessRequest,
-            include: [{ model: AccessRequestApplication }],
+            include: [{ model: Application }],
           },
         ],
       },
@@ -112,7 +112,7 @@ export class VerificationRequestController {
       include: [
         {
           model: AccessRequest,
-          include: [{ model: AccessRequestApplication }],
+          include: [{ model: Application }],
         },
       ],
     });
