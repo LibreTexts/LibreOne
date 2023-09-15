@@ -308,10 +308,11 @@ export class LibraryController {
         <email>${userData.email}</email>
         <fullname>${userData.name}</email>
         <status>active</status>
+        <license.seat>true</license.seat>
         <service.authentication id="3" />
         <permissions.user>
           <role>Viewer</role>
-        </permisisons.user>
+        </permissions.user>
       </user>
     `;
     const { data: newUserData } = await axios.post(
