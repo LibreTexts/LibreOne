@@ -306,7 +306,7 @@ export class LibraryController {
       <user>
         <username>${userData.uuid}</username>
         <email>${userData.email}</email>
-        <fullname>${userData.name}</email>
+        <fullname>${userData.name}</fullname>
         <status>active</status>
         <license.seat>true</license.seat>
         <service.authentication id="3" />
