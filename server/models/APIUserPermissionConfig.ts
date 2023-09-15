@@ -26,6 +26,12 @@ export class APIUserPermissionConfig extends Model {
   api_user?: APIUser;
 
   @Column(DataType.BOOLEAN)
+  declare access_requests_read: boolean;
+
+  @Column(DataType.BOOLEAN)
+  declare access_requests_write: boolean;
+
+  @Column(DataType.BOOLEAN)
   declare api_users_read: boolean;
 
   @Column(DataType.BOOLEAN)
