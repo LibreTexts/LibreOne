@@ -187,11 +187,11 @@
     "applications": "Applications",
     "applications_placeholder": "Select applications",
     "applications_desc": "Select the LibreTexts applications you would intially like access to. You may request more applications later.",
-    "libraries": "Libraries",
-    "libraries_placeholder": "Select libraries",
-    "libraries_desc": "Select up to three LibreTexts libraries you would like to contribute to. You may request more libraries later.",
-    "apps_or_libs_invalid": "You must select at least one application or library.",
-    "one_app_or_lib": "You must select at least one application or library."
+    "special_libraries": "Special Libraries",
+    "special_libraries_placeholder": "Select special libraries",
+    "special_libraries_desc": "verified instructors automatically receive edit access to the core libraries. You may request access to special libraries below.",
+    "apps_or_libs_invalid": "You must select at least one application or special library.",
+    "one_app_or_lib": "You must select at least one application or special library."
   },
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",
