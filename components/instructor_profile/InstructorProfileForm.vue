@@ -38,7 +38,7 @@
       v-if="formStep === 2"
       class="mt-8"
     >
-      <form @submit="submitVerificationRequest">
+      <form @submit.prevent="submitVerificationRequest">
         <ThemedInput
           id="bio_url_input"
           :label="$t('instructor.biourl')"
@@ -114,7 +114,6 @@
         </p>
         <ThemedButton
           type="submit"
-          @click="submitVerificationRequest"
           class="mt-6"
           :loading="isLoading"
           :disabled="!formValid"
