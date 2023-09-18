@@ -1,4 +1,4 @@
-import { Op, UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { Request, Response } from 'express';
 import { marked } from 'marked';
 import {
@@ -26,19 +26,14 @@ export class AccessRequestController {
 
   /**
    * Validates that all application identifiers provided correspond to a
-   * registered standalone application.
+   * registered application.
    *
    * @param application_ids - Application identifiers to validate.
    * @returns If all identifiers are valid.
    */
   public async validateRequestedApplications(application_ids: number[]) {
     const allApps = await Application.findAll({
-      where: {
-        [Op.and]: [
-          { app_type: 'standalone' },
-          { hide_from_apps: false },
-        ],
-      },
+      where: { hide_from_apps: false },
     });
     return application_ids.reduce((acc, curr) => {
       if (!acc) {
