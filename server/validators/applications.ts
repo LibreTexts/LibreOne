@@ -29,6 +29,7 @@ export const getAllApplicationsSchema = joi.object({
   query: joi.string().max(100),
   type: applicationTypeValidator,
   onlyCASSupported: joi.boolean(),
+  default_access: joi.string().valid('all', 'instructors', 'none'),
 });
 
 export const updateApplicationSchema = joi.object({

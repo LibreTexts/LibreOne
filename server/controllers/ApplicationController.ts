@@ -67,7 +67,14 @@ export class ApplicationController {
    * @returns The fulfilled API response.
    */
   public async getAllApplications(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query, type, onlyCASSupported } = (req.query as unknown) as GetAllApplicationsQuery;
+    const {
+      offset,
+      limit,
+      query,
+      type,
+      onlyCASSupported,
+      default_access,
+    } = (req.query as unknown) as GetAllApplicationsQuery;
 
     const criteria: WhereOptions[] = [{ hide_from_apps: false }];
     if (query) {
@@ -80,6 +87,9 @@ export class ApplicationController {
     }
     if (onlyCASSupported) {
       criteria.push({ supports_cas: true });
+    }
+    if (default_access) {
+      criteria.push({ default_access });
     }
 
     const { count, rows } = await Application.findAndCountAll({

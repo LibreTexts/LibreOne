@@ -41,6 +41,7 @@ export type GetAllApplicationsQuery = {
   query?: string;
   type?: ApplicationType;
   onlyCASSupported?: boolean;
+  default_access?: 'all' | 'instructors' | 'none';
 };
 
 export type UpdateApplicationBody = Partial<CreateApplicationBody>;
