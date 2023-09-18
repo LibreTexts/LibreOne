@@ -3,7 +3,7 @@
   "require": "source-map-support/register",
   "extensions": ["ts"],
   "spec": [
-    "server/tests/**/*.spec.*"
+    "server/tests/**/*.{spec,unit}.*"
   ],
   "watch-files": [
     "server"
