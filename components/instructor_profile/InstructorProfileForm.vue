@@ -3,7 +3,7 @@
     <div v-if="formStep === 1">
       <div class="flex justify-center mt-16 mb-12">
         <div
-          :class="`flex flex-col p-4 rounded max-w-lg ${statusClasses} shadow`"
+          :class="`flex flex-col p-4 rounded-sm max-w-lg ${statusClasses} shadow-md`"
         >
           <p class="text-center text-lg font-medium">
             {{ $t("common.status") }}:
@@ -29,18 +29,16 @@
         @click="handleStartForm"
         type="submit"
         class="mt-6"
-        :disabled="true"
         v-if="shouldShowStartButton"
       >
-      {{ $t('common.comingsoon') }}
-        <!-- {{ $t(getStartButtonTextKey) }} -->
+        {{ $t(getStartButtonTextKey) }}
       </ThemedButton>
     </div>
     <div
       v-if="formStep === 2"
       class="mt-8"
     >
-      <form @submit="submitVerificationRequest">
+      <form @submit.prevent="submitVerificationRequest">
         <ThemedInput
           id="bio_url_input"
           :label="$t('instructor.biourl')"
@@ -84,22 +82,20 @@
         />
         <ThemedSelectInput
           id="libs_select_input"
-          :label="$t('instructor.libraries')"
-          :placeholder="$t('instructor.libraries_placeholder')"
+          :label="$t('instructor.special_libraries') + ': ' + $t('instructor.special_libraries_desc')"
+          :placeholder="$t('instructor.special_libraries_placeholder')"
           :instructions="
-            $t('instructor.libraries_desc') +
-              ' ' +
-              $t('instructor.one_app_or_lib')
+            $t('instructor.one_app_or_lib')
           "
           :options="
-            availableLibs.map((app) => {
+            specialLibs.map((app) => {
               return {
                 label: app.name,
                 value: app.id,
               };
             })
           "
-          v-model:value="selectedLibs"
+          v-model:value="selectedSpecialLibs"
           :max="3"
           multiple
           class="my-4"
@@ -118,7 +114,6 @@
         </p>
         <ThemedButton
           type="submit"
-          @click="submitVerificationRequest"
           class="mt-6"
           :loading="isLoading"
           :disabled="!formValid"
@@ -140,12 +135,12 @@
   import { useI18n } from 'vue-i18n';
   import { useAxios } from '@renderer/useAxios';
   import joi from 'joi';
-
-  const TEMP_APP_EXCLUSION_NAMES = ['Commons & Conductor (L1 Stage)'];
+  import { usePageContext } from '@renderer/usePageContext';
 
   // Props & Hooks
   const { t } = useI18n();
   const axios = useAxios();
+  const pageContext = usePageContext();
   const props = withDefaults(
     defineProps<{
       status?: string;
@@ -164,9 +159,9 @@
   const bioURL = ref('');
   //const registrationCode = ref('');
   const selectedApps = ref<string[]>([]);
-  const selectedLibs = ref<string[]>([]);
+  const selectedSpecialLibs = ref<string[]>([]);
   const availableApps = ref<Application[]>([]);
-  const availableLibs = ref<Application[]>([]);
+  const specialLibs = ref<Application[]>([]);
   const requestError = ref('');
   const validationErrors = ref<string[]>([]);
   const isLoading = ref(false);
@@ -212,7 +207,7 @@
 
   // Watchers
   watch(
-    () => [selectedApps.value, selectedLibs.value, bioURL.value],
+    () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value],
     () => {
       formValid.value = validateForm(false);
     },
@@ -229,11 +224,11 @@
       availableApps.value = res.data.data.filter((app: Application) => {
         return (
           app.app_type === 'standalone' &&
-          !TEMP_APP_EXCLUSION_NAMES.includes(app.name)
+          app.default_access === 'none'
         );
       });
-      availableLibs.value = res.data.data.filter((app: Application) => {
-        return app.app_type === 'library';
+      specialLibs.value = res.data.data.filter((app: Application) => {
+        return app.app_type === 'library' && app.is_default_library === false;
       });
     } catch (err) {
       console.error(err);
@@ -266,7 +261,7 @@
       }
       isValid = false;
     }
-    if (selectedApps.value.length === 0 && selectedLibs.value.length === 0) {
+    if (selectedApps.value.length === 0 && selectedSpecialLibs.value.length === 0) {
       if (setErrors) {
         validationErrors.value.push(t('instructor.apps_or_libs_invalid'));
       }
@@ -279,10 +274,15 @@
     try {
       isLoading.value = true;
       requestError.value = '';
+      if(!pageContext.user?.uuid) throw new Error('badcontext');
       if (!validateForm(true)) return;
 
-      // TODO: Implement API call
-      if (1 > 5) throw new Error('badres');
+      const res = await axios.post(`/users/${pageContext.user.uuid}/verification-request`, {
+        bio_url: bioURL.value,
+        applications: [...selectedApps.value, ...selectedSpecialLibs.value],
+        //registration_code: registrationCode.value,
+      });
+      if (!res || res.data.err) throw new Error('badres');
 
       window.location.reload();
     } catch (err) {
