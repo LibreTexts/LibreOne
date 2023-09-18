@@ -137,8 +137,6 @@
   import joi from 'joi';
   import { usePageContext } from '@renderer/usePageContext';
 
-  const TEMP_APP_EXCLUSION_NAMES = ['Commons & Conductor (L1 Stage)'];
-
   // Props & Hooks
   const { t } = useI18n();
   const axios = useAxios();
@@ -226,7 +224,7 @@
       availableApps.value = res.data.data.filter((app: Application) => {
         return (
           app.app_type === 'standalone' &&
-          !TEMP_APP_EXCLUSION_NAMES.includes(app.name)
+          app.default_access === 'none'
         );
       });
       specialLibs.value = res.data.data.filter((app: Application) => {
