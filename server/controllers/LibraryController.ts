@@ -276,7 +276,7 @@ export class LibraryController {
       if (existingUser.status === 'inactive') {
         await this.activateLibraryUser(lib, userData.uuid, reqHeaders);
       }
-      return true;
+      return existingUser['@id'];
     }
 
     const userDataBody = `
