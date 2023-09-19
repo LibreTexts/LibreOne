@@ -238,9 +238,12 @@ export class VerificationRequestController {
 
       // create user apps
       const userController = new UserController();
-      await Promise.all(userAppsToCreate.map((ua) => (
-        userController.createUserApplicationInternal(ua.user_id, ua.application_id)
-      )));
+      for (let i = 0; i < userAppsToCreate.length; i += 1) {
+        await userController.createUserApplicationInternal(
+          userAppsToCreate[i].user_id,
+          userAppsToCreate[i].application_id,
+        );
+      }
 
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),
