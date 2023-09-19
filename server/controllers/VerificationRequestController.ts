@@ -166,6 +166,7 @@ export class VerificationRequestController {
           status: 'needs_change',
           ...(props.reason && { decision_reason: props.reason }),
         }, { transaction });
+        await foundUser.update({ verify_status: 'needs_review' }, { transaction });
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
           status: 'needs_change',
@@ -183,6 +184,7 @@ export class VerificationRequestController {
           status: 'denied',
           ...(props.reason && { decision_reason: props.reason }),
         }, { transaction });
+        await foundUser.update({ verify_status: 'denied' }, { transaction });
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
           status: 'denied',
@@ -202,6 +204,7 @@ export class VerificationRequestController {
         status: 'approved',
         ...(props.reason && { decision_reason: props.reason }),
       }, { transaction });
+      await foundUser.update({ verify_status: 'verified' }, { transaction });
       if (foundAccessReq)
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,

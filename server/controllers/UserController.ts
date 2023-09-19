@@ -851,6 +851,9 @@ export class UserController {
     if (!updateRes) {
       return errors.internalServerError(res);
     }
+    if (foundVerificationReq.get('status') === 'needs_change') {
+      await foundUser.update({ verify_status: 'pending' });
+    }
 
     return res.send({ data: updateRes.get() });
   }
