@@ -35,6 +35,7 @@ export class LibraryController {
         accessKeyId: process.env.AWS_SSM_ACCESS_KEY || 'unknown',
         secretAccessKey: process.env.AWS_SSM_SECRET_KEY || 'unknown',
       },
+      region: process.env.AWS_SSM_REGION,
     });
   }
 
@@ -275,7 +276,7 @@ export class LibraryController {
       if (existingUser.status === 'inactive') {
         await this.activateLibraryUser(lib, userData.uuid, reqHeaders);
       }
-      return true;
+      return existingUser['@id'];
     }
 
     const userDataBody = `

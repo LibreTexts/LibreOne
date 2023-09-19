@@ -7,6 +7,7 @@ import {
   Application,
   sequelize,
   User,
+  UserApplication,
   VerificationRequest,
   VerificationRequestHistory,
 } from '../models';
@@ -147,6 +148,7 @@ export class VerificationRequestController {
     if (!foundUser) {
       return errors.notFound(res);
     }
+    const existingUserApps = await UserApplication.findAll({ where: { user_id: foundUser.get('uuid') } });
 
     if (props.effect === 'request_change' && props.approved_applications?.length) {
       return errors.badRequest(res);
@@ -164,6 +166,7 @@ export class VerificationRequestController {
           status: 'needs_change',
           ...(props.reason && { decision_reason: props.reason }),
         }, { transaction });
+        await foundUser.update({ verify_status: 'needs_review' }, { transaction });
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
           status: 'needs_change',
@@ -181,6 +184,7 @@ export class VerificationRequestController {
           status: 'denied',
           ...(props.reason && { decision_reason: props.reason }),
         }, { transaction });
+        await foundUser.update({ verify_status: 'denied' }, { transaction });
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
           status: 'denied',
@@ -200,6 +204,7 @@ export class VerificationRequestController {
         status: 'approved',
         ...(props.reason && { decision_reason: props.reason }),
       }, { transaction });
+      await foundUser.update({ verify_status: 'verified' }, { transaction });
       if (foundAccessReq)
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
@@ -222,19 +227,24 @@ export class VerificationRequestController {
           foundApplications: approvedApps.map((a) => a.get()),
         });
       }
+      const existingUserAppIds = existingUserApps.map((ua) => ua.get('application_id'));
       const userAppsToCreate = approvedApps.map((app) => ({
         user_id: foundUser.get('uuid'),
         application_id: app.get('id'),
-      }));
+      })).filter((ua) => !existingUserAppIds.includes(ua.application_id));
       if (foundAccessReq) {
         await foundAccessReq.update({ status: 'approved' }, { transaction });
       }
 
       // create user apps
       const userController = new UserController();
-      await Promise.all(userAppsToCreate.map((ua) => (
-        userController.createUserApplicationInternal(ua.user_id, ua.application_id)
-      )));
+      for (let i = 0; i < userAppsToCreate.length; i += 1) {
+        await userController.createUserApplicationInternal(
+          userAppsToCreate[i].user_id,
+          userAppsToCreate[i].application_id,
+          transaction,
+        );
+      }
 
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),

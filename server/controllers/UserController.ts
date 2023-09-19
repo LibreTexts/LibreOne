@@ -1,6 +1,6 @@
 
 import { NextFunction, Request, Response } from 'express';
-import { Op, WhereOptions } from 'sequelize';
+import { Op, Transaction, WhereOptions } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -112,13 +112,13 @@ export class UserController {
   /**
    * Creates a new UserApplication record and handles provisions necessary auxiliary resources.
    */
-  public async createUserApplicationInternal(uuid: string, application_id: number) {  
-    const foundUser = await User.findOne({ where: { uuid } });
+  public async createUserApplicationInternal(uuid: string, application_id: number, transaction?: Transaction) {  
+    const foundUser = await User.findOne({ where: { uuid }, transaction });
     if (!foundUser) {
       return false;
     }
   
-    const foundApp = await Application.findOne({ where: { id: application_id } });
+    const foundApp = await Application.findOne({ where: { id: application_id }, transaction });
     if (!foundApp) {
       return false;
     }
@@ -172,7 +172,7 @@ export class UserController {
       ...(sandbox_url && {
         library_sandbox_url: sandbox_url,
       }),
-    });
+    }, { transaction });
 
     return true;
   }
@@ -850,6 +850,9 @@ export class UserController {
     );
     if (!updateRes) {
       return errors.internalServerError(res);
+    }
+    if (foundVerificationReq.get('status') === 'needs_change') {
+      await foundUser.update({ verify_status: 'pending' });
     }
 
     return res.send({ data: updateRes.get() });
