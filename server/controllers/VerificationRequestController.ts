@@ -7,6 +7,7 @@ import {
   Application,
   sequelize,
   User,
+  UserApplication,
   VerificationRequest,
   VerificationRequestHistory,
 } from '../models';
@@ -147,6 +148,7 @@ export class VerificationRequestController {
     if (!foundUser) {
       return errors.notFound(res);
     }
+    const existingUserApps = await UserApplication.findAll({ where: { user_id: foundUser.get('uuid') } });
 
     if (props.effect === 'request_change' && props.approved_applications?.length) {
       return errors.badRequest(res);
@@ -222,10 +224,11 @@ export class VerificationRequestController {
           foundApplications: approvedApps.map((a) => a.get()),
         });
       }
+      const existingUserAppIds = existingUserApps.map((ua) => ua.get('application_id'));
       const userAppsToCreate = approvedApps.map((app) => ({
         user_id: foundUser.get('uuid'),
         application_id: app.get('id'),
-      }));
+      })).filter((ua) => !existingUserAppIds.includes(ua.application_id));
       if (foundAccessReq) {
         await foundAccessReq.update({ status: 'approved' }, { transaction });
       }
