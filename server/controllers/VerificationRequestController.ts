@@ -242,6 +242,7 @@ export class VerificationRequestController {
         await userController.createUserApplicationInternal(
           userAppsToCreate[i].user_id,
           userAppsToCreate[i].application_id,
+          transaction,
         );
       }
 
