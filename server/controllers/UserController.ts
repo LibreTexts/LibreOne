@@ -73,7 +73,7 @@ export class UserController {
   }
 
   /**
-   * Creates a new UserApplication record, indicating the user has access to that application.
+   * Creates a new UserApplication, indicating the user has access to that application.
    *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
@@ -93,8 +93,38 @@ export class UserController {
       return errors.badRequest(res);
     }
 
+    const result = await this.createUserApplicationInternal(
+      foundUser.get('uuid'),
+      foundApp.get('id'),
+    );
+    if (!result) {
+      return errors.internalServerError(res);
+    }
+
+    return res.send({
+      data: {
+        uuid: foundUser.get('uuid'),
+        application_id: foundApp.get('id'),
+      },
+    });
+  }
+
+  /**
+   * Creates a new UserApplication record and handles provisions necessary auxiliary resources.
+   */
+  public async createUserApplicationInternal(uuid: string, application_id: number) {  
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return false;
+    }
+  
+    const foundApp = await Application.findOne({ where: { id: application_id } });
+    if (!foundApp) {
+      return false;
+    }
+  
     // create or reactivate library user if necessary
-    let sandbox_url;
+    let sandbox_url: string | null = null;
     if (foundApp.get('app_type') === 'library') {
       const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
       const libController = new LibraryController();
@@ -120,6 +150,12 @@ export class UserController {
             last_name: foundUser.get('last_name'),
           },
         );
+  
+        const libGroups = await libController.getLibraryGroups(lib);
+        const basicUserGroup = libGroups.find((g) => g.name?.toLowerCase() === 'basicuser');
+        if (basicUserGroup) {
+          await libController.createLibraryGroupUser(lib, libUserID, basicUserGroup.id);
+        }
       } catch (e) {
         console.error({
           msg: 'Library user creation failed!',
@@ -129,7 +165,7 @@ export class UserController {
         });
       }      
     }
-
+  
     await UserApplication.create({
       user_id: uuid,
       application_id,
@@ -138,12 +174,7 @@ export class UserController {
       }),
     });
 
-    return res.send({
-      data: {
-        uuid: foundUser.get('uuid'),
-        application_id: foundApp.get('id'),
-      },
-    });
+    return true;
   }
 
   /**

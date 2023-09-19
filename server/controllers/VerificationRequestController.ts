@@ -7,7 +7,6 @@ import {
   Application,
   sequelize,
   User,
-  UserApplication,
   VerificationRequest,
   VerificationRequestHistory,
 } from '../models';
@@ -20,6 +19,7 @@ import {
   UpdateVerificationRequestByUserProps,
   VerificationRequestIDParams,
 } from '../types/verificationrequests';
+import { UserController } from './UserController';
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
@@ -180,7 +180,7 @@ export class VerificationRequestController {
         await foundReq.update({
           status: 'denied',
           ...(props.reason && { decision_reason: props.reason }),
-        });
+        }, { transaction });
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
           status: 'denied',
@@ -199,7 +199,7 @@ export class VerificationRequestController {
       await foundReq.update({
         status: 'approved',
         ...(props.reason && { decision_reason: props.reason }),
-      });
+      }, { transaction });
       if (foundAccessReq)
         await VerificationRequestHistory.create({
           verification_request_id: foundReq.id,
@@ -209,84 +209,38 @@ export class VerificationRequestController {
         }, { validate: true, transaction });
 
       // process application access
-      const defaultApps = await Application.findAll({
-        where: {
-          [Op.and]: [
-            { default_access: 'all' },
-            { app_type: 'standalone' },
-          ],
-        },
+      if (!props.approved_applications) {
+        return errors.badRequest(res);
+      }
+      const approvedApps = await Application.findAll({
+        where: { id: { [Op.in]: props.approved_applications } },
       });
-      let userAppsToCreate = defaultApps.map((app) => ({
+      if (props.approved_applications.length !== approvedApps.length) {
+        console.warn({
+          msg: 'Number of found applications does not match number of provided approved application identifiers.',
+          approvedApplications: props.approved_applications,
+          foundApplications: approvedApps.map((a) => a.get()),
+        });
+      }
+      const userAppsToCreate = approvedApps.map((app) => ({
         user_id: foundUser.get('uuid'),
         application_id: app.get('id'),
       }));
-      if (props.approved_applications) {
-        const specificApps = await Application.findAll({
-          where: {
-            [Op.and]: [
-              { id: { [Op.in]: props.approved_applications } },
-              { app_type: 'standalone' },
-            ],
-          },
-        });
-        userAppsToCreate = [...userAppsToCreate, ...specificApps.map((app) => ({
-          user_id: foundUser.get('uuid'),
-          application_id: app.get('id'),
-        }))];
-        if (foundAccessReq) {
-          await foundAccessReq.update({ status: 'partially_approved' }, { transaction });
-        }
-      } else if (foundReq) {
-        const specificApps = foundAccessReq?.get('applications') || [];
-        userAppsToCreate = [...userAppsToCreate, ...specificApps.map((app) => ({
-          user_id: foundUser.get('uuid'),
-          application_id: app.get('id'),
-        }))];
-        if (foundAccessReq) {
-          await foundAccessReq.update({ status: 'approved' }, { transaction });
-        }
-      }
-
-      // process library access
-      let userLibsToCreate: { user_id: string; application_id: number }[] = [];
-      const allLibraries = await Application.findAll({ where: { app_type: 'library' } });
-      if (props.library_access_option === 'all') {
-        userLibsToCreate = allLibraries.map((l) => ({
-          user_id: foundUser.get('uuid'),
-          application_id: l.get('id'),
-        }));
-      }
-      if (props.library_access_option === 'default') {
-        userLibsToCreate = allLibraries.filter((l) => l.get('is_default_library') === true).map((l) => ({
-          user_id: foundUser.get('uuid'),
-          application_id: l.get('id'),
-        }));
-      }
-      if (props.library_access_option === 'specific') {
-        userLibsToCreate = allLibraries
-          .filter((l) => !!(props.libraries || [])
-            .find((approvedLib) => approvedLib === l.get('id')))
-          .map((l) => ({
-            user_id: foundUser.get('uuid'),
-            application_id: l.get('id'),
-          }));
+      if (foundAccessReq) {
+        await foundAccessReq.update({ status: 'approved' }, { transaction });
       }
 
       // create user apps
-      const uniqueAppIDs = new Set();
-      const allUserAppsToCreate = [...userAppsToCreate, ...userLibsToCreate].filter((ua) => {
-        if (!uniqueAppIDs.has(ua.application_id)) {
-          uniqueAppIDs.add(ua.application_id);
-          return true;
-        }
-        return false;
-      });
-      await UserApplication.bulkCreate(allUserAppsToCreate, { validate: true, transaction });
+      const userController = new UserController();
+      await Promise.all(userAppsToCreate.map((ua) => (
+        userController.createUserApplicationInternal(ua.user_id, ua.application_id)
+      )));
 
-      // TODO: handle library user creation
-
-      await this.sendUserRequestApprovedNotification(foundUser.get('email'), props.reason);
+      await this.sendUserRequestApprovedNotification(
+        foundUser.get('email'),
+        props.reason,
+        approvedApps.map((a) => a.get('name')),
+      );
       return foundReq;
     });
 
@@ -370,7 +324,7 @@ export class VerificationRequestController {
     return true;
   }
 
-  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string) {
+  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string, applicationNames?: string[]) {
     const mailSender = new MailController();
     if (mailSender.isReady()) {
       const emailRes = await mailSender.send({
@@ -382,6 +336,12 @@ export class VerificationRequestController {
           ${comment ? `
             <p>The team member reviewing your request provided this comment:</p>
             <p>${marked.parseInline(comment)}</p>
+          ` : ''}
+          ${applicationNames?.length ? `
+            <p>You now have access to the following applications:</p>
+            <ul>
+            ${applicationNames.map((a) => `<li>${a}</li>`).join('')}
+            </ul>
           ` : ''}
           <p>If you have further questions, please feel free to reach out to <a href="mailto:support@libretexts.org">support@libretexts.org</a>.</p>
           <p>Best,</p>

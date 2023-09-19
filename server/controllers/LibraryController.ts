@@ -122,61 +122,37 @@ export class LibraryController {
     };
   }
 
-  public async getLibraryGroups(lib: string, headers?: LibraryAPIRequestHeaders): Promise<{ id: string; name: string; role: string }[]> {
+  /**
+   * Adds a library user to a group.
+   */
+  public async createLibraryGroupUser(lib: string, libUserID: string, groupID: string, headers?: LibraryAPIRequestHeaders) {
     const reqHeaders = headers || await this.generateAPIRequestHeaders(lib);
     try {
-      const groupsParams = new URLSearchParams({ 'dream.out.format': 'json' });
-      const { data: groupsData } = await axios.get(
-        `https://${lib}.libretexts.org/@api/deki/groups?${groupsParams.toString()}`,
-        { headers: reqHeaders },
+      await axios.post(
+        `https://${lib}.libretexts.org/@api/deki/groups/${groupID}/users?dream.out.format=json`,
+        `
+          <users>
+            <user id="${libUserID}" />
+          </users>
+        `,
+        {
+          headers: {
+            ...reqHeaders,
+            'Content-Type': 'application/xml; charset=utf-8',
+          },
+        },
       );
-      if (groupsData['@count'] > 0 && groupsData.group) {
-        const groups = (groupsData.group.length ? groupsData.group : [groupsData.group]).map((g) => ({
-          id: g['@id'],
-          name: g['groupname'],
-          role: g['permissions.group'].role['#text'],
-        }));
-        return groups;
-      }
     } catch (e) {
-      console.error({
-        msg: 'Error retrieving library groups!',
+      console.warn({
+        msg: 'Error adding library user to group',
         lib,
+        libUserID,
+        groupID,
         error: e,
       });
+      return false;
     }
-    return [];
-  }
-
-  /**
-   * Retrieves a library user's Sandbox URL (publicly shareable).
-   */
-  public async getLibraryUserSandboxURL(lib: string, uuid: string) {
-    const fallbackURL = `https://${lib}.libretexts.org/Sandboxes`;
-
-    const foundLibraryApp = await Application.findOne({ where: { main_url: `https://${lib}.libretexts.org` } });
-    if (!foundLibraryApp) {
-      return null;
-    }
-
-    const foundUserApp = await UserApplication.findOne({
-      where: {
-        [Op.and]: [
-          { user_id: uuid },
-          { application_id: foundLibraryApp.get('id') },
-        ],
-      },
-    });
-    if (!foundUserApp) {
-      return fallbackURL;
-    }
-
-    const sandboxURL = foundUserApp.get('library_sandbox_url');
-    if (!sandboxURL) {
-      return fallbackURL;
-    }
-
-    return sandboxURL;
+    return true;
   }
 
   /**
@@ -334,6 +310,35 @@ export class LibraryController {
   }
 
   /**
+   * Retrieves all known groups in a library.
+   */
+  public async getLibraryGroups(lib: string, headers?: LibraryAPIRequestHeaders): Promise<{ id: string; name: string; role: string }[]> {
+    const reqHeaders = headers || await this.generateAPIRequestHeaders(lib);
+    try {
+      const groupsParams = new URLSearchParams({ 'dream.out.format': 'json' });
+      const { data: groupsData } = await axios.get(
+        `https://${lib}.libretexts.org/@api/deki/groups?${groupsParams.toString()}`,
+        { headers: reqHeaders },
+      );
+      if (groupsData['@count'] > 0 && groupsData.group) {
+        const groups = (groupsData.group.length ? groupsData.group : [groupsData.group]).map((g) => ({
+          id: g['@id'],
+          name: g['groupname'],
+          role: g['permissions.group'].role['#text'],
+        }));
+        return groups;
+      }
+    } catch (e) {
+      console.error({
+        msg: 'Error retrieving library groups!',
+        lib,
+        error: e,
+      });
+    }
+    return [];
+  }
+
+  /**
    * Retrieves a library user.
    */
   public async getLibraryUser(lib: string, uuid: string, headers?: LibraryAPIRequestHeaders) {
@@ -350,6 +355,37 @@ export class LibraryController {
       }
       throw e;
     }
+  }
+
+  /**
+   * Retrieves a library user's Sandbox URL (publicly shareable).
+   */
+  public async getLibraryUserSandboxURL(lib: string, uuid: string) {
+    const fallbackURL = `https://${lib}.libretexts.org/Sandboxes`;
+
+    const foundLibraryApp = await Application.findOne({ where: { main_url: `https://${lib}.libretexts.org` } });
+    if (!foundLibraryApp) {
+      return null;
+    }
+
+    const foundUserApp = await UserApplication.findOne({
+      where: {
+        [Op.and]: [
+          { user_id: uuid },
+          { application_id: foundLibraryApp.get('id') },
+        ],
+      },
+    });
+    if (!foundUserApp) {
+      return fallbackURL;
+    }
+
+    const sandboxURL = foundUserApp.get('library_sandbox_url');
+    if (!sandboxURL) {
+      return fallbackURL;
+    }
+
+    return sandboxURL;
   }
 
   /**
