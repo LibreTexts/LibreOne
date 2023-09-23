@@ -372,6 +372,7 @@ export class UserController {
     const fuzzyQuery = query ? `%${query}%` : null;
     const queryCriteria = fuzzyQuery ? {
       [Op.or]: [
+        { uuid: { [Op.like]: fuzzyQuery } },
         { first_name: { [Op.like]: fuzzyQuery} },
         { last_name: { [Op.like]: fuzzyQuery } },
         { email: { [Op.like]: fuzzyQuery } },

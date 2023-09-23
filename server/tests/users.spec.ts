@@ -433,6 +433,26 @@ describe('Users', async () => {
           },
         ]);
       });
+      it('should search users by uuid', async () => {
+        const searchParams = new URLSearchParams({ query: user2.uuid });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta).to.exist;
+        expect(response.body?.data).to.have.length(1);
+        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
+        expect(users).to.have.deep.members([
+          {
+            uuid: user2.uuid,
+            email: user2.email,
+            first_name: user2.first_name,
+            last_name: user2.last_name,
+            student_id: user2.student_id,
+          },
+        ]);
+      });
       it('should search users by first name', async () => {
         const searchParams = new URLSearchParams({ query: 'Alice' });
         const response = await request(server)
