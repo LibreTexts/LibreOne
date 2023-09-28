@@ -186,10 +186,10 @@
     "registrationcode_desc": "If you have were provided a registration code, enter it here. This is not required.",
     "applications": "Applications",
     "applications_placeholder": "Select applications",
-    "applications_desc": "Select the LibreTexts applications you would intially like access to. You may request more applications later.",
+    "applications_desc": "Select any LibreTexts applications you would initially like access to. You may request more applications later.",
     "special_libraries": "Special Libraries",
     "special_libraries_placeholder": "Select special libraries",
-    "special_libraries_desc": "verified instructors automatically receive edit access to the core libraries. You may request access to special libraries below.",
+    "special_libraries_desc": "Verified instructors automatically receive edit access to the core libraries. You may request access to special libraries below.",
     "apps_or_libs_invalid": "You must select at least one application or special library.",
     "one_app_or_lib": "You must select at least one application or special library."
   },

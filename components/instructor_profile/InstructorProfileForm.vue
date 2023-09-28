@@ -62,11 +62,7 @@
           id="apps_select_input"
           :label="$t('instructor.applications')"
           :placeholder="$t('instructor.applications_placeholder')"
-          :instructions="
-            $t('instructor.applications_desc') +
-              ' ' +
-              $t('instructor.one_app_or_lib')
-          "
+          :instructions="$t('instructor.applications_desc')"
           :options="
             availableApps.map((app) => {
               return {
@@ -82,11 +78,9 @@
         />
         <ThemedSelectInput
           id="libs_select_input"
-          :label="$t('instructor.special_libraries') + ': ' + $t('instructor.special_libraries_desc')"
+          :label="$t('instructor.special_libraries')"
           :placeholder="$t('instructor.special_libraries_placeholder')"
-          :instructions="
-            $t('instructor.one_app_or_lib')
-          "
+          :instructions="$t('instructor.special_libraries_desc')"
           :options="
             specialLibs.map((app) => {
               return {
@@ -261,12 +255,6 @@
       }
       isValid = false;
     }
-    if (selectedApps.value.length === 0 && selectedSpecialLibs.value.length === 0) {
-      if (setErrors) {
-        validationErrors.value.push(t('instructor.apps_or_libs_invalid'));
-      }
-      isValid = false;
-    }
     return isValid;
   }
 
@@ -279,7 +267,9 @@
 
       const res = await axios.post(`/users/${pageContext.user.uuid}/verification-request`, {
         bio_url: bioURL.value,
-        applications: [...selectedApps.value, ...selectedSpecialLibs.value],
+        ...((selectedApps.value.length || selectedSpecialLibs.value.length) && {
+          applications: [...selectedApps.value, ...selectedSpecialLibs.value],
+        }),
         //registration_code: registrationCode.value,
       });
       if (!res || res.data.err) throw new Error('badres');
