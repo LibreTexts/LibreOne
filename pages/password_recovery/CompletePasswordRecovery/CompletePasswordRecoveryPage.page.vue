@@ -95,6 +95,26 @@
               {{ $t('passwordrecovery.redirecting') }}
             </p>
           </div>
+          <div
+            v-else
+            class="flex items-center justify-center mt-8 text-accent"
+          >
+            <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
+            <i18n-t
+              keypath="passwordrecovery.backtosource"
+              tag="a"
+              :href="SIGN_IN_URI"
+              class="text-center ml-2 pb-1"
+            >
+              <template #source>
+                <a
+                  :href="SIGN_IN_URI"
+                >
+                  {{ $t('common.signin') }}
+                </a>
+              </template>
+            </i18n-t>
+          </div>
         </div>
       </div>
     </div>
@@ -125,6 +145,7 @@
   const expired = ref(false);
   const willRedirect = ref(false);
   const passStrength = computed(() => getPasswordStrength(password.value));
+  const SIGN_IN_URI = 'https://auth.libretexts.org/cas/login';
   const restartURI = computed(() => {
     const params = new URLSearchParams({
       ...(props.origRedirectURI && { 
