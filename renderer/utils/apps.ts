@@ -9,15 +9,9 @@ import { useAxios } from '@renderer/useAxios';
 async function getUserAppsAndLibraries(
   uuid: string,
 ): Promise<[Application[], Application[]]> {
-  const apps: Application[] = [];
-  const libs: Application[] = [];
   try {
     const axiosClient = useAxios();
-    const appPromise = axiosClient.get(`/users/${uuid}/applications`, {
-      params: {
-        type: 'standalone',
-      },
-    });
+    const allAppPromise = axiosClient.get(`/users/${uuid}/applications`);
 
     const libPromise = axiosClient.get('/applications', {
       params: {
@@ -25,12 +19,12 @@ async function getUserAppsAndLibraries(
       },
     });
 
-    const [appRes, libRes] = await Promise.all([appPromise, libPromise]);
+    const [allAppRes, libRes] = await Promise.all([allAppPromise, libPromise]);
 
     if (
-      !appRes.data ||
-      !appRes.data.data.applications ||
-      !Array.isArray(appRes.data.data.applications)
+      !allAppRes.data ||
+      !allAppRes.data.data.applications ||
+      !Array.isArray(allAppRes.data.data.applications)
     ) {
       throw new Error('badres');
     }
@@ -39,12 +33,11 @@ async function getUserAppsAndLibraries(
       throw new Error('badres');
     }
 
-    apps.push(...appRes.data.data.applications);
-    libs.push(...libRes.data.data);
+    return [allAppRes.data.data.applications, libRes.data.data];
   } catch (err) {
     console.error(err);
   }
-  return [apps, libs];
+  return [[], []];
 }
 
 export { getUserAppsAndLibraries };

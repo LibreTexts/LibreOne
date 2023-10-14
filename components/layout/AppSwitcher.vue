@@ -96,7 +96,7 @@
         pageContext.user.uuid,
       );
 
-      apps.value = [...appRes, ...libRes];
+      apps.value = [...appRes.filter((app) => app.app_type === 'standalone'), ...libRes];
     } catch (err) {
       console.error(err);
     }
