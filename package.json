@@ -99,7 +99,7 @@
     "husky": "^8.0.0",
     "mocha": "^10.2.0",
     "nodemon": "^2.0.22",
-    "postcss": "^8.4.20",
+    "postcss": "^8.4.31",
     "rimraf": "^3.0.2",
     "semantic-release": "^21.0.0",
     "sinon": "^15.0.3",
