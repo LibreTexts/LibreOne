@@ -28,6 +28,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
       ...(token && {
         pageProps: {
           token,
+          signInURI: `${process.env.CAS_PROTO}://${process.env.CAS_DOMAIN}/cas/login`,
           ...(successRedirectURI && {
             successRedirectURI,
             origRedirectURI: redirectURI,
