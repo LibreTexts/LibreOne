@@ -117,13 +117,17 @@
     "completedtagline": "Nice! You can now log in to LibreTexts services using the password you just set.",
     "redirecting": "We're redirecting you to the login screen."
   },
-  "home": {
+  "launchpad_auth": {
     "yourlibreverse": "Your LibreVerse",
     "yourlibreversetagline": "Access all of your LibreTexts applications from one place.",
     "libraries": "Libraries",
     "libraryeditrequest": "All accounts have access to view the LibreTexts libraries. Instructors who wish to create or edit content on the libraries may need to {requestaccesslink}",
     "libraryeditinfo": "Libraries you have edit access to will be denoted with a key icon.",
     "requestaccess": "request access"
+  },
+  "launchpad_unauth": {
+    "appsandservices": "Applications & Services",
+    "libraryeditrequest": "A LibreOne account is not required to view library content. Instructors who wish to create or edit content on the libraries may need to {requestaccesslink}"
   },
   "profile": {
     "header": "Profile Management",
