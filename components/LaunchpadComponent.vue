@@ -15,9 +15,11 @@
       </p>
       <p
         class="mt-2 text-slate-500"
-        v-if="$props.authorized"
+        v-if="$props.authorized || hasUnsupportedApps"
       >
-        {{ $t("launchpad_auth.yourlibreversetagline") }}
+        <span v-if="$props.authorized">{{ $t("launchpad_auth.yourlibreversetagline") }}</span>
+        <span v-if="$props.authorized && hasUnsupportedApps">&nbsp;</span>
+        <span v-if="hasUnsupportedApps">{{ $t("launchpad_auth.not_integrated_apps") }}</span>
       </p>
       <div
         class="apps-list px-2"
@@ -36,6 +38,15 @@
               width="90"
               height="90"
             >
+            <div
+                class="app-item-icon-overlay"
+                v-if="!app.supports_cas"
+              >
+              <FontAwesomeIcon
+                class="app-item-unsupported-icon"
+                icon="fa-solid fa-screwdriver-wrench"
+              />
+            </div>
           </div>
           <div class="app-item-text-container">
             <p class="app-item-header">
@@ -91,7 +102,7 @@
                 height="90"
               >
               <div
-                class="app-item-key-overlay"
+                class="app-item-icon-overlay"
                 v-if="hasEditAccess(lib.name)"
               >
                 <FontAwesomeIcon
@@ -116,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
   import { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
@@ -139,6 +150,17 @@
   const loading = ref(false);
   const apps = ref<Application[]>([]);
   const libs = ref<Application[]>([]);
+  const hasUnsupportedApps = computed(() =>
+    apps.value.reduce((acc, curr) => {
+      if (!!acc) {
+        return true;
+      }
+      if (!curr.supports_cas) {
+        return true;
+      }
+      return false;
+    }, false)
+  );
 
   // Init
   if (props.authorized) {
@@ -239,7 +261,7 @@
   align-items: center;
   justify-content: center;
 }
-.app-item-key-overlay {
+.app-item-icon-overlay {
   position: absolute;
   top: 0;
   right: 0;
@@ -252,6 +274,10 @@
 }
 .app-item-key-icon {
   color: #6b7280;
+  font-size: 0.9rem;
+}
+.app-item-unsupported-icon {
+  color: #127bc4;
   font-size: 0.9rem;
 }
 .app-item-text-container {
