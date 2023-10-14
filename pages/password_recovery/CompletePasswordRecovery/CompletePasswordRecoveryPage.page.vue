@@ -103,12 +103,12 @@
             <i18n-t
               keypath="passwordrecovery.backtosource"
               tag="a"
-              :href="SIGN_IN_URI"
-              class="text-center ml-2 pb-1"
+              :href="props.signInURI"
+              class="text-center ml-2"
             >
               <template #source>
                 <a
-                  :href="SIGN_IN_URI"
+                  :href="props.signInURI"
                 >
                   {{ $t('common.signin') }}
                 </a>
@@ -132,6 +132,7 @@
 
   const props = defineProps<{
     token: string;
+    signInURI: string;
     successRedirectURI?: string;
     origRedirectURI?: string;
   }>();
@@ -145,7 +146,6 @@
   const expired = ref(false);
   const willRedirect = ref(false);
   const passStrength = computed(() => getPasswordStrength(password.value));
-  const SIGN_IN_URI = 'https://auth.libretexts.org/cas/login';
   const restartURI = computed(() => {
     const params = new URLSearchParams({
       ...(props.origRedirectURI && { 
