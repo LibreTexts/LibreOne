@@ -25,7 +25,8 @@
     "comingsoon": "Coming Soon..."
   },
   "welcome": {
-    "getstarted": "Get Started"
+    "register": "Register For A LibreOne Account",
+    "signin": "Sign In With Existing Account"
   },
   "register": {
     "infoline": "LibreOne allows you to access all LibreTexts applications with just one login.",
