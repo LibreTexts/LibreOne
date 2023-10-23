@@ -13,9 +13,12 @@ export async function onBeforeRender(pageContext: PageContextServer) {
     redirectURI = searchParams.redirect_uri;
   }
 
+  const instructorProfileURL = `http://${process.env.DOMAIN}/instructor`;
+
   return {
     pageContext: {
       pageProps: {
+        instructorProfileURL,
         ...(redirectURI && { redirectURI }),
       },
     },

@@ -90,7 +90,7 @@
     "header": "Registration Complete!",
     "tagline": "Thanks for sticking with us. Now, let's get you on your way.",
     "redirecting": "Just a moment...",
-    "instructor_guide": "You can now use Conductor to complete your Instructor Profile. This will allow LibreTexts to verify your status as an instructor and give you advanced access to our services."
+    "instructor_guide": "You can now use LibreOne to complete your Instructor Profile. This will allow LibreTexts to verify your status as an instructor and give you advanced access to our services."
   },
   "password": {
     "strength": "Strength",
