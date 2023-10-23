@@ -34,6 +34,25 @@ export function getProductionURL(): string {
 }
 
 /**
+ * Returns the base URL of the CAS server.
+ * @returns The base URL of the CAS server.
+ */
+export function getCASBaseURL(): string {
+  return `${process.env.CAS_PROTO}://${process.env.CAS_DOMAIN}`;
+}
+
+/**
+ * Returns the url of the production CAS login page.
+ * @returns The URL of the CAS login page.
+ */
+export function getProductionLoginURL(): string {
+  const params = new URLSearchParams({
+    service: `${getProductionURL()}/api/v1/auth/cas-callback`,
+  });
+  return `${getCASBaseURL()}/cas/login?${params.toString()}`;
+}
+
+/**
  * Tries to parse a JSON string into an object.
  *
  * @param input - JSON string to parse/check.
