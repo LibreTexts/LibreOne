@@ -13,7 +13,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
     redirectURI = searchParams.redirect_uri;
   }
 
-  const instructorProfileURL = `http://${process.env.DOMAIN}/instructor`;
+  const instructorProfileURL = `${process.env.NODE_ENV !== 'production' ? 'http' : 'https'}://${process.env.DOMAIN}/instructor`;
 
   return {
     pageContext: {
