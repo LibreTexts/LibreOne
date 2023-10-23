@@ -27,7 +27,7 @@
             {{ $t('registration_complete.instructor_guide') }}
           </p>
           <a
-            href="https://commons.libretexts.org/account/instructorprofile"
+            :href="instructorProfileURL"
             class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
           >
             <span>{{ $t('common.continue') }}</span>
@@ -63,6 +63,7 @@
   import LoadingIndicator from '@components/LoadingIndicator.vue';
 
   const props = defineProps<{
+    instructorProfileURL: string,
     redirectURI?: string;
   }>();
   const pageContext = usePageContext();
