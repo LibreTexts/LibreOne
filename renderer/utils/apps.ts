@@ -19,7 +19,17 @@ async function getUserAppsAndLibraries(
       },
     });
 
-    const [allAppRes, libRes] = await Promise.all([allAppPromise, libPromise]);
+    const nonSupportedPromise = axiosClient.get('/applications', {
+      params: {
+        type: 'standalone',
+      },
+    });
+
+    const [allAppRes, libRes, nonSupportedRes] = await Promise.all([
+      allAppPromise,
+      libPromise,
+      nonSupportedPromise,
+    ]);
 
     if (
       !allAppRes.data ||
@@ -33,7 +43,22 @@ async function getUserAppsAndLibraries(
       throw new Error('badres');
     }
 
-    return [allAppRes.data.data.applications, libRes.data.data];
+    if (
+      !nonSupportedRes.data ||
+      !nonSupportedRes.data.data ||
+      !Array.isArray(nonSupportedRes.data.data)
+    ) {
+      throw new Error('badres');
+    }
+
+    const nonSupportedApps = nonSupportedRes.data.data.filter(
+      (app: Application) => app.supports_cas === false,
+    );
+
+    return [
+      [...allAppRes.data.data.applications, ...nonSupportedApps],
+      libRes.data.data,
+    ];
   } catch (err) {
     console.error(err);
   }
