@@ -9,6 +9,7 @@ import { Application } from './Application';
 import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
+import { License } from './License';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
@@ -46,6 +47,7 @@ sequelize.addModels([
   AccessRequestApplication,
   Domain,
   EmailVerification,
+  License,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
@@ -140,6 +142,7 @@ export {
   Application,
   Domain,
   EmailVerification,
+  License,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
