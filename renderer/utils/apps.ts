@@ -55,10 +55,10 @@ async function getUserAppsAndLibraries(
       (app: Application) => app.supports_cas === false,
     );
 
-    return [
-      [...allAppRes.data.data.applications, ...nonSupportedApps],
-      libRes.data.data,
-    ];
+    const allApps = [...allAppRes.data.data.applications, ...nonSupportedApps];
+    const uniqApps = [...new Map(allApps.map((v) => [v.id, v])).values()]; // Check for duplicates
+    
+    return [uniqApps, libRes.data.data];
   } catch (err) {
     console.error(err);
   }
