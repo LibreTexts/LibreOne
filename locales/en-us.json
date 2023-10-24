@@ -43,9 +43,9 @@
     "forgotpassword": "Forgot your password?",
     "resetpassword": "Reset password",
     "resetpassword_friendly": "Reset your password",
-    "verify_header": "Verify Your Email",
-    "verify_message": "We just sent a six-digit verification code to {email}. Please enter the code here to finish registering. If you did not receive a code, please check your spam folder.",
-    "verify_code": "Verification Code",
+    "verify_header": "Confirm Your Email",
+    "verify_message": "We just sent a six-digit confirmation code to {email}. Please enter the code here to finish registering. If you did not receive a code, please check your spam folder.",
+    "verify_code": "Confirmation Code",
     "verify_invalid": "Invalid code, please check your input.",
     "verify_thanks": "Thanks for helping to keep our community safe!"
   },
@@ -90,7 +90,8 @@
     "header": "Registration Complete!",
     "tagline": "Thanks for sticking with us. Now, let's get you on your way.",
     "redirecting": "Just a moment...",
-    "instructor_guide": "You can now use LibreOne to complete your Instructor Profile. This will allow LibreTexts to verify your status as an instructor and give you advanced access to our services."
+    "instructor_guide": "You can now use LibreOne to complete your instructor verification. This will allow LibreTexts to give you advanced access to services reserved for educators only.",
+    "continue_verification": "Continue to Instructor Verification"
   },
   "password": {
     "strength": "Strength",

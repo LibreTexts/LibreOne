@@ -23,14 +23,14 @@
           </p>
         </div>
         <div v-else-if="isInstructor">
-          <p class="m-8 text-center">
+          <p class="m-8 text-center font-semibold">
             {{ $t('registration_complete.instructor_guide') }}
           </p>
           <a
             :href="instructorProfileURL"
-            class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
+            class="inline-flex items-center justify-center h-10 bg-primary p-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
           >
-            <span>{{ $t('common.continue') }}</span>
+            <span>{{ $t('registration_complete.continue_verification') }}</span>
             <FontAwesomeIcon
               icon="fa-solid fa-circle-arrow-right"
               class="ml-2"
