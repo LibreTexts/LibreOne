@@ -6,20 +6,17 @@
     <p class="font-medium text-white">
       {{ $t("instructor.verify_reminder_header") }}
     </p>
-    <i18n-t
-      keypath="instructor.verify_reminder_msg"
-      tag="p"
-    >
-      <template #instructorVerificationLink>
-        <a
-          href="/instructor"
-          target="_blank"
-          rel="noreferer"
-          class="text-yellow-400 hover:text-yellow-100"
-        >
-          {{ $t("common.here") }}
-        </a>
-      </template>
-    </i18n-t>
+    <p>
+      {{ $t("instructor.verify_reminder_msg") }}
+      {{ ' ' }}
+      <a
+        href="/instructor"
+        target="_blank"
+        rel="noreferer"
+        class="hover:text-amber-100"
+      >
+        {{ $t("instructor.verify_reminder_link") }}
+      </a>
+    </p>
   </div>
 </template>
