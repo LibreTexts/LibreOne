@@ -4,6 +4,9 @@
     v-bind="$attrs"
   >
     <div>
+      <NotVerifiedBanner
+        v-if="$props.authorized && pageContext?.user?.verify_status === 'not_attempted'"
+      />
       <p class="text-3xl font-medium">
         {{
           $t(
@@ -133,6 +136,7 @@
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { useAxios } from '@renderer/useAxios';
+  import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
 
   // Props & Context
   const props = withDefaults(
