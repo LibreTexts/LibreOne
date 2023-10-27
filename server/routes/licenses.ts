@@ -14,7 +14,7 @@ licensesRouter.route('/').get(
 
 licensesRouter.route('/:licenseID').get(
   validate(LicenseValidator.licenseIDParamSchema, 'params'),
-  catchInternal((req, res) => controller.getOrganization(req, res)),
+  catchInternal((req, res) => controller.getLicense(req, res)),
 );
 
 export {

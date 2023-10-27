@@ -13,7 +13,7 @@ export class LicenseController {
    * @returns The fulfilled API response.
    */
   public async getAllLicenses(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query } =
+    const { query } =
       req.query as unknown as GetAllLicensesQuery;
 
     const fuzzyQuery = query ? `%${query}%` : null;
@@ -22,11 +22,7 @@ export class LicenseController {
 
     const { count, rows } = await License.findAndCountAll({
       ...(whereSearch && { where: whereSearch }),
-      offset,
-      limit,
       order: sequelize.col('name'),
-      attributes: ['id', 'name', 'url', 'version'],
-      subQuery: false,
     });
 
     const results = rows.map((row) => ({
@@ -35,8 +31,6 @@ export class LicenseController {
 
     return res.send({
       meta: {
-        offset,
-        limit,
         total: count,
       },
       data: results,
@@ -50,15 +44,15 @@ export class LicenseController {
    * @param res - Outgoing API response.
    * @returns The fulfilled API response.
    */
-  public async getOrganization(req: Request, res: Response): Promise<Response> {
+  public async getLicense(req: Request, res: Response): Promise<Response> {
     const { licenseID } = req.params as unknown as LicenseIDParams;
-    const foundOrg = await License.findByPk(licenseID);
-    if (!foundOrg) {
+    const foundLicense = await License.findByPk(licenseID);
+    if (!foundLicense) {
       return errors.notFound(res);
     }
 
     const result = {
-      ...foundOrg.get(), // convert to POJO
+      ...foundLicense.get(), // convert to POJO
     };
 
     return res.send({ data: result });
