@@ -95,7 +95,8 @@
           </i18n-t>
           <button
             type="submit"
-            class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
+            :class="`${invalidForm ? 'opacity-50' : 'hover:bg-sky-700 hover:shadow'} inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium`"
+            :disabled="loading || invalidForm"
           >
             <span v-if="!loading">{{ $t('register.create') }}</span>
             <template v-else>
@@ -221,6 +222,9 @@
   const unknownError = ref(false);
   const showPassword = ref(false);
   const passStrength = computed(() => getPasswordStrength(password.value));
+  const invalidForm = computed(() => {
+    return (email.value.trim().length < 3 || email.value.trim().length > 320 || !email.value.includes('@')) ||
+      passStrength.value < 3;});
 
   /**
    * Toggles the show/hide password state.
