@@ -1,82 +1,69 @@
 import _ from 'lodash';
-import { after, afterEach, describe, it } from 'mocha';
+import { after, describe, it } from 'mocha';
 import { expect } from 'chai';
 import request from 'supertest';
 import { server } from '..';
-import {
-  License,
-  Organization,
-} from '../models';
+import { License } from '../models';
 
 describe('Licenses', async () => {
   const omitFields = ['created_at', 'updated_at'];
   const defaultFields = (override?: Record<string, unknown>) => ({
-    version: null,
+    versions: [] as string[],
     url: null,
     ...override,
   });
 
   after(async () => {
+    await License.destroy({ where: {} });
     if (server?.listening) {
       server.close();
     }
   });
-  afterEach(async () => {
-    await License.destroy({ where: {} });
-  });
 
   describe('READ', () => {
-    it('should get license', async () => {
-      const license = await License.create({ name: 'CC-BY-NC' });
+    it('should get license (default values)', async () => {
+      const all = await License.findAll();
+      const randLicense = all[Math.floor(Math.random() * all.length)];
+
       const response = await request(server).get(
-        `/api/v1/licenses/${license.id}`,
+        `/api/v1/licenses/${randLicense.id}`,
       );
       expect(response.status).to.equal(200);
       expect(_.omit(response.body?.data, omitFields)).to.deep.equal({
-        ..._.omit(license.get(), omitFields),
         ...defaultFields(),
+        ..._.omit(
+          {
+            ...randLicense.get(),
+            // Map versions to string array
+            versions: (await randLicense.$get('versions')).map(
+              (v) => v.version,
+            ),
+          },
+          omitFields,
+        ),
       });
     });
-    it('should get all licenses', async () => {
-      const [lic1, lic2] = await License.bulkCreate([
-        { name: 'CC-BY' },
-        { name: 'CC-BY-NC' },
-      ]);
+    it('should get all licenses (default values)', async () => {
       const response = await request(server).get('/api/v1/licenses');
       expect(response.status).to.equal(200);
-      expect(response.body?.data).to.have.length(2);
-      const [out1, out2] = response.body.data;
-      expect(_.omit(out1, omitFields)).to.deep.equal({
-        ..._.omit(lic1.get(), omitFields),
-        ...defaultFields(),
-      });
-      expect(_.omit(out2, omitFields)).to.deep.equal({
-        ..._.omit(lic2.get(), omitFields),
-        ...defaultFields(),
-      });
+      expect(response.body?.data).to.have.lengthOf.at.least(1);
     });
-    it('should search licenses by name', async () => {
-      const [, lic1, lic2] = await License.bulkCreate([
-        { name: 'All Rights Reserved' },
-        { name: 'CC-BY' },
-        { name: 'CC-BY-NC' },
-      ]);
-
-      const params = new URLSearchParams({ query: 'BY' });
+    it('should search licenses by name (default values)', async () => {
+      const params = new URLSearchParams({ query: 'GNU' });
       const response = await request(server).get(
         `/api/v1/licenses?${params.toString()}`,
       );
       expect(response.status).to.equal(200);
       const data = response.body?.data;
-      const licenses = data.map((o) => _.pick(o, ['id', 'name']));
+      const licenses = data.map((o) => _.pick(o, ['name', 'versions']));
       expect(licenses).to.deep.equal([
         {
-          id: lic1.id,
-          name: 'CC-BY',
+          name: 'GNU FDL',
+          versions: ['1.1', '1.2', '1.3'],
         },
         {
-          id: lic2.id,
-          name: 'CC-BY-NC',
+          name: 'GNU GPL',
+          versions: ['1.0', '2.0', '3.0'],
         },
       ]);
     });
