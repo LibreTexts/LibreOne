@@ -7,7 +7,9 @@ import {
   Table,
   UpdatedAt,
   Model,
+  HasMany,
 } from 'sequelize-typescript';
+import { LicenseVersion } from './LicenseVersion';
 
 @Table({
   timestamps: true,
@@ -19,8 +21,8 @@ export class License extends Model {
   @Column(DataType.STRING)
   declare name: string;
 
-  @Column(DataType.STRING)
-  declare version?: string;
+  @HasMany(() => LicenseVersion)
+  declare versions: LicenseVersion[];
 
   @Column(DataType.STRING)
   declare url?: string;

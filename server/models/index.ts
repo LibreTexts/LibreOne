@@ -10,6 +10,7 @@ import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
 import { License } from './License';
+import { LicenseVersion } from './LicenseVersion';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
@@ -22,6 +23,7 @@ import { UserApplication } from './UserApplication';
 import { UserOrganization } from './UserOrganization';
 import { VerificationRequest } from './VerificationRequest';
 import { VerificationRequestHistory } from './VerificationRequestHistory';
+import { defaultLicenses } from '@server/licenses';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -48,6 +50,7 @@ sequelize.addModels([
   Domain,
   EmailVerification,
   License,
+  LicenseVersion,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
@@ -101,6 +104,46 @@ async function createDefaultTimeZones() {
 }
 
 /**
+ * Creates default Licenses where necessary.
+ */
+async function createDefaultLicenses() {
+  let transaction;
+  try {
+    console.log('[DB] Creating default licenses...');
+    const existing = await License.findAll();
+    const existingLicenses = existing.map((r) => r.name);
+    const newLicenses = defaultLicenses.filter((r) => !existingLicenses.includes(r.name));
+
+    transaction = await sequelize.transaction();
+
+    for(const license of newLicenses) {
+      const newLicense = await License.create({
+        name: license.name,
+        url: license.url,
+      }, { transaction });
+
+      if(!license.versions) continue;
+
+      for(const version of license.versions) {
+        await LicenseVersion.create({
+          license_id: newLicense.id,
+          version,
+        }, { transaction });
+      }
+    }
+
+    await transaction.commit();
+
+    console.log('[DB] Created default licenses.');
+  } catch (e) {
+    if(transaction) {
+      await transaction.rollback();
+    }
+    console.error('[DB] Error creating default licenses:', e);
+  }
+}
+
+/**
  * Initializes the database with default values.
  */
 export async function initDatabase() {
@@ -108,6 +151,7 @@ export async function initDatabase() {
     console.log('[DB] Initializing database...');
     await createDefaultAdminRoles();
     await createDefaultTimeZones();
+    await createDefaultLicenses();
     console.log('[DB] Database initialized with default values.');
   } catch (e) {
     console.error('[DB] Error initializing database:', e);
@@ -143,6 +187,7 @@ export {
   Domain,
   EmailVerification,
   License,
+  LicenseVersion,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
