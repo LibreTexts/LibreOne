@@ -28,12 +28,11 @@ export class LicenseController {
 
     const results = rows.map((row) => ({
       ...row.get(), // convert to POJO
+    })).map((result) => ({
+      // Map the versions to an array of strings and sort them
+      ...result,
+      versions: result.versions.map((version) => version.version).sort(),
     }));
-
-    // Map the versions to an array of strings and sort them
-    results.forEach((result) =>
-      result.versions = result.versions.map((version) => version.version).sort(),
-    );
 
     return res.send({
       meta: {
