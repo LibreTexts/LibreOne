@@ -50,26 +50,6 @@
               </button>
             </div>
           </li>
-          <li class="h-12 flex border-b border-b-slate-200 px-2 py-4">
-            <div class="flex flex-1 items-center">
-              <i18n-t
-                keypath="complete_registration_org.add_institution"
-                tag="span"
-              >
-                <template #query>
-                  <strong>{{ query }}</strong>
-                </template>
-              </i18n-t>
-            </div>
-            <div class="flex items-center">
-              <button
-                class="flex items-center justify-center h-8 bg-secondary p-2 mr-2 rounded-md text-white w-16 text-sm font-medium hover:bg-violet-700 hover:shadow"
-                @click="submitOrganization({ add_organization_name: query })"
-              >
-                {{ $t('complete_registration_org.add') }}
-              </button>
-            </div>
-          </li>
         </ul>
       </div>
     </div>
@@ -94,7 +74,6 @@
   };
   type OrganizationPatch = {
     organization_id?: number;
-    add_organization_name?: string;
   };
   
   // Props and Hooks

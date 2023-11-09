@@ -22,7 +22,6 @@ export type CreateUserEmailChangeRequestBody = {
 
 export type CreateUserOrganizationBody = {
   organization_id?: number;
-  add_organization_name?: string;
 };
 
 export type CreateUserVerificationRequestBody = {

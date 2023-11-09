@@ -1011,28 +1011,6 @@ describe('Users', async () => {
 
       await org1.destroy();
     });
-    it('should add user to new organization', async () => {
-      const user1 = await User.create({
-        uuid: uuidv4(),
-        email: 'info@libretexts.org',
-      });
-
-      const response = await request(server)
-        .post(`/api/v1/users/${user1.uuid}/organizations`)
-        .send({ add_organization_name: 'LibreTexts' })
-        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
-      expect(response.status).to.equal(200);
-
-      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
-      expect(orgMembership).to.exist;
-
-      const createdOrgID = orgMembership?.get('organization_id');
-      const createdOrg = await Organization.findOne({ where: { id: createdOrgID } });
-      expect(createdOrg).to.exist;
-      expect(createdOrg?.get('name')).to.equal('LibreTexts');
-
-      await createdOrg?.destroy();
-    });
     it('should remove user from organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
       const user1 = await User.create({
