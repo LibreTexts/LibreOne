@@ -1011,27 +1011,31 @@ describe('Users', async () => {
 
       await org1.destroy();
     });
-    it('should add user to new organization', async () => {
+    it('should add user to default organization', async () => {
+      const org1 = await Organization.create({ name: 'LibreTexts', is_default: true });
       const user1 = await User.create({
         uuid: uuidv4(),
         email: 'info@libretexts.org',
       });
 
+      const updateObj = { use_default_organization: true };
       const response = await request(server)
         .post(`/api/v1/users/${user1.uuid}/organizations`)
-        .send({ add_organization_name: 'LibreTexts' })
+        .send(updateObj)
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
       expect(response.status).to.equal(200);
 
-      const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
+      const orgMembership = await UserOrganization.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user1.uuid },
+            { organization_id: org1.id },
+          ],
+        },
+      });
       expect(orgMembership).to.exist;
 
-      const createdOrgID = orgMembership?.get('organization_id');
-      const createdOrg = await Organization.findOne({ where: { id: createdOrgID } });
-      expect(createdOrg).to.exist;
-      expect(createdOrg?.get('name')).to.equal('LibreTexts');
-
-      await createdOrg?.destroy();
+      await org1.destroy();
     });
     it('should remove user from organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });

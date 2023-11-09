@@ -246,11 +246,12 @@ export class UserController {
         return errors.notFound(res);
       }
       orgID = foundOrg.id;
-    } else if (props.add_organization_name) {
-      const [foundOrCreateOrg] = await Organization.findOrCreate({
-        where: { name: props.add_organization_name },
-      });
-      orgID = foundOrCreateOrg.id;
+    } else if (props.use_default_organization) {
+      const foundOrg = await Organization.findOne({ where: { is_default: true } });
+      if (!foundOrg) {
+        return errors.notFound(res);
+      }
+      orgID = foundOrg.id;
     } else {
       return errors.badRequest(res);
     }

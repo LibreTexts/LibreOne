@@ -5,6 +5,7 @@ import {
   Column,
   CreatedAt,
   DataType,
+  Default,
   ForeignKey,
   Index,
   Model,
@@ -35,6 +36,10 @@ export class Organization extends Model {
   @ForeignKey(() => OrganizationSystem)
   @Column(DataType.INTEGER)
   declare system_id?: number;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare is_default?: boolean;
 
   @BelongsTo(() => OrganizationSystem)
   system?: OrganizationSystem;

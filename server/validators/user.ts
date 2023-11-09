@@ -31,7 +31,7 @@ export const createUserApplicationSchema = joi.object({
 
 export const createUserOrganizationSchema = joi.object({
   organization_id: joi.number().integer(),
-  add_organization_name: joi.string().max(100),
+  use_default_organization: joi.boolean(),
 });
 
 export const createUserVerificationRequestSchema = joi.object({
