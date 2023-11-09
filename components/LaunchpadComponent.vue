@@ -5,7 +5,7 @@
   >
     <div>
       <NotVerifiedBanner
-        v-if="$props.authorized && pageContext?.user?.verify_status === 'not_attempted'"
+        v-if="$props.authorized && pageContext?.user?.user_type === 'instructor' && pageContext?.user?.verify_status === 'not_attempted'"
       />
       <p class="text-3xl font-medium">
         {{
