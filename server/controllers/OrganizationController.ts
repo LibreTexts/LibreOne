@@ -313,7 +313,7 @@ export class OrganizationController {
       offset,
       limit,
       order: sequelize.col('name'),
-      attributes: ['id', 'name', 'logo'],
+      attributes: ['id', 'name', 'logo', 'is_default'],
       include: [
         { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
         { model: Alias, through: { attributes: [] } },

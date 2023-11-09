@@ -1011,6 +1011,32 @@ describe('Users', async () => {
 
       await org1.destroy();
     });
+    it('should add user to default organization', async () => {
+      const org1 = await Organization.create({ name: 'LibreTexts', is_default: true });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const updateObj = { use_default_organization: true };
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations`)
+        .send(updateObj)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+      expect(response.status).to.equal(200);
+
+      const orgMembership = await UserOrganization.findOne({
+        where: {
+          [Op.and]: [
+            { user_id: user1.uuid },
+            { organization_id: org1.id },
+          ],
+        },
+      });
+      expect(orgMembership).to.exist;
+
+      await org1.destroy();
+    });
     it('should remove user from organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
       const user1 = await User.create({

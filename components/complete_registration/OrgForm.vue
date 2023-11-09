@@ -51,6 +51,14 @@
             </div>
           </li>
         </ul>
+        <div class="flex justify-center mt-6">
+          <button
+            class="text-sm text-gray-700 hover:underline"
+            @click="submitOrganization({ use_default_organization: true })"
+          >
+            {{ $t('complete_registration_org.org_not_listed') }}
+          </button>
+        </div>
       </div>
     </div>
   </template>
@@ -74,6 +82,7 @@
   };
   type OrganizationPatch = {
     organization_id?: number;
+    use_default_organization?: boolean;
   };
   
   // Props and Hooks

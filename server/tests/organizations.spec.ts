@@ -26,6 +26,7 @@ describe('Organizations', async () => {
     domains: [],
     logo: null,
     system: null,
+    is_default: false,
     ...override,
   });
   const mapAliases = (aliases) => aliases.map((a) => _.pick(a, ['id', 'alias']));
@@ -425,10 +426,7 @@ describe('Organizations', async () => {
         {
           id: org2.id,
           name: 'Org2',
-          logo: null,
-          aliases: [],
-          domains: [],
-          system: null,
+          ...defaultFields(),
         },
       ]);
     });
@@ -449,10 +447,7 @@ describe('Organizations', async () => {
         {
           id: org3.id,
           name: 'River Valley School of Fine Arts',
-          logo: null,
-          aliases: [],
-          domains: [],
-          system: null,
+          ...defaultFields(),
         },
       ]);
     });

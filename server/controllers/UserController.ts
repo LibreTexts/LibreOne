@@ -246,6 +246,12 @@ export class UserController {
         return errors.notFound(res);
       }
       orgID = foundOrg.id;
+    } else if (props.use_default_organization) {
+      const foundOrg = await Organization.findOne({ where: { is_default: true } });
+      if (!foundOrg) {
+        return errors.notFound(res);
+      }
+      orgID = foundOrg.id;
     } else {
       return errors.badRequest(res);
     }

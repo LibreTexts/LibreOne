@@ -22,6 +22,7 @@ export type CreateUserEmailChangeRequestBody = {
 
 export type CreateUserOrganizationBody = {
   organization_id?: number;
+  use_default_organization?: boolean;
 };
 
 export type CreateUserVerificationRequestBody = {

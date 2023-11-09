@@ -71,7 +71,8 @@
     "results": "Results",
     "results_live": "Results will update as you type.",
     "results_found": "{num} found",
-    "select": "Select"
+    "select": "Select",
+    "org_not_listed": "I don't see my organization listed."
   },
   "complete_registration_student": {
     "header": "Just a few more details...",
