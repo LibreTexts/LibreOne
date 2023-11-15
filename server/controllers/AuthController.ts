@@ -358,26 +358,27 @@ export class AuthController {
       .setAudience('libretexts.org')
       .setExpirationTime('7d')
       .sign(privKey);
-    
-    res.cookie('overlayJWT', token, {
+    const cookieConfig: CookieOptions = {
       path: '/',
       secure: true,
-      domain: source,
+      domain: 'libretexts.org',
       sameSite: 'lax',
       maxAge: 604800,
-    });
+    };
+    
+    res.cookie(`cas_bridge_token_${source}`, token, cookieConfig);
     if (foundLib) {
       res.cookie(
         `cas_bridge_authorized_${source}`,
         'true',
-        {
-          path: '/',
-          secure: true,
-          domain: source,
-          sameSite: 'lax',
-          maxAge: 604800,
-        },
+        cookieConfig,
       ); 
+    } else if (foundUser.user_type === 'instructor' && foundUser.verify_status !== 'verified') {
+      res.cookie(
+        `cas_bridge_unverified_${source}`,
+        'true',
+        cookieConfig,
+      );
     }
 
     if (redirect) {
