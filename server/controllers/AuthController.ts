@@ -362,7 +362,7 @@ export class AuthController {
     res.cookie('overlayJWT', token, {
       path: '/',
       secure: true,
-      domain: 'libretexts.org',
+      domain: source,
       sameSite: 'lax',
       maxAge: 604800,
     });
@@ -373,9 +373,9 @@ export class AuthController {
         {
           path: '/',
           secure: true,
-          domain: 'libretexts.org',
+          domain: source,
           sameSite: 'lax',
-          maxAge: 43200,
+          maxAge: 604800,
         },
       ); 
     }
