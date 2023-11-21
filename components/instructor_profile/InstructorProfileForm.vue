@@ -138,14 +138,13 @@
   const props = withDefaults(
     defineProps<{
       status?: string;
+      applications?: Application[];
     }>(),
     {
       status: 'not_attempted',
+      applications: () => [],
     },
   );
-
-  // Init
-  loadApps();
 
   // Data & UI
   const formStep = ref(1);
@@ -154,8 +153,6 @@
   //const registrationCode = ref('');
   const selectedApps = ref<string[]>([]);
   const selectedSpecialLibs = ref<string[]>([]);
-  const availableApps = ref<Application[]>([]);
-  const specialLibs = ref<Application[]>([]);
   const requestError = ref('');
   const validationErrors = ref<string[]>([]);
   const isLoading = ref(false);
@@ -199,6 +196,20 @@
     }
   });
 
+  const availableApps = computed(() => {
+    return props.applications?.filter((app: Application) => {
+      return (
+        app.app_type === 'standalone' &&
+        app.default_access === 'none'
+      );
+    }) ?? [];
+  });
+  const specialLibs = computed(() => {
+    return props.applications?.filter((app: Application) => {
+      return app.app_type === 'library' && app.is_default_library === false;
+    }) ?? [];
+  });
+
   // Watchers
   watch(
     () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value],
@@ -208,28 +219,6 @@
   );
 
   // Methods
-  async function loadApps() {
-    try {
-      const res = await axios.get('/applications');
-      if (!res || !res.data.data || !Array.isArray(res.data.data)) {
-        throw new Error('badres');
-      }
-
-      availableApps.value = res.data.data.filter((app: Application) => {
-        return (
-          app.app_type === 'standalone' &&
-          app.default_access === 'none'
-        );
-      });
-      specialLibs.value = res.data.data.filter((app: Application) => {
-        return app.app_type === 'library' && app.is_default_library === false;
-      });
-    } catch (err) {
-      console.error(err);
-      requestError.value = t('common.unknownerror');
-    }
-  }
-
   function handleStartForm() {
     formStep.value = 2;
   }

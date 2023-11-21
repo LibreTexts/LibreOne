@@ -13,7 +13,10 @@
         </div>
       </div>
       <!--Content Body-->
-      <InstructorProfileForm :status="instructorStatus" />
+      <InstructorProfileForm
+        :status="instructorStatus"
+        :applications="$props.applications"
+      />
       <InstructorGettingStarted
         v-if="['verified', 'pending'].includes(instructorStatus ?? '')"
         class="mt-14"
@@ -28,7 +31,11 @@
   import InstructorProfileForm from '../../components/instructor_profile/InstructorProfileForm.vue';
   import InstructorGettingStarted from '../../components/instructor_profile/InstructorGettingStarted.vue';
   import { usePageContext } from '@renderer/usePageContext';
+  import { Application } from '@server/types/applications';
 
+  const props = defineProps<{
+    applications: Application[];
+  }>();
   const pageContext = usePageContext();
 
   const instructorStatus = computed(() => {
