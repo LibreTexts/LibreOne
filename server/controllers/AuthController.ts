@@ -516,6 +516,11 @@ export class AuthController {
       console.error('Error creating default user applications!', e);
     }
 
+    const notifySuccess = await this._notifyConductorOfNewUser(foundUser);
+    if(!notifySuccess) {
+      throw new Error('Unable to notify Conductor of new user!');
+    }
+
     let shouldCreateSSOSession = true;
     let redirectCASService = null;
     if (req.cookies.cas_state) {
@@ -1019,4 +1024,39 @@ export class AuthController {
     return res.send('Password updated.');
   }
 
+  private async _notifyConductorOfNewUser(user: User) {
+    try {
+      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/new-user' || 'http://localhost:5000/api/v1/central-identity/webhooks/new-user';
+
+      const payload = {
+        central_identity_id: user.uuid,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        avatar: user.avatar,
+        verify_status: user.verify_status,
+      }
+
+      const res = await fetch(conductorWebhookURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Authorization': `Bearer ${process.env.CONDUCTOR_API_KEY}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const jsonRes = await res.json();
+
+      if(jsonRes.err) {
+        throw new Error(jsonRes.data.errMsg);
+      }
+
+      return true
+    } catch (err) {
+      console.error('Error notifying Conductor of new user:', err);
+      return false;
+    }
+  }
 }
