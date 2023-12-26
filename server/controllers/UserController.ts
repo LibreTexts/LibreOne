@@ -38,6 +38,7 @@ import type {
   UserUUIDParams,
 } from '../types/users';
 import { LibraryController } from './LibraryController';
+import { AuthController } from './AuthController';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -124,7 +125,7 @@ export class UserController {
     }
   
     // create or reactivate library user if necessary
-    let sandbox_url: string | null = null;
+    // let sandbox_url: string | null = null;
     if (foundApp.get('app_type') === 'library') {
       const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
       const libController = new LibraryController();
@@ -141,21 +142,24 @@ export class UserController {
           throw new Error('Library user creation did not return a user ID!');
         }
 
-        sandbox_url = await libController.createLibraryUserSandbox(
-          lib,
-          libUserID,
-          {
-            uuid: foundUser.get('uuid'),
-            first_name: foundUser.get('first_name'),
-            last_name: foundUser.get('last_name'),
-          },
-        );
+        // sandbox_url = await libController.createLibraryUserSandbox(
+        //   lib,
+        //   libUserID,
+        //   {
+        //     uuid: foundUser.get('uuid'),
+        //     first_name: foundUser.get('first_name'),
+        //     last_name: foundUser.get('last_name'),
+        //   },
+        // );
   
         const libGroups = await libController.getLibraryGroups(lib);
         const basicUserGroup = libGroups.find((g) => g.name?.toLowerCase() === 'basicuser');
         if (basicUserGroup) {
           await libController.createLibraryGroupUser(lib, libUserID, basicUserGroup.id);
         }
+
+        const authController = new AuthController();
+        await authController.notifyConductorOfUserLibraryAccess(foundUser, lib)
       } catch (e) {
         console.error({
           msg: 'Library user creation failed!',
@@ -169,9 +173,9 @@ export class UserController {
     await UserApplication.create({
       user_id: uuid,
       application_id,
-      ...(sandbox_url && {
-        library_sandbox_url: sandbox_url,
-      }),
+      // ...(sandbox_url && {
+      //   library_sandbox_url: sandbox_url,
+      // }),
     }, { transaction });
 
     return true;

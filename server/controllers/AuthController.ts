@@ -1024,6 +1024,43 @@ export class AuthController {
     return res.send('Password updated.');
   }
 
+  private _getConductorWebhookHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Authorization': `Bearer ${process.env.CONDUCTOR_API_KEY}`,
+    }
+  }
+
+  public async notifyConductorOfUserLibraryAccess(user: User, library: string) {
+    try {
+
+      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/user-library-access' || 'http://localhost:5000/api/v1/central-identity/webhooks/user-library-access';
+
+      const payload = {
+        central_identity_id: user.uuid,
+        library
+      }
+
+      const res = await fetch(conductorWebhookURL, {
+        method: 'POST',
+        headers: this._getConductorWebhookHeaders(),
+        body: JSON.stringify(payload),
+      })
+
+      const jsonRes = await res.json();
+
+      if(jsonRes.err) {
+        throw new Error(jsonRes.data.errMsg);
+      }
+
+      return true
+    } catch (err) {
+      console.error('Error notifying Conductor of user library access:', err);
+      return true // Fail silently
+    }
+  }
+
   private async _notifyConductorOfNewUser(user: User) {
     try {
       const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/new-user' || 'http://localhost:5000/api/v1/central-identity/webhooks/new-user';
@@ -1039,11 +1076,7 @@ export class AuthController {
 
       const res = await fetch(conductorWebhookURL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Authorization': `Bearer ${process.env.CONDUCTOR_API_KEY}`,
-        },
+        headers: this._getConductorWebhookHeaders(),
         body: JSON.stringify(payload),
       })
 

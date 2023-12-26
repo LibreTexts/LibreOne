@@ -159,112 +159,112 @@ export class LibraryController {
   /**
    * Creates a sandbox for a new library user. Assumes that no sandbox exists yet for the user.
    */
-  public async createLibraryUserSandbox(lib: string, libUserID: string, userData: CreateLibraryUserSandboxUserDataInput, headers?: LibraryAPIRequestHeaders) {
-    const sandboxName = this.generateSandboxName(userData);
-    const pagePath = `Sandboxes/${sandboxName}`;
-    const reqHeaders = headers || await this.generateAPIRequestHeaders(lib);
+  // public async createLibraryUserSandbox(lib: string, libUserID: string, userData: CreateLibraryUserSandboxUserDataInput, headers?: LibraryAPIRequestHeaders) {
+  //   const sandboxName = this.generateSandboxName(userData);
+  //   const pagePath = `Sandboxes/${sandboxName}`;
+  //   const reqHeaders = headers || await this.generateAPIRequestHeaders(lib);
 
-    // create the page
-    try {
-      const createParams = new URLSearchParams({ abort: 'never', 'dream.out.format': 'json', title: sandboxName });
-      await axios.post(
-        `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/contents?${createParams.toString()}`,
-        `
-          <p>Welcome to Libretexts&nbsp;{{user.displayname}}!</p>
-          <p class="mt-script-comment">Welcome Message</p>
-          <pre class="script">template('CrossTransclude/Web', { 'Library': 'chem', 'PageID': 207047 });</pre>
-          <p>{{template.ShowOrg()}}</p>
-          <p class="template:tag-insert"><em>Tags recommended by the template: </em><a href="#">article:topic-category</a></p>
-        `,
-        { headers: reqHeaders },
-      );
-    } catch (e) {
-      console.error({
-        msg: 'Error creating sandbox!',
-        lib,
-        userData,
-        sandboxName,
-        error: e,
-      });
-      throw new Error('Error creating sandbox.');
-    }
+  //   // create the page
+  //   try {
+  //     const createParams = new URLSearchParams({ abort: 'never', 'dream.out.format': 'json', title: sandboxName });
+  //     await axios.post(
+  //       `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/contents?${createParams.toString()}`,
+  //       `
+  //         <p>Welcome to Libretexts&nbsp;{{user.displayname}}!</p>
+  //         <p class="mt-script-comment">Welcome Message</p>
+  //         <pre class="script">template('CrossTransclude/Web', { 'Library': 'chem', 'PageID': 207047 });</pre>
+  //         <p>{{template.ShowOrg()}}</p>
+  //         <p class="template:tag-insert"><em>Tags recommended by the template: </em><a href="#">article:topic-category</a></p>
+  //       `,
+  //       { headers: reqHeaders },
+  //     );
+  //   } catch (e) {
+  //     console.error({
+  //       msg: 'Error creating sandbox!',
+  //       lib,
+  //       userData,
+  //       sandboxName,
+  //       error: e,
+  //     });
+  //     throw new Error('Error creating sandbox.');
+  //   }
 
-    // set the default thumbnail
-    try {
-      const defaultThumbnailRes = await axios.get(`${this.defaultImagesURL}/sandbox.jpg`, { responseType: 'arraybuffer' });
-      if (!defaultThumbnailRes || !defaultThumbnailRes.data) {
-        throw new Error('Error retrieving default sandbox thumbnail.');
-      }
+  //   // set the default thumbnail
+  //   try {
+  //     const defaultThumbnailRes = await axios.get(`${this.defaultImagesURL}/sandbox.jpg`, { responseType: 'arraybuffer' });
+  //     if (!defaultThumbnailRes || !defaultThumbnailRes.data) {
+  //       throw new Error('Error retrieving default sandbox thumbnail.');
+  //     }
 
-      const thumbnailParams = new URLSearchParams({ 'dream.out.format': 'json' });
-      await axios.put(
-        `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/files/=mindtouch.page%2523thumbnail?${thumbnailParams.toString()}`,
-        defaultThumbnailRes.data,
-        {
-          headers: {
-            ...reqHeaders,
-            'Content-Type': defaultThumbnailRes.headers['content-type'],
-          },
-        },
-      );
-    } catch (e) {
-      console.error({
-        msg: 'Error setting sandbox thumbnail!',
-        lib,
-        userData,
-        sandboxName,
-        error: e,
-      });
-    }
+  //     const thumbnailParams = new URLSearchParams({ 'dream.out.format': 'json' });
+  //     await axios.put(
+  //       `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/files/=mindtouch.page%2523thumbnail?${thumbnailParams.toString()}`,
+  //       defaultThumbnailRes.data,
+  //       {
+  //         headers: {
+  //           ...reqHeaders,
+  //           'Content-Type': defaultThumbnailRes.headers['content-type'],
+  //         },
+  //       },
+  //     );
+  //   } catch (e) {
+  //     console.error({
+  //       msg: 'Error setting sandbox thumbnail!',
+  //       lib,
+  //       userData,
+  //       sandboxName,
+  //       error: e,
+  //     });
+  //   }
 
-    // update permissions
-    try {
-      const groups = await this.getLibraryGroups(lib, reqHeaders);
-      const devGroup = groups.find((g) => g.name?.toLowerCase() === 'developer');
-      const devGroupGrant = devGroup
-        ? `
-          <grant>
-            <group id="${devGroup.id}"></group>
-            <permissions><role>Manager</role></permissions>
-          </grant>
-        `
-        : '';
-      const permsParams = new URLSearchParams({ 'dream.out.format': 'json' });
-      await axios.put(
-        `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/security?${permsParams.toString()}`,
-        `
-          <security>
-            <permissions.page>
-              <restriction>Semi-Private</restriction>
-            </permissions.page>
-            <grants>
-              ${devGroupGrant}
-              <grant>
-                <user id="${libUserID}"></user>
-                <permissions><role>Manager</role></permissions>
-              </grant>
-            </grants>
-          </security>
-        `,
-        {
-          headers: {
-            ...reqHeaders,
-            'Content-Type': 'application/xml; charset=utf-8',
-          },
-        },
-      );
-    } catch (e) {
-      console.error({
-        msg: 'Error updating sandbox permissions!',
-        lib,
-        userData,
-        sandboxName,
-        error: e,
-      });
-    }
+  //   // update permissions
+  //   try {
+  //     const groups = await this.getLibraryGroups(lib, reqHeaders);
+  //     const devGroup = groups.find((g) => g.name?.toLowerCase() === 'developer');
+  //     const devGroupGrant = devGroup
+  //       ? `
+  //         <grant>
+  //           <group id="${devGroup.id}"></group>
+  //           <permissions><role>Manager</role></permissions>
+  //         </grant>
+  //       `
+  //       : '';
+  //     const permsParams = new URLSearchParams({ 'dream.out.format': 'json' });
+  //     await axios.put(
+  //       `https://${lib}.libretexts.org/@api/deki/pages/=${this.doubleEncodeURIComponent(pagePath)}/security?${permsParams.toString()}`,
+  //       `
+  //         <security>
+  //           <permissions.page>
+  //             <restriction>Semi-Private</restriction>
+  //           </permissions.page>
+  //           <grants>
+  //             ${devGroupGrant}
+  //             <grant>
+  //               <user id="${libUserID}"></user>
+  //               <permissions><role>Manager</role></permissions>
+  //             </grant>
+  //           </grants>
+  //         </security>
+  //       `,
+  //       {
+  //         headers: {
+  //           ...reqHeaders,
+  //           'Content-Type': 'application/xml; charset=utf-8',
+  //         },
+  //       },
+  //     );
+  //   } catch (e) {
+  //     console.error({
+  //       msg: 'Error updating sandbox permissions!',
+  //       lib,
+  //       userData,
+  //       sandboxName,
+  //       error: e,
+  //     });
+  //   }
 
-    return `https://${lib}.libretexts.org/${pagePath}`;
-  }
+  //   return `https://${lib}.libretexts.org/${pagePath}`;
+  // }
 
   /**
    * Creates a new library user or reactivates their existing account.
