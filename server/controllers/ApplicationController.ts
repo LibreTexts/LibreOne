@@ -8,6 +8,7 @@ import {
   UpdateApplicationBody,
 } from '../types/applications';
 import errors from '../errors';
+import { APIResponse } from '@server/types/misc';
 
 export class ApplicationController {
 
@@ -108,6 +109,62 @@ export class ApplicationController {
       },
       data: results,
     });
+  }
+
+  /**
+   * Retrieves all Applications using optional searching and pagination.
+   *
+   * @param {object} options - The options for the query.
+   * @returns {Promise<APIResponse<Application[]>>} The fulfilled API response.
+   */
+  public async getAllApplicationsInternal({
+    offset,
+    limit,
+    query,
+    type,
+    onlyCASSupported,
+    default_access,
+  }:{
+      offset?: number;
+      limit?: number;
+      query?: string;
+      type?: string;
+      onlyCASSupported?: boolean;
+      default_access?: string;
+    } ): Promise<APIResponse<Application[]>> {
+    
+    const criteria: WhereOptions[] = [{ hide_from_apps: false }];
+    if (query) {
+      criteria.push({
+        name: { [Op.like]: `%${query}%` },
+      });
+    }
+    if (type) {
+      criteria.push({ app_type: type });
+    }
+    if (onlyCASSupported) {
+      criteria.push({ supports_cas: true });
+    }
+    if (default_access) {
+      criteria.push({ default_access });
+    }
+  
+    const { count, rows } = await Application.findAndCountAll({
+      where: criteria.length > 1 ? { [Op.and]: criteria } : criteria[0],
+      offset,
+      limit,
+      order: sequelize.literal('name'),
+    });
+    const results = rows.map((row) => row.get()) as unknown as Application[];
+  
+    return {
+      meta: {
+        offset,
+        limit,
+        total: count,
+      },
+      data: results,
+    };
   }
 
   /**
