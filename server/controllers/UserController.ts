@@ -125,7 +125,6 @@ export class UserController {
     }
   
     // create or reactivate library user if necessary
-    // let sandbox_url: string | null = null;
     if (foundApp.get('app_type') === 'library') {
       const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
       const libController = new LibraryController();
@@ -142,16 +141,6 @@ export class UserController {
           throw new Error('Library user creation did not return a user ID!');
         }
 
-        // sandbox_url = await libController.createLibraryUserSandbox(
-        //   lib,
-        //   libUserID,
-        //   {
-        //     uuid: foundUser.get('uuid'),
-        //     first_name: foundUser.get('first_name'),
-        //     last_name: foundUser.get('last_name'),
-        //   },
-        // );
-  
         const libGroups = await libController.getLibraryGroups(lib);
         const basicUserGroup = libGroups.find((g) => g.name?.toLowerCase() === 'basicuser');
         if (basicUserGroup) {
@@ -173,9 +162,6 @@ export class UserController {
     await UserApplication.create({
       user_id: uuid,
       application_id,
-      // ...(sandbox_url && {
-      //   library_sandbox_url: sandbox_url,
-      // }),
     }, { transaction });
 
     return true;
