@@ -50,7 +50,7 @@
         break;
       case 'outlined':
         variantClasses =
-          'bg-transparent border border-primary hover:bg-sky-700 text-primary hover:text-white';
+          'bg-transparent border border-primary text-sky-700 text-primary';
         break;
       default:
         variantClasses = 'bg-primary hover:bg-sky-700';
