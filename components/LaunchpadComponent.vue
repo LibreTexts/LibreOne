@@ -30,7 +30,7 @@
       >
         <div
           class="app-item-container"
-          v-for="app in apps.filter((app) => app.app_type === 'standalone')"
+          v-for="app in apps.filter((app) => app.app_type === 'standalone').sort((a, b) => a.name.localeCompare(b.name))"
           @click="openAppLink(app.main_url)"
           :key="app.id ?? app.name"
         >
