@@ -298,7 +298,9 @@ export class UserController {
       return errors.badRequest(res);
     }
     const foundRequests = await VerificationRequest.findAll({ where: { user_id: req.userUUID } });
-    if (foundUser.get('verify_status') !== 'not_attempted' || foundRequests.length > 0) {
+
+    // only one open request allowed at a time
+    if (foundRequests.length > 0 && foundRequests.some((r) => r.get('status') === 'open')) {
       return errors.badRequest(res);
     }
 
