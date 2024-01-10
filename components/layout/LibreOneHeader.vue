@@ -25,6 +25,14 @@
           >
             {{ item.title }}
           </a>
+          <a
+            href="https://donate.libretexts.org"
+            target="_blank"
+            key="donate-link"
+            class="text-md font-semibold leading-6 text-gray-900 ml-6"
+          >
+            {{ $t('common.donate') }}
+          </a>
         </div>
         <div class="flex flex-row mr-2">
           <button
