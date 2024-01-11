@@ -10,6 +10,7 @@ import {
   Model,
   Table,
   UpdatedAt,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { AccessRequest } from './AccessRequest';
 import { User } from './User';
@@ -49,4 +50,7 @@ export class VerificationRequest extends Model {
 
   @UpdatedAt
   declare updated_at: Date;
+
+  @BelongsTo(() => User)
+  declare user: User;
 }

@@ -115,10 +115,13 @@ export class VerificationRequestController {
           model: AccessRequest,
           include: [{ model: Application }],
         },
+        {
+          model: User,
+          attributes: ['uuid', 'first_name', 'last_name', 'email'],
+        }
       ],
     });
     const results = rows.map((row) => row.get());
-
     return res.send({
       meta: {
         offset,
