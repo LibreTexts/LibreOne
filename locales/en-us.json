@@ -23,7 +23,8 @@
     "status": "Status",
     "select": "Select",
     "comingsoon": "Coming Soon...",
-    "here": "here"
+    "here": "here",
+    "donate": "Donate"
   },
   "welcome": {
     "register": "Register For A LibreOne Account",
