@@ -93,6 +93,12 @@ describe('Verification Requests', async () => {
         bio_url: 'https://libretexts.org',
         decision_reason: null,
         access_request: null,
+        user: {
+          uuid: user1.uuid,
+          email: user1.email,
+          first_name: null,
+          last_name: null,
+        }
       });
       expect(_.omit(out2, omitFields)).to.deep.equal({
         id: verifReq2.id,
@@ -101,6 +107,12 @@ describe('Verification Requests', async () => {
         bio_url: 'https://one.libretexts.org',
         decision_reason: null,
         access_request: null,
+        user: {
+          uuid: user2.uuid,
+          email: user2.email,
+          first_name: null,
+          last_name: null,
+        }
       });
     });
   });
