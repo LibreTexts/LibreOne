@@ -518,7 +518,7 @@ export class AuthController {
 
     const notifySuccess = await this._notifyConductorOfNewUser(foundUser);
     if(!notifySuccess) {
-      throw new Error('Unable to notify Conductor of new user!');
+      console.log('Unable to notify Conductor of new user: ', foundUser.get('uuid')); // no-op if fails
     }
 
     let shouldCreateSSOSession = true;
