@@ -38,8 +38,8 @@
             <img
               :src="app.icon"
               :alt="app.name"
-              width="90"
-              height="90"
+              width="160"
+              height="160"
             >
             <div
                 class="app-item-icon-overlay"
