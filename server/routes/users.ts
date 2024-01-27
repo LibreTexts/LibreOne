@@ -65,12 +65,6 @@ usersRouter.route('/:uuid/applications/:applicationID').delete(
   catchInternal((req, res) => controller.deleteUserApplication(req, res)),
 );
 
-usersRouter.route('/:uuid/libraries/:libraryID/sandbox-url').get(
-  useLibreTextsCORS,
-  validate(UserValidator.uuidLibraryIDParamsSchema, 'params'),
-  catchInternal((req, res) => controller.getUserLibraryAppSandboxURL(req, res)),
-);
-
 usersRouter.route('/:uuid/organizations')
   .all(
     verifyAPIAuthentication,
