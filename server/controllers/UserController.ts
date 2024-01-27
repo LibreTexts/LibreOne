@@ -450,26 +450,6 @@ export class UserController {
     });
     return foundLibs.map((l) => l.get()) || [];
   }
-
-  /**
-   * Retrieves a User's Sandbox URL on a library application.
-   *
-   * @param req - Incoming API request.
-   * @param res - Outgoing API response.
-   * @returns The fulfilled API response.
-   */
-  public async getUserLibraryAppSandboxURL(req: Request, res: Response): Promise<Response> {
-    const { uuid, libraryID } = req.params as UserLibraryIDParams;
-    const libController = new LibraryController();
-    const sandboxRes = await libController.getLibraryUserSandboxURL(libraryID, uuid);
-
-    // invalid libraryID
-    if (!sandboxRes) {
-      return errors.notFound(res);
-    }
-
-    return res.send({ data: sandboxRes });
-  }
   
   /**
    * Retrieves a list of all Organizations a User is associated with.

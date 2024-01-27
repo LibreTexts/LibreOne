@@ -15,12 +15,6 @@ type CreateLibraryUserUserDataInput = {
   name: string;
 };
 
-type CreateLibraryUserSandboxUserDataInput = {
-  uuid: string;
-  first_name: string;
-  last_name: string;
-};
-
 export class LibraryController {
   private apiUsername: string;
   private defaultImagesURL = 'https://cdn.libretexts.net/DefaultImages';
@@ -50,22 +44,6 @@ export class LibraryController {
 
   private doubleEncodeURIComponent(str: string) {
     return encodeURIComponent(encodeURIComponent(str));
-  }
-
-  private generateSandboxName(userData: CreateLibraryUserSandboxUserDataInput) {
-    const makeNameURLSafe = (name: string) => name.replace(/[^a-zA-Z]/g, '');
-
-    let uniqueGuarantee = randomBytes(2).toString('hex');
-    if (typeof userData.uuid === 'string') {
-      const splitUUID = userData.uuid.split('-');
-      if (splitUUID.length < 2) {
-        uniqueGuarantee = splitUUID[1];
-      }
-    }
-
-    const safeFirst = makeNameURLSafe(userData.first_name || 'unknown');
-    const safeLast = makeNameURLSafe(userData.last_name || 'unknown');
-    return `${safeFirst}-${safeLast}-${uniqueGuarantee}`.toLowerCase();
   }
 
   /**
@@ -249,37 +227,6 @@ export class LibraryController {
       }
       throw e;
     }
-  }
-
-  /**
-   * Retrieves a library user's Sandbox URL (publicly shareable).
-   */
-  public async getLibraryUserSandboxURL(lib: string, uuid: string) {
-    const fallbackURL = `https://${lib}.libretexts.org/Sandboxes`;
-
-    const foundLibraryApp = await Application.findOne({ where: { main_url: `https://${lib}.libretexts.org` } });
-    if (!foundLibraryApp) {
-      return null;
-    }
-
-    const foundUserApp = await UserApplication.findOne({
-      where: {
-        [Op.and]: [
-          { user_id: uuid },
-          { application_id: foundLibraryApp.get('id') },
-        ],
-      },
-    });
-    if (!foundUserApp) {
-      return fallbackURL;
-    }
-
-    const sandboxURL = foundUserApp.get('library_sandbox_url');
-    if (!sandboxURL) {
-      return fallbackURL;
-    }
-
-    return sandboxURL;
   }
 
   /**
