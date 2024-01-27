@@ -74,6 +74,10 @@ export class Application extends Model {
   @Column(DataType.BOOLEAN)
   declare supports_cas: boolean;
 
+  /** Service identifier for library authentication **/
+  @Column(DataType.INTEGER)
+  declare auth_service_id: number;
+
   @BelongsToMany(() => AccessRequest, () => AccessRequestApplication)
   access_requests?: Array<AccessRequest & { AccessRequestApplication: AccessRequestApplication }>;
 

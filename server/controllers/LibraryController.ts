@@ -169,6 +169,9 @@ export class LibraryController {
       return existingUser['@id'];
     }
 
+    const libraryApp = await Application.findOne({ where: { main_url: `https://${lib}.libretexts.org` } });
+    const authenticationServiceId = libraryApp?.auth_service_id ?? 3;
+
     const userDataBody = `
       <user>
         <username>${userData.uuid}</username>
@@ -176,7 +179,7 @@ export class LibraryController {
         <fullname>${userData.name}</fullname>
         <status>active</status>
         <license.seat>true</license.seat>
-        <service.authentication id="3" />
+        <service.authentication id="${authenticationServiceId}" />
         <permissions.user>
           <role>Viewer</role>
         </permissions.user>
