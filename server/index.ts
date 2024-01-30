@@ -62,7 +62,7 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
       redirectURI: req.path,
       tryGateway: 'true',
     });
-    return res.redirect(307, `/api/v1/login?${redirParams.toString()}`);
+    return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
   }
   const pageContextInit: PageContextInitCustom = {
     isAuthenticated,
