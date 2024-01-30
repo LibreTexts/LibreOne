@@ -34,6 +34,7 @@ export type InitLoginQuery = {
   redirectURI?: string;
   redirectCASServiceURI?: string;
   casInitSSOSession?: boolean;
+  tryGateway?: boolean;
 };
 
 export type CompleteLoginQuery = {

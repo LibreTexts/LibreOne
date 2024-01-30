@@ -796,10 +796,11 @@ export class AuthController {
    * @returns The fulfilled API response (302 redirect).
    */
   public async initLogin(req: Request, res: Response): Promise<void> {
-    const { redirectURI, redirectCASServiceURI } = req.query as InitLoginQuery;
+    const { redirectURI, redirectCASServiceURI, tryGateway } = req.query as InitLoginQuery;
     const state = JSON.stringify({
       ...(redirectURI && { redirectURI }),
       ...(redirectCASServiceURI && { redirectCASServiceURI }),
+      ...(tryGateway && { tryGateway }),
     });
 
     const prodCookieConfig: CookieOptions = {
@@ -812,9 +813,14 @@ export class AuthController {
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
 
-    const casParams = new URLSearchParams({
-      service: CAS_CALLBACK,
-    });
+    const casParams = new URLSearchParams({ service: CAS_CALLBACK });
+    if (tryGateway) {
+      casParams.set('gateway', 'true');
+      res.cookie('one_tried_gateway', true, {
+        httpOnly: true,
+        ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+      });
+    }
     const redirURL = `${CAS_LOGIN}?${casParams.toString()}`;
     return res.redirect(redirURL);
   }
@@ -828,6 +834,25 @@ export class AuthController {
    */
   public async completeLogin(req: Request, res: Response): Promise<Response | void> {
     const { ticket } = req.query as CompleteLoginQuery;
+
+    let redirectURI = '/home';
+    if (req.cookies.cas_state) {
+      try {
+        const cas_state = JSON.parse(req.cookies.cas_state);
+        if (cas_state.redirectURI) {
+          redirectURI = cas_state.redirectURI;
+        }
+      } catch (e) {
+        console.warn('Error parsing CAS state cookie value as JSON.');
+      }
+    }
+
+    if (!ticket && req.cookies.one_tried_gateway) {
+      return res.redirect(redirectURI);
+    }
+    if (!ticket) {
+      return errors.badRequest(res);
+    }
 
     const networkAgent = process.env.NODE_ENV === 'production'
       ? null
@@ -858,20 +883,9 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
-    let redirectURI = '/home';
     if (!foundUser.registration_complete) {
       redirectURI = '/complete-registration';
-    } else if (req.cookies.cas_state) {
-      try {
-        const cas_state = JSON.parse(req.cookies.cas_state);
-        if (cas_state.redirectURI) {
-          redirectURI = cas_state.redirectURI;
-        }
-      } catch (e) {
-        console.warn('Error parsing cookie value as JSON.');
-      }
     }
-
     return res.redirect(redirectURI);
   }
 
