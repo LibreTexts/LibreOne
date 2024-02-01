@@ -1,5 +1,6 @@
+import { buildLocalizedServerRedirectURL } from '@renderer/helpers';
+import { getProductionLoginURL } from '@server/helpers';
 import type { PageContextServer } from '@renderer/types';
-import {getProductionLoginURL } from '@server/helpers';
 
 /**
  * Reads search parameters provided in the URL and transforms them to component props. Redirects
@@ -9,6 +10,15 @@ import {getProductionLoginURL } from '@server/helpers';
  * @returns New pageContext object with parsed props or redirect URL.
  */
 export async function onBeforeRender(pageContext: PageContextServer) {
+  // Redirect if already authenticated
+  if (pageContext.isAuthenticated && pageContext.user) {
+    const redirectTo = buildLocalizedServerRedirectURL(pageContext, '/home');
+    return {
+      pageContext: {
+        redirectTo,
+      },
+    };
+  }
 
   return {
     pageContext: {

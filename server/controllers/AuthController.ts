@@ -818,6 +818,7 @@ export class AuthController {
       casParams.set('gateway', 'true');
       res.cookie('one_tried_gateway', true, {
         httpOnly: true,
+        maxAge: 60 * 1000, // 60 seconds
         ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
       });
     }
