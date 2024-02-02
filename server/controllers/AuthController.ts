@@ -798,7 +798,7 @@ export class AuthController {
   public async initLogin(req: Request, res: Response): Promise<void> {
     const { redirectURI, redirectCASServiceURI, tryGateway } = req.query as InitLoginQuery;
     const state = JSON.stringify({
-      ...(redirectURI && { redirectURI }),
+      ...(redirectURI && { redirectURI: decodeURIComponent(redirectURI) }),
       ...(redirectCASServiceURI && { redirectCASServiceURI }),
       ...(tryGateway && { tryGateway }),
     });

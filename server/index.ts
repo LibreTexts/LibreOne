@@ -57,13 +57,16 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
   if (isAuthenticated && userUUID) {
     user = await userController.getUserInternal(userUUID);
   }
-  if (!isAuthenticated && !req.cookies.one_tried_gateway) {
+
+  const gatewayExcludePaths = ['/passwordrecovery', '/passwordrecovery/complete'];
+  if (!isAuthenticated && !gatewayExcludePaths.includes(req.path) && !req.cookies.one_tried_gateway) {
     const redirParams = new URLSearchParams({
-      redirectURI: req.path,
+      redirectURI: encodeURIComponent(req.url),
       tryGateway: 'true',
     });
     return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
   }
+
   const pageContextInit: PageContextInitCustom = {
     isAuthenticated,
     urlOriginal: req.originalUrl,

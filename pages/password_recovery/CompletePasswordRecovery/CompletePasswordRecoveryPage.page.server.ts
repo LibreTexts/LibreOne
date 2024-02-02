@@ -21,7 +21,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   }
 
   // Missing token props
-  const invalidRedirectURI = buildLocalizedServerRedirectURL(pageContext, `/passwordrecovery${origParams.toString()}`);
+  const invalidRedirectURI = buildLocalizedServerRedirectURL(pageContext, `/passwordrecovery?${origParams.toString()}`);
   return {
     pageContext: {
       redirectTo: token ? undefined : invalidRedirectURI,
