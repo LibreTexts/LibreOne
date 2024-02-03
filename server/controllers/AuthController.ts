@@ -187,7 +187,7 @@ export class AuthController {
     const prodCookieConfig: CookieOptions = {
       secure: true,
       domain: COOKIE_DOMAIN,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
     };
     res.cookie('one_access', access, {
@@ -555,7 +555,7 @@ export class AuthController {
         redirectURI: `${SESSION_DOMAIN}/registration-complete`,
       });
       const prodCookieConfig: CookieOptions = {
-        sameSite: 'strict',
+        sameSite: 'lax',
         domain: COOKIE_DOMAIN,
         secure: true,
       };
@@ -804,7 +804,7 @@ export class AuthController {
     });
 
     const prodCookieConfig: CookieOptions = {
-      sameSite: 'strict',
+      sameSite: 'lax',
       domain: COOKIE_DOMAIN,
       secure: true,
     };
@@ -901,7 +901,7 @@ export class AuthController {
     const prodCookieConfig: CookieOptions = {
       secure: true,
       domain: COOKIE_DOMAIN,
-      sameSite: 'strict',
+      sameSite: 'lax',
     };
     res.clearCookie('one_access', {
       path: '/',
