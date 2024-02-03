@@ -58,8 +58,9 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
     user = await userController.getUserInternal(userUUID);
   }
 
-  const gatewayExcludePaths = ['/passwordrecovery', '/passwordrecovery/complete'];
-  if (!isAuthenticated && !gatewayExcludePaths.includes(req.path) && !req.cookies.one_tried_gateway) {
+  const gatewayExcludePathPrefixes = ['/passwordrecovery', '/complete-registration'];
+  const pathExcluded = !!gatewayExcludePathPrefixes.find((p) => req.path.includes(p));
+  if (!isAuthenticated && !pathExcluded && !req.cookies.one_tried_gateway) {
     const redirParams = new URLSearchParams({
       redirectURI: encodeURIComponent(req.url),
       tryGateway: 'true',
