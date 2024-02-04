@@ -527,6 +527,9 @@ export class AuthController {
     if (req.cookies.cas_state) {
       try {
         const cas_state = JSON.parse(req.cookies.cas_state);
+        if (cas_state.hasCASSession) {
+          shouldCreateSSOSession = false;
+        }
         if (cas_state.redirectCASServiceURI) {
           shouldCreateSSOSession = false;
           redirectCASService = cas_state.redirectCASServiceURI;
@@ -877,6 +880,15 @@ export class AuthController {
     // create local session
     const uuid = validData.serviceResponse.authenticationSuccess.user;
     await this.createAndAttachLocalSession(res, uuid);
+    const prodCookieConfig: CookieOptions = {
+      sameSite: 'lax',
+      domain: COOKIE_DOMAIN,
+      secure: true,
+    };
+    res.cookie('cas_state', JSON.stringify({ hasCASSession: true }), {
+      httpOnly: true,
+      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+    });
 
     // check registration status
     const foundUser = await User.findOne({ where: { uuid } });
