@@ -1070,16 +1070,12 @@ export class AuthController {
         library
       }
 
-      const res = await fetch(conductorWebhookURL, {
-        method: 'POST',
-        headers: this._getConductorWebhookHeaders(),
-        body: JSON.stringify(payload),
+      const res = await axios.post(conductorWebhookURL, payload, {
+        headers: this._getConductorWebhookHeaders()
       })
 
-      const jsonRes = await res.json();
-
-      if(jsonRes.err) {
-        throw new Error(jsonRes.data.errMsg);
+      if(res.data.err) {
+        throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
       return true
@@ -1098,20 +1094,15 @@ export class AuthController {
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
-        avatar: user.avatar,
-        verify_status: user.verify_status,
+        ...(user.avatar && { avatar: user.avatar }),
       }
 
-      const res = await fetch(conductorWebhookURL, {
-        method: 'POST',
-        headers: this._getConductorWebhookHeaders(),
-        body: JSON.stringify(payload),
+      const res = await axios.post(conductorWebhookURL, payload, {
+        headers: this._getConductorWebhookHeaders()
       })
 
-      const jsonRes = await res.json();
-
-      if(jsonRes.err) {
-        throw new Error(jsonRes.data.errMsg);
+      if(res.data.err) {
+        throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
       return true
