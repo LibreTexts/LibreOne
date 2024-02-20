@@ -92,6 +92,11 @@
         throw new Error('nouuid');
       }
 
+      if (pageContext.user?.apps) {
+        apps.value = pageContext.user?.apps;
+        return;
+      }
+
       const [appRes, libRes] = await getUserAppsAndLibraries(
         pageContext.user.uuid,
       );

@@ -2,6 +2,28 @@ import { ApplicationType } from './applications';
 import { OrganizationIDParams } from './organizations';
 import { UserOrganizationAdminRole } from '../controllers/PermissionsController';
 
+export type User = {
+  uuid: string;
+  external_subject_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  user_type?: string;
+  time_zone: string;
+  student_id: string;
+  disabled: boolean;
+  expired: boolean;
+  registration_complete: boolean;
+  legacy: boolean;
+  external_idp: string;
+  avatar: string;
+  bio_url: string;
+  verify_status: string;
+  last_password_change: Date;
+  created_at: Date;
+  updated_at: Date;
+};
+
 export type UserUUIDParams = {
   uuid: string;
 };

@@ -1,22 +1,19 @@
 import type { PageContextServer } from '@renderer/types';
+import { ApplicationController } from '@server/controllers/ApplicationController';
 
 /**
- * Redirects the user to login if they are not yet authenticated.
+ * Loads data from the server for use in page rendering.
  *
  * @param pageContext - The current server-side page rendering context.
  * @returns New pageContext object with any applicable redirect.
  */
 export async function onBeforeRender(pageContext: PageContextServer) {
-  /*
-  let redirectTo: string | null = null;
-  if (!pageContext.user) {
-    const params = new URLSearchParams({ redirectURI: '/home' });
-    redirectTo = `/api/v1/auth/login?${params}`;
-  }
+  const { data: publicApps } = await new ApplicationController().getAllApplicationsInternal({});
   return {
     pageContext: {
-      ...(redirectTo && { redirectTo }),
+      pageProps: {
+        publicApps,
+      },
     },
   };
-  */
 }

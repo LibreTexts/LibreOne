@@ -1,9 +1,13 @@
 import type { PageContextBuiltIn } from 'vite-plugin-ssr';
 import type { PageContextBuiltInClient } from 'vite-plugin-ssr/client'; // When using Server Routing
 import type { App, ComponentPublicInstance } from 'vue';
+import { Application } from '@server/types/applications';
+import { User } from '@server/types/users';
 
 type Page = ComponentPublicInstance;
 type PageProps = object;
+
+export type PageContextUser = User & { apps?: Application[] };
 
 export type PageContextInitCustom = {
   urlOriginal: string;
@@ -11,7 +15,7 @@ export type PageContextInitCustom = {
   isAuthenticated: boolean;
   expiredAuth: boolean;
   redirectTo?: string;
-  user?: Record<string, string>;
+  user?: PageContextUser;
 };
 
 export type PageContextCustom = {
@@ -30,7 +34,7 @@ export type PageContextCustom = {
   redirectTo?: string;
   isAuthenticated: boolean;
   expiredAuth: boolean;
-  user?: Record<string, string>;
+  user?: PageContextUser;
 };
 
 type PageContextServer = PageContextBuiltIn<Page> & PageContextCustom;

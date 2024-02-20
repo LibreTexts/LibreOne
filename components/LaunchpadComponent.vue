@@ -42,9 +42,9 @@
               height="160"
             >
             <div
-                class="app-item-icon-overlay"
-                v-if="!app.supports_cas"
-              >
+              class="app-item-icon-overlay"
+              v-if="!app.supports_cas"
+            >
               <FontAwesomeIcon
                 class="app-item-unsupported-icon"
                 icon="fa-solid fa-screwdriver-wrench"
@@ -142,9 +142,11 @@
   const props = withDefaults(
     defineProps<{
       authorized?: boolean;
+      publicApps?: Application[];
     }>(),
     {
       authorized: false,
+      publicApps: undefined,
     },
   );
   const pageContext = usePageContext();
@@ -156,14 +158,14 @@
   const libs = ref<Application[]>([]);
   const hasUnsupportedApps = computed(() =>
     apps.value.reduce((acc, curr) => {
-      if (!!acc) {
+      if (acc) {
         return true;
       }
       if (!curr.supports_cas) {
         return true;
       }
       return false;
-    }, false)
+    }, false),
   );
 
   // Init
@@ -176,11 +178,16 @@
   // Methods
   async function loadUsersApps() {
     try {
-      loading.value = true;
       if (!pageContext?.user?.uuid) {
         throw new Error('nouuid');
       }
+      if (pageContext.user?.apps) {
+        apps.value = pageContext.user.apps.filter((a) => a.app_type === 'standalone');
+        libs.value = pageContext.user.apps.filter((a) => a.app_type === 'library');
+        return;
+      }
 
+      loading.value = true;
       [apps.value, libs.value] = await getUserAppsAndLibraries(
         pageContext.user.uuid,
       );
@@ -193,6 +200,12 @@
 
   async function loadPublicApps() {
     try {
+      if (props.publicApps) {
+        apps.value = props.publicApps.filter((a) => a.app_type === 'standalone');
+        libs.value = props.publicApps.filter((a) => a.app_type === 'library');
+        return;
+      }
+
       loading.value = true;
 
       const res = await axios.get('/applications');

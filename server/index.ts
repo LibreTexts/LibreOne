@@ -55,7 +55,7 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
   const { expired, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
   let user;
   if (isAuthenticated && userUUID) {
-    user = await userController.getUserInternal(userUUID);
+    user = await userController.getUserInternal(userUUID, true);
   }
 
   const gatewayExcludePathPrefixes = ['/passwordrecovery', '/complete-registration'];

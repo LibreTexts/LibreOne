@@ -33,7 +33,6 @@ import type {
   UpdateUserPasswordBody,
   UpdateUserVerificationRequestBody,
   UserApplicationIDParams,
-  UserLibraryIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
 } from '../types/users';
@@ -148,7 +147,7 @@ export class UserController {
         }
 
         const authController = new AuthController();
-        await authController.notifyConductorOfUserLibraryAccess(foundUser, lib)
+        await authController.notifyConductorOfUserLibraryAccess(foundUser, lib);
       } catch (e) {
         console.error({
           msg: 'Library user creation failed!',
@@ -316,11 +315,53 @@ export class UserController {
    *
    * @todo Improve result typing.
    * @param uuid - User identifier.
+   * @param includeApps - Also resolve applications the user has access to.
    * @returns The located User, or null if not found.
    */
-  public async getUserInternal(uuid: string): Promise<Record<string, string> | null> {
+  public async getUserInternal(uuid: string, includeApps?: boolean): Promise<Record<string, string> | null> {
     const user = await User.findOne({ where: { uuid }});
-    return user?.get() || null;
+    if (!user) {
+      return null;
+    }
+    if (!includeApps) {
+      return user.get();
+    }
+    const userApps = await this.getUserAppsAndLibrariesInternal(user.get('uuid'));
+    return {
+      ...user.get(),
+      apps: userApps,
+    };
+  }
+
+  /**
+   * Retrieves applications that a user has explicit access to, libraries, and apps unsupported by LibreOne.
+   * @param uuid - User identifier.
+   * @returns Array of applications (POJOs).
+   */
+  public async getUserAppsAndLibrariesInternal(uuid: string): Promise<Application[]> {
+    const userApps = await Application.findAll({
+      where: { hide_from_user_apps: false },
+      include: [
+        {
+          model: User,
+          through: { attributes: [] },
+          where: { uuid },
+          attributes: [],
+        },
+      ],
+    });
+    const allApps = await Application.findAll({ where: { hide_from_apps: false } });
+    return Object.values([...userApps, ...allApps].reduce((acc, curr) => {
+      const isLibrary = curr.get('app_type') === 'library';
+      const isUnsupported = curr.get('supports_cas') === false;
+      if (
+        (isLibrary || isUnsupported || userApps.find((a) => a.get('id') === curr.get('id')))
+        && !acc[curr.get('id')]
+      ) {
+        acc[curr.get('id')] = curr.get();
+      }
+      return acc;
+    }, {} as Record<number, Application>));
   }
   
   /**
