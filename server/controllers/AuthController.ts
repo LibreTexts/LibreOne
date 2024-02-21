@@ -1057,7 +1057,8 @@ export class AuthController {
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
       'Authorization': `Bearer ${process.env.CONDUCTOR_API_KEY}`,
-    }
+      'Origin': process.env.PRODUCTION_DOMAIN ?? process.env.DOMAIN ?? 'one.libretexts.org',
+    };
   }
 
   public async notifyConductorOfUserLibraryAccess(user: User, library: string) {
@@ -1067,21 +1068,24 @@ export class AuthController {
 
       const payload = {
         central_identity_id: user.uuid,
-        library
-      }
+        library,
+      };
 
       const res = await axios.post(conductorWebhookURL, payload, {
-        headers: this._getConductorWebhookHeaders()
-      })
+        headers: this._getConductorWebhookHeaders(),
+      });
 
       if(res.data.err) {
         throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
-      return true
+      return true;
     } catch (err) {
-      console.error('Error notifying Conductor of user library access:', err);
-      return true // Fail silently
+      console.error({
+        msg: 'Error notifying Conductor of user library access!',
+        error: err,
+      });
+      return true; // Fail silently
     }
   }
 
@@ -1095,19 +1099,22 @@ export class AuthController {
         last_name: user.last_name,
         email: user.email,
         ...(user.avatar && { avatar: user.avatar }),
-      }
+      };
 
       const res = await axios.post(conductorWebhookURL, payload, {
-        headers: this._getConductorWebhookHeaders()
-      })
+        headers: this._getConductorWebhookHeaders(),
+      });
 
       if(res.data.err) {
         throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
-      return true
+      return true;
     } catch (err) {
-      console.error('Error notifying Conductor of new user:', err);
+      console.error({
+        msg: 'Error notifying Conductor of user library access!',
+        error: err,
+      });
       return false;
     }
   }
