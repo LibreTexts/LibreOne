@@ -512,7 +512,9 @@ export class AuthController {
       application_id: app.get('id'),
     }));
     try {
-      await UserApplication.bulkCreate(userAppsToCreate);
+      await UserApplication.bulkCreate(userAppsToCreate, {
+        ignoreDuplicates: true,
+      });
     } catch (e) {
       console.error('Error creating default user applications!', e);
     }
