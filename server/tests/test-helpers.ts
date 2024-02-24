@@ -26,6 +26,7 @@ export function testAppData(override?) {
     default_access: 'all',
     icon: 'https://libretexts.org/icon.png',
     description: 'An awesome application.',
+    auth_service_id: null,
     ...override,
   };
 }

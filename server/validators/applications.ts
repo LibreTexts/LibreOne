@@ -21,6 +21,7 @@ export const createApplicationSchema = joi.object({
   icon: joi.string().uri().required(),
   description: joi.string().min(2).max(100).required(),
   primary_color: joi.string().regex(/^#[A-Fa-f0-9]{6}/).required(), // hex color
+  auth_service_id: joi.number().integer().allow(null),
 });
 
 export const getAllApplicationsSchema = joi.object({
@@ -44,4 +45,5 @@ export const updateApplicationSchema = joi.object({
   icon: joi.string().uri(),
   description: joi.string().min(2).max(100),
   primary_color: joi.string().regex(/^#[A-Fa-f0-9]{6}/), // hex color
+  auth_service_id: joi.number().integer().allow(null),
 });
