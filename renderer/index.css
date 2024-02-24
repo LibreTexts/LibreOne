@@ -14,3 +14,11 @@ body {
   @apply h-full;
   @apply w-full;
 }
+
+.support-center-widget {
+  position: fixed;
+  z-index: 9999;
+  display: inline-flex;
+  bottom: 0px;
+  right: 10px;
+}
