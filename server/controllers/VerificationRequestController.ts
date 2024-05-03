@@ -21,6 +21,7 @@ import {
   VerificationRequestIDParams,
 } from '../types/verificationrequests';
 import { UserController } from './UserController';
+import {AuthController} from "@server/controllers/AuthController";
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
@@ -248,6 +249,10 @@ export class VerificationRequestController {
       ));
 
       await Promise.all(promises);
+
+      // Notify conductor of verification update
+      const authController = new AuthController();
+      await authController.notifyConductorOfVerificationUpdate(foundUser);
 
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),

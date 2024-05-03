@@ -10,6 +10,7 @@ node_modules/
 
 # IDEs
 .vscode/
+.idea/
 
 # macOS Metadata
 .DS_Store

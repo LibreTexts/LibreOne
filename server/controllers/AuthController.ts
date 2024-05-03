@@ -1120,4 +1120,31 @@ export class AuthController {
       return false;
     }
   }
+
+  public async notifyConductorOfVerificationUpdate(user: User) {
+    try {
+      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/verification-update' || 'http://localhost:5000/api/v1/central-identity/webhooks/verification-update';
+
+        const payload = {
+            central_identity_id: user.uuid,
+            verify_status: user.verify_status,
+        };
+
+        const res = await axios.post(conductorWebhookURL, payload, {
+          headers: this._getConductorWebhookHeaders(),
+        });
+
+        if(res.data.err) {
+          throw new Error(res.data.errMsg ?? 'Unknown error');
+        }
+
+        return true;
+    } catch (err) {
+        console.error({
+            msg: 'Error notifying Conductor of updated verification status!',
+            error: err,
+        });
+        return false;
+    }
+  }
 }
