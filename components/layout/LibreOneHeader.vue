@@ -33,7 +33,34 @@
           >
             {{ $t('common.donate') }}
           </a>
+           
+
         </div>
+        <div class = "flex flex-row items-center w-auto   ">
+      
+        <UserAvatar
+            :src="pageContext.user?.avatar"
+            :width="40"
+            class="mt-1"
+          />
+           
+      <div class = "ml-5 mr-5 text-l">
+
+          {{firstName+ " "+ lastName}}
+        
+      </div>
+       
+
+          <font-awesome-icon v-if= "isVerified===true"  icon="circle-check" class="w-5 h-5" style="color: #63E6BE;" />
+
+          <div class = "ml-2 mr-5 text-xs">
+
+                   {{"("+email+")"}}
+      </div>
+
+       
+        </div>
+
         <div class="flex flex-row mr-2">
           <button
             @click="$props.authorized ? handleLogout() : handleGoToLogin()"
@@ -61,6 +88,9 @@
         enter-active-class="motion-safe:transition-transform motion-safe:ease-out motion-safe:duration-300"
         leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
       >
+ 
+     
+ 
         <section
           v-if="menuOpen"
           class="flex flex-col justify-start w-full mt-3"
@@ -84,6 +114,7 @@
           </div>
         </section>
       </Transition>
+      
     </nav>
   </header>
 </template>
@@ -92,6 +123,27 @@
   import { ref, computed } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import AppSwitcher from './AppSwitcher.vue';
+  import { usePageContext } from '@renderer/usePageContext';
+  import UserAvatar from '../account_management/UserAvatar.vue';
+   
+
+const pageContext = usePageContext();
+  const firstName = ref('');
+  const lastName = ref('');
+  const email = ref('');
+  const verifyStatus = ref('');
+  
+ 
+  firstName.value = pageContext.user?.first_name ?? '';
+  lastName.value = pageContext.user?.last_name ?? '';
+  email.value = pageContext.user?.email?? '';
+  verifyStatus.value = pageContext.user?.verify_status;
+  const isVerified = verifyStatus.value ==='verified';
+  console.log(isVerified);
+  
+  
+  console.log(pageContext);
+  console.log(firstName.value);
 
   // Local Types
   type NavItem = {
