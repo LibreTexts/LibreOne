@@ -32,6 +32,9 @@
             />
           </div>
         </Transition>
+        <p class = "text-center">
+    You're currently logged in as {{pageContext.user.email}}
+    </p>
       </div>
     </div>
   </div>

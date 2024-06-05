@@ -21,9 +21,14 @@
             v-bind="componentProps"
             v-on="componentEvents"
           />
+          
         </Transition>
+        <p class = "text-center">
+    You're currently logged in as {{email }}
+    </p>
       </div>
     </div>
+ 
   </div>
 </template>
 
@@ -31,6 +36,8 @@
   import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
   import AuthForm from '@components/registration/AuthForm.vue';
   const VerifyEmail = defineAsyncComponent(() => import('@components/registration/VerifyEmail.vue'));
+  
+ 
 
   const props = defineProps<{
     loginURL: string;

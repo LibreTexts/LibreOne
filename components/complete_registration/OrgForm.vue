@@ -68,12 +68,15 @@
   >
     <LoadingIndicator class="!h-8 !w-8" />
   </div>
+
 </template>
 
 <script lang="ts" setup>
   import { computed, ref, Ref, watch } from 'vue';
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import { usePageContext } from '@renderer/usePageContext';
+  const pageContext = usePageContext();
 
   // Local Types
   type OrganizationResult = {

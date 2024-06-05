@@ -37,6 +37,7 @@
   >
     <LoadingIndicator class="!h-8 !w-8" />
   </div>
+    
 </template>
 
 <script setup lang="ts">
@@ -45,6 +46,8 @@
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import ThemedInput from '../ThemedInput.vue';
   import ThemedButton from '../ThemedButton.vue';
+  import { usePageContext } from '@renderer/usePageContext';
+  const pageContext = usePageContext();
 
   // Local Types
   type StudentIdPatch = {

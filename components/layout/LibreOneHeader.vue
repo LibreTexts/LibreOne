@@ -5,16 +5,13 @@
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <AppSwitcher
-          class="ml-2 pt-1"
-          v-if="$props.authorized"
-        />
+        <AppSwitcher class="ml-2 pt-1" v-if="$props.authorized" />
         <img
           src="@renderer/libretexts_logo.png"
           alt="LibreTexts Logo"
           class="h-9 w-auto mb-1"
           v-else
-        >
+        />
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -31,34 +28,30 @@
             key="donate-link"
             class="text-md font-semibold leading-6 text-gray-900 ml-6"
           >
-            {{ $t('common.donate') }}
+            {{ $t("common.donate") }}
           </a>
-           
-
         </div>
-        <div class = "flex flex-row items-center w-auto   ">
-      
-        <UserAvatar
+        <div class="flex flex-row items-center w-auto">
+          <UserAvatar
             :src="pageContext.user?.avatar"
             :width="40"
             class="mt-1"
           />
-           
-      <div class = "ml-5 mr-5 text-l">
 
-          {{firstName+ " "+ lastName}}
-        
-      </div>
-       
+          <div class="ml-5 mr-5 text-l font-semibold">
+            {{ firstName + " " + lastName }}
+          </div>
 
-          <font-awesome-icon v-if= "isVerified===true"  icon="circle-check" class="w-5 h-5" style="color: #63E6BE;" />
+          <font-awesome-icon
+            v-if="isVerified === true"
+            icon="circle-check"
+            class="w-5 h-5"
+            style="color: #63e6be"
+          />
 
-          <div class = "ml-2 mr-5 text-xs">
-
-                   {{"("+email+")"}}
-      </div>
-
-       
+          <div class="ml-2 mr-5 text-xs">
+            {{ "(" + email + ")" }}
+          </div>
         </div>
 
         <div class="flex flex-row mr-2">
@@ -88,9 +81,6 @@
         enter-active-class="motion-safe:transition-transform motion-safe:ease-out motion-safe:duration-300"
         leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
       >
- 
-     
- 
         <section
           v-if="menuOpen"
           class="flex flex-col justify-start w-full mt-3"
@@ -114,88 +104,84 @@
           </div>
         </section>
       </Transition>
-      
     </nav>
   </header>
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed } from 'vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import AppSwitcher from './AppSwitcher.vue';
-  import { usePageContext } from '@renderer/usePageContext';
-  import UserAvatar from '../account_management/UserAvatar.vue';
-   
+import { ref, computed } from "vue";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import AppSwitcher from "./AppSwitcher.vue";
+import { usePageContext } from "@renderer/usePageContext";
+import UserAvatar from "../account_management/UserAvatar.vue";
 
 const pageContext = usePageContext();
-  const firstName = ref('');
-  const lastName = ref('');
-  const email = ref('');
-  const verifyStatus = ref('');
-  
- 
-  firstName.value = pageContext.user?.first_name ?? '';
-  lastName.value = pageContext.user?.last_name ?? '';
-  email.value = pageContext.user?.email?? '';
-  verifyStatus.value = pageContext.user?.verify_status;
-  const isVerified = verifyStatus.value ==='verified';
-  console.log(isVerified);
-  
-  
-  console.log(pageContext);
-  console.log(firstName.value);
+const firstName = ref("");
+const lastName = ref("");
+const email = ref("");
+const verifyStatus = ref("");
 
-  // Local Types
-  type NavItem = {
-    title: string;
-    link: string;
-  };
+firstName.value = pageContext.user?.first_name ?? "";
+lastName.value = pageContext.user?.last_name ?? "";
+email.value = pageContext.user?.email ?? "";
+verifyStatus.value = pageContext.user?.verify_status;
+const isVerified = verifyStatus.value === "verified";
+console.log(isVerified);
 
-  // Props & Context
-  const props = withDefaults(
-    defineProps<{
-      authorized?: boolean;
-    }>(),
-    {
-      authorized: false,
-    },
-  );
+console.log(pageContext);
+console.log(firstName.value);
 
-  // Data & UI
-  const menuOpen = ref<boolean>(false);
-  const baseItems: NavItem[] = [
-    {
-      title: 'Home',
-      link: '/home',
-    },
-  ];
-  const authItems: NavItem[] = [
-    {
-      title: 'Profile',
-      link: '/profile',
-    },
-    {
-      title: 'Security',
-      link: '/security',
-    },
-    {
-      title: 'Instructor',
-      link: '/instructor',
-    },
-  ];
+// Local Types
+type NavItem = {
+  title: string;
+  link: string;
+};
 
-  const navItems = computed<NavItem[]>(() => {
-    return [...baseItems, ...(props.authorized ? authItems : [])];
-  });
-
-  // Methods
-  function handleLogout() {
-    window.location.href = '/api/v1/auth/logout';
+// Props & Context
+const props = withDefaults(
+  defineProps<{
+    authorized?: boolean;
+  }>(),
+  {
+    authorized: false,
   }
+);
 
-  function handleGoToLogin() {
-    window.location.href = '/api/v1/auth/login';
-  }
+// Data & UI
+const menuOpen = ref<boolean>(false);
+const baseItems: NavItem[] = [
+  {
+    title: "Home",
+    link: "/home",
+  },
+];
+const authItems: NavItem[] = [
+  {
+    title: "Profile",
+    link: "/profile",
+  },
+  {
+    title: "Security",
+    link: "/security",
+  },
+  {
+    title: "Instructor",
+    link: "/instructor",
+  },
+];
+
+const navItems = computed<NavItem[]>(() => {
+  return [...baseItems, ...(props.authorized ? authItems : [])];
+});
+
+// Methods
+function handleLogout() {
+  window.location.href = "/api/v1/auth/logout";
+}
+
+function handleGoToLogin() {
+  window.location.href = "/api/v1/auth/login";
+}
 </script>
 
 <style lang="css">

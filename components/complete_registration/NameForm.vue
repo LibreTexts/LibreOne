@@ -62,6 +62,7 @@
         {{ $t('complete_registration_name.updatelater') }}
       </p>
     </form>
+  
   </div>
 </template>
 
@@ -71,6 +72,9 @@
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME } from '@server/helpers';
+  import { usePageContext } from '@renderer/usePageContext';
+  const pageContext = usePageContext();
+  console.log(pageContext);
 
   // Props && Hooks
   const props = defineProps<{
@@ -82,6 +86,7 @@
     (e: 'name-update', firstName: string, lastName: string): void;
   }>();
   const axios = useAxios();
+
 
   // Data && UI
   const loading = ref(false);
