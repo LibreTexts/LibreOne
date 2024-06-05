@@ -1,9 +1,19 @@
 <template>
   <div :aria-busy="isLoading">
     <div
-      v-if="user?.external_idp"
-      class="flex flex-col text-center my-6"
+      v-if="user?.external_idp" 
+      class="flex flex-col text-center"
     >
+    <div class = "text-med  text-left mb-6">
+       <p class = "ml-0 font-semibold">
+          {{ $t("common.email") }}
+        </p>
+        <p >
+          {{ user?.email }}
+        </p>
+
+    </div>
+       
       <p class="text-md font-medium">
         {{ $t("security.external") }}
       </p>
@@ -64,7 +74,7 @@
           </p>
           <ThemedButton
             variant="outlined"
-            class="mt-2"
+            class='mt-2 '
             @click="() => (editPassword = true)"
             small
           >
@@ -81,7 +91,9 @@
   import ThemedButton from '../ThemedButton.vue';
   import NewEmailForm from './NewEmailForm.vue';
   import NewPasswordForm from './NewPasswordForm.vue';
+ import { usePageContext } from '@renderer/usePageContext';
   import { useI18n } from 'vue-i18n';
+  
 
   const emit = defineEmits<{
     (e: 'set-unknown-error', error: boolean): void;
