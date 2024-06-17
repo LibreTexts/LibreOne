@@ -25,7 +25,7 @@ import { VerificationRequest } from './VerificationRequest';
 
 @DefaultScope(() => ({
   attributes: {
-    exclude: ['password', 'last_access', 'ip_address', 'email_verify_code'],
+    exclude: ['password', 'ip_address', 'email_verify_code'],
   },
 }))
 @Table({
