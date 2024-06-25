@@ -3,6 +3,7 @@
 
 # Output
 dist/
+vite.config.*.timestamp-*
 
 # Dependencies
 node_modules/
