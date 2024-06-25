@@ -61,6 +61,9 @@
     <p class="text-xs text-center text-gray-500 mt-4">
       {{ $t('register.verify_thanks') }}
     </p>
+ 
+
+   
   </div>
 </template>
 
@@ -77,6 +80,7 @@
   const code = ref('');
   const codeErr = ref(false);
   const verifyErr = ref(false);
+ 
 
   const loading = ref(false);
 

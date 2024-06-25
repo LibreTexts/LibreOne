@@ -21,9 +21,11 @@
             v-bind="componentProps"
             v-on="componentEvents"
           />
+          
         </Transition>
       </div>
     </div>
+ 
   </div>
 </template>
 
@@ -31,6 +33,8 @@
   import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
   import AuthForm from '@components/registration/AuthForm.vue';
   const VerifyEmail = defineAsyncComponent(() => import('@components/registration/VerifyEmail.vue'));
+  
+ 
 
   const props = defineProps<{
     loginURL: string;

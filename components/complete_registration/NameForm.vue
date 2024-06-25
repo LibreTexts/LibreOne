@@ -62,6 +62,7 @@
         {{ $t('complete_registration_name.updatelater') }}
       </p>
     </form>
+  
   </div>
 </template>
 
@@ -82,6 +83,7 @@
     (e: 'name-update', firstName: string, lastName: string): void;
   }>();
   const axios = useAxios();
+
 
   // Data && UI
   const loading = ref(false);

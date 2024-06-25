@@ -3,6 +3,8 @@
   <div id="support-widget-container" class="support-center-widget"></div>
 </template>
 
+
+
 <script lang="ts" setup>
 import { onMounted } from "vue";
 

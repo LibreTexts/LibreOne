@@ -11,6 +11,10 @@
       <div
         class="bg-white p-6 mt-6 shadow-md shadow-gray-400 rounded-md overflow-hidden min-h-[16em]"
       >
+      
+      <p class="text-center lg:text-right text-sm text-slate-600 mb-4 lg:mb-2">
+          {{ $t("register.logged_in_as") }} <span class="font-semibold">{{pageContext?.user?.email}}</span>
+        </p>
         <Transition
           mode="out-in"
           enter-from-class="motion-safe:translate-x-full"

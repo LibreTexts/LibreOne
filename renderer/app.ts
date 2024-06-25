@@ -14,6 +14,7 @@ import {
   faRocket,
   faKey,
   faScrewdriverWrench,
+  faRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 import { setPageContext } from './usePageContext';
 import { initAxios } from './useAxios';
@@ -78,6 +79,7 @@ export function createApp(pageContext: PageContext): App<Element> {
     faKey,
     faRocket,
     faScrewdriverWrench,
+    faRightFromBracket,
   );
   app.component('FontAwesomeIcon', FontAwesomeIcon);
 
