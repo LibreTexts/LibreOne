@@ -1,6 +1,6 @@
 <template>
   <button
-    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 mr-5"
+    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md p-2 mr-5"
     @click="isOpen = !isOpen"
     @keydown.prevent.enter="isOpen = !isOpen"
     tabindex="0"
@@ -13,7 +13,7 @@
   
     <FontAwesomeIcon
       icon="fa-solid fa-rocket"
-      class="switcher-icon text-primary rounded-md"
+      class="text-primary rounded-md"
       size="2x"
     />
     <ul
@@ -137,10 +137,6 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
   z-index: 100;
-}
-.switcher-icon {
-  padding-top: 6px;
-  padding-bottom: 1px;
 }
 .switcher-item {
   padding: 0.5rem;
