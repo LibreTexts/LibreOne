@@ -1,24 +1,20 @@
 <template>
   <button
-    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 pt-1"
+    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md p-2 mr-5"
     @click="isOpen = !isOpen"
     @keydown.prevent.enter="isOpen = !isOpen"
     tabindex="0"
     :class="
       isOpen
-        ? 'shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md px-2 pt-1'
+        ? 'shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md  '
         : ''
     "
   >
-    <img
-      src="@renderer/libretexts_logo.png"
-      alt="LibreTexts Logo"
-      class="h-9 w-auto mb-1"
-    >
+  
     <FontAwesomeIcon
       icon="fa-solid fa-rocket"
-      class="switcher-icon text-primary rounded-md px-2 mt-1 ml-2"
-      size="lg"
+      class="text-primary rounded-md"
+      size="2x"
     />
     <ul
       v-if="isOpen"
@@ -71,6 +67,11 @@
       </li>
     </ul>
   </button>
+    <img
+      src="@renderer/libretexts_logo.png"
+      alt="LibreTexts Logo"
+      class="h-9 w-auto"
+    >
 </template>
 
 <script lang="ts" setup>
@@ -136,10 +137,6 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
   z-index: 100;
-}
-.switcher-icon {
-  padding-top: 6px;
-  padding-bottom: 1px;
 }
 .switcher-item {
   padding: 0.5rem;
