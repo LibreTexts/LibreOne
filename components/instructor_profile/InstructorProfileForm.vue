@@ -63,6 +63,7 @@
           :label="$t('instructor.applications')"
           :placeholder="$t('instructor.applications_placeholder')"
           :instructions="$t('instructor.applications_desc')"
+            v-if=!isVerified
           :options="
             availableApps.map((app) => {
               return {
@@ -90,6 +91,7 @@
             })
           "
           v-model:value="selectedSpecialLibs"
+          v-if=!isVerified
           :max="3"
           multiple
           class="my-4"
@@ -135,6 +137,7 @@
   const { t } = useI18n();
   const axios = useAxios();
   const pageContext = usePageContext();
+  const isVerified = pageContext.user.verify_status == 'verified';
   const props = withDefaults(
     defineProps<{
       status?: string;
