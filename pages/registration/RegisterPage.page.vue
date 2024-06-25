@@ -23,9 +23,6 @@
           />
           
         </Transition>
-        <p class = "text-center">
-    You're currently logged in as {{email }}
-    </p>
       </div>
     </div>
  

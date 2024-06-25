@@ -31,39 +31,35 @@
             {{ $t("common.donate") }}
           </a>
         </div>
-        <div class="flex flex-row items-center w-auto">
+        <div class="hidden lg:flex flex-row items-center w-auto">
           <UserAvatar
             :src="pageContext.user?.avatar"
             :width="40"
             class="mt-1"
           />
 
-          <div class="ml-5 mr-5 text-l font-semibold">
-            {{ firstName + " " + lastName }}
+          <div class="flex flex-col ml-2 mr-4">
+          <div class="text-l font-semibold">
+            {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
           </div>
-
-          <font-awesome-icon
-            v-if="isVerified === true"
-            icon="circle-check"
-            class="w-5 h-5"
-            style="color: #63e6be"
-          />
-
-          <div class="ml-2 mr-5 text-xs">
-            {{ "(" + email + ")" }}
+          <div class="text-xs">
+            <span>{{ pageContext.user?.email }}</span>
+            <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
           </div>
         </div>
+        </div>
 
-        <div class="flex flex-row mr-2">
+        <div class="flex flex-row mr-2 items-center">
           <button
             @click="$props.authorized ? handleLogout() : handleGoToLogin()"
-            class="hidden md:block text-sm font-semibold leading-6"
+            class="hidden lg:block text-sm font-semibold leading-6"
             :class="$props.authorized ? 'text-gray-500' : 'text-black'"
           >
-            {{ $t($props.authorized ? "common.logout" : "common.signin") }}
+            <font-awesome-icon icon="right-from-bracket" class="w-6 h-6 mt-1.5" v-if="$props.authorized" />
+            <span v-else>{{ $t("common.signin") }}</span>
           </button>
           <FontAwesomeIcon
-            class="md:hidden clicked-animation"
+            class="lg:hidden clicked-animation"
             @click="menuOpen = !menuOpen"
             aria-label="Open Navigation Menu"
             :class="menuOpen ? 'motion-safe:-rotate-90' : ''"
@@ -86,6 +82,23 @@
           class="flex flex-col justify-start w-full mt-3"
         >
           <div class="flex flex-col justify-start items-start w-full">
+            <div class="flex flex-row items-center w-auto">
+            <UserAvatar
+              :src="pageContext.user?.avatar"
+              :width="40"
+              class="mt-1"
+            />
+
+            <div class="flex flex-col ml-2 mr-4">
+              <div class="text-l font-semibold line-clamp-2">
+                {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
+              </div>
+              <div class="text-xs">
+                <span>{{ pageContext.user?.email }}</span>
+                <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
+              </div>
+            </div>
+          </div>
             <a
               v-for="(item, idx) in navItems"
               :key="idx"
@@ -116,20 +129,7 @@ import { usePageContext } from "@renderer/usePageContext";
 import UserAvatar from "../account_management/UserAvatar.vue";
 
 const pageContext = usePageContext();
-const firstName = ref("");
-const lastName = ref("");
-const email = ref("");
-const verifyStatus = ref("");
-
-firstName.value = pageContext.user?.first_name ?? "";
-lastName.value = pageContext.user?.last_name ?? "";
-email.value = pageContext.user?.email ?? "";
-verifyStatus.value = pageContext.user?.verify_status;
-const isVerified = verifyStatus.value === "verified";
-console.log(isVerified);
-
 console.log(pageContext);
-console.log(firstName.value);
 
 // Local Types
 type NavItem = {

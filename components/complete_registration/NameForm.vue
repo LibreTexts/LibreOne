@@ -72,9 +72,6 @@
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME } from '@server/helpers';
-  import { usePageContext } from '@renderer/usePageContext';
-  const pageContext = usePageContext();
-  console.log(pageContext);
 
   // Props && Hooks
   const props = defineProps<{

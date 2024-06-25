@@ -38,6 +38,7 @@
     "create": "Create account",
     "ordelegated": "Or, register with:",
     "legalnotice": "By registering with LibreTexts, you agree to our {privpolicy} and {tos}.",
+    "logged_in_as": "You are currently logged in as:",
     "register": "Register",
     "registering": "Registering...",
     "existingaccount": "Already have an account?",
