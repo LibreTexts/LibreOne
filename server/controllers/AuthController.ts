@@ -1123,7 +1123,7 @@ export class AuthController {
 
   public async notifyConductorOfVerificationUpdate(user: User) {
     try {
-      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/verification-update' || 'http://localhost:5000/api/v1/central-identity/webhooks/verification-update';
+      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/verify-status' || 'http://localhost:5000/api/v1/central-identity/webhooks/verify-status';
 
         const payload = {
             central_identity_id: user.uuid,
