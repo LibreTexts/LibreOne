@@ -5,13 +5,16 @@
       aria-label="Global"
     >
       <section class="flex flex-row w-full items-center justify-between">
-        <AppSwitcher class="ml-2 pt-1" v-if="$props.authorized" />
+        <AppSwitcher
+          class="ml-2 pt-1"
+          v-if="$props.authorized"
+        />
         <img
           src="@renderer/libretexts_logo.png"
           alt="LibreTexts Logo"
           class="h-9 w-auto mb-1"
           v-else
-        />
+        >
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
@@ -31,7 +34,10 @@
             {{ $t("common.donate") }}
           </a>
         </div>
-        <div class="hidden lg:flex flex-row items-center w-auto">
+        <div
+          class="hidden lg:flex flex-row items-center w-auto"
+          v-if="$props.authorized"
+        >
           <UserAvatar
             :src="pageContext.user?.avatar"
             :width="40"
@@ -39,14 +45,14 @@
           />
 
           <div class="flex flex-col ml-2 mr-4">
-          <div class="text-l font-semibold">
-            {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
+            <div class="text-l font-semibold">
+              {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
+            </div>
+            <div class="text-xs">
+              <span>{{ pageContext.user?.email }}</span>
+              <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
+            </div>
           </div>
-          <div class="text-xs">
-            <span>{{ pageContext.user?.email }}</span>
-            <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
-          </div>
-        </div>
         </div>
 
         <div class="flex flex-row mr-2 items-center">
@@ -55,7 +61,11 @@
             class="hidden lg:block text-sm font-semibold leading-6"
             :class="$props.authorized ? 'text-gray-500' : 'text-black'"
           >
-            <font-awesome-icon icon="right-from-bracket" class="w-6 h-6 mt-1.5" v-if="$props.authorized" />
+            <FontAwesomeIcon
+              icon="right-from-bracket"
+              class="w-6 h-6 mt-1.5"
+              v-if="$props.authorized"
+            />
             <span v-else>{{ $t("common.signin") }}</span>
           </button>
           <FontAwesomeIcon
@@ -82,23 +92,28 @@
           class="flex flex-col justify-start w-full mt-3"
         >
           <div class="flex flex-col justify-start items-start w-full">
-            <div class="flex flex-row items-center w-auto">
-            <UserAvatar
-              :src="pageContext.user?.avatar"
-              :width="40"
-              class="mt-1"
-            />
+            <div
+              class="flex flex-row items-center w-auto"
+              v-if="$props.authorized"
+            >
+              <UserAvatar
+                :src="pageContext.user?.avatar"
+                :width="40"
+                class="mt-1"
+              />
 
-            <div class="flex flex-col ml-2 mr-4">
-              <div class="text-l font-semibold line-clamp-2">
-                {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
-              </div>
-              <div class="text-xs">
-                <span>{{ pageContext.user?.email }}</span>
-                <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
+              <div
+                class="flex flex-col ml-2 mr-4"
+              >
+                <div class="text-l font-semibold line-clamp-2">
+                  {{ pageContext.user?.first_name + " " + pageContext.user?.last_name }}
+                </div>
+                <div class="text-xs">
+                  <span>{{ pageContext.user?.email }}</span>
+                  <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
+                </div>
               </div>
             </div>
-          </div>
             <a
               v-for="(item, idx) in navItems"
               :key="idx"
@@ -122,66 +137,65 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from "vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import AppSwitcher from "./AppSwitcher.vue";
-import { usePageContext } from "@renderer/usePageContext";
-import UserAvatar from "../account_management/UserAvatar.vue";
+  import { ref, computed } from 'vue';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import AppSwitcher from './AppSwitcher.vue';
+  import { usePageContext } from '@renderer/usePageContext';
+  import UserAvatar from '../account_management/UserAvatar.vue';
 
-const pageContext = usePageContext();
-console.log(pageContext);
+  const pageContext = usePageContext();
 
-// Local Types
-type NavItem = {
-  title: string;
-  link: string;
-};
+  // Local Types
+  type NavItem = {
+    title: string;
+    link: string;
+  };
 
-// Props & Context
-const props = withDefaults(
-  defineProps<{
-    authorized?: boolean;
-  }>(),
-  {
-    authorized: false,
+  // Props & Context
+  const props = withDefaults(
+    defineProps<{
+      authorized?: boolean;
+    }>(),
+    {
+      authorized: false,
+    },
+  );
+
+  // Data & UI
+  const menuOpen = ref<boolean>(false);
+  const baseItems: NavItem[] = [
+    {
+      title: 'Home',
+      link: '/home',
+    },
+  ];
+  const authItems: NavItem[] = [
+    {
+      title: 'Profile',
+      link: '/profile',
+    },
+    {
+      title: 'Security',
+      link: '/security',
+    },
+    {
+      title: 'Instructor',
+      link: '/instructor',
+    },
+  ];
+
+  const navItems = computed<NavItem[]>(() => {
+    return [...baseItems, ...(props.authorized ? authItems : [])];
+  });
+
+  // Methods
+  function handleLogout() {
+    window.location.href = '/api/v1/auth/logout';
   }
-);
 
-// Data & UI
-const menuOpen = ref<boolean>(false);
-const baseItems: NavItem[] = [
-  {
-    title: "Home",
-    link: "/home",
-  },
-];
-const authItems: NavItem[] = [
-  {
-    title: "Profile",
-    link: "/profile",
-  },
-  {
-    title: "Security",
-    link: "/security",
-  },
-  {
-    title: "Instructor",
-    link: "/instructor",
-  },
-];
-
-const navItems = computed<NavItem[]>(() => {
-  return [...baseItems, ...(props.authorized ? authItems : [])];
-});
-
-// Methods
-function handleLogout() {
-  window.location.href = "/api/v1/auth/logout";
-}
-
-function handleGoToLogin() {
-  window.location.href = "/api/v1/auth/login";
-}
+  function handleGoToLogin() {
+    window.location.href = '/api/v1/auth/login';
+  }
 </script>
 
 <style lang="css">
