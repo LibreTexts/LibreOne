@@ -137,7 +137,7 @@
   const { t } = useI18n();
   const axios = useAxios();
   const pageContext = usePageContext();
-  const isVerified = pageContext.user.verify_status == 'verified';
+  const isVerified = pageContext?.user?.verify_status == 'verified';
   const props = withDefaults(
     defineProps<{
       status?: string;

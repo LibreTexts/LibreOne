@@ -39,7 +39,7 @@
   const pageContext = usePageContext();
 
   const instructorStatus = computed(() => {
-    return pageContext.user?.verify_status;
+    return pageContext?.user?.verify_status;
   });
 </script>
 <style lang="css" scoped>
