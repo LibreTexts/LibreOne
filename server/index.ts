@@ -60,7 +60,10 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
 
   const gatewayExcludePathPrefixes = ['/passwordrecovery', '/complete-registration'];
   const pathExcluded = !!gatewayExcludePathPrefixes.find((p) => req.path.includes(p));
-  if (!isAuthenticated && !pathExcluded && !req.cookies.one_tried_gateway) {
+  
+  const triedGateway = process.env.NODE_ENV === 'development' ? true : req.cookies.one_tried_gateway;
+
+  if (!isAuthenticated && !pathExcluded && !triedGateway) {
     const redirParams = new URLSearchParams({
       redirectURI: encodeURIComponent(req.url),
       tryGateway: 'true',
