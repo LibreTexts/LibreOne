@@ -111,6 +111,7 @@ export class VerificationRequestController {
       offset,
       limit,
       order: sequelize.literal('created_at'),
+      distinct: true,
       include: [
         {
           model: AccessRequest,
