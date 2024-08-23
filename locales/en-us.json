@@ -203,7 +203,10 @@
     "one_app_or_lib": "You must select at least one application or special library.",
     "verify_reminder_header": "Verify Your Instructor Status",
     "verify_reminder_msg": "Heads up! You have not yet verified your instructor status.",
-    "verify_reminder_link": "Please click here to start the verification process."
+    "verify_reminder_link": "Please click here to start the verification process.",
+    "adapt_access_header": "Need an ADAPT Access Code?",
+    "adapt_access_msg": "Make sure you have completed the instructor verification process first.",
+    "adapt_access_link": "Then, click here to request an access code."
   },
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",
