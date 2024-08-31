@@ -21,7 +21,9 @@ import {
   VerificationRequestIDParams,
 } from '../types/verificationrequests';
 import { UserController } from './UserController';
-import {AuthController} from "@server/controllers/AuthController";
+import { AuthController } from "@server/controllers/AuthController";
+import { SignJWT } from 'jose';
+import axios from 'axios';
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
@@ -255,10 +257,15 @@ export class VerificationRequestController {
       const authController = new AuthController();
       await authController.notifyConductorOfVerificationUpdate(foundUser);
 
+      // Generate ADAPT access code if it was requested (and approved)
+      const foundADAPTApp = approvedApps.find((a) => a.get('name') === 'ADAPT');
+      const adaptAccessCode = foundADAPTApp ? await this._generateADAPTAccessCode() : null;
+
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),
         props.reason,
         approvedApps.map((a) => a.get('name')),
+        adaptAccessCode || undefined,
       );
       return foundReq;
     });
@@ -343,7 +350,7 @@ export class VerificationRequestController {
     return true;
   }
 
-  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string, applicationNames?: string[]) {
+  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string, applicationNames?: string[], adaptAccessCode?: string | null) {
     const mailSender = new MailController();
     if (mailSender.isReady()) {
       const emailRes = await mailSender.send({
@@ -362,7 +369,15 @@ export class VerificationRequestController {
             ${applicationNames.map((a) => `<li>${a}</li>`).join('')}
             </ul>
           ` : ''}
-          <p>If you have further questions, please feel free to reach out to <a href="mailto:support@libretexts.org">support@libretexts.org</a>.</p>
+          ${adaptAccessCode && adaptAccessCode !== 'error' ? `
+            <p><strong>Your ADAPT access code is: ${adaptAccessCode}</strong> . You can create your ADAPT instructor account <a href="https://adapt.libretexts.org/register/instructor" target="_blank">here</a>. Please note, access codes are only valid for 48 hours from their creation.</p>
+            <p><strong>Remember:</strong> ADAPT isn't integrated with LibreOne yet. You'll need to create separate credentials for use with ADAPT until that time.</p>
+          ` : 
+            adaptAccessCode === 'error' ? `
+              <p>There was an issue generating your ADAPT access code. Please contact support.</p>
+              ` : ''
+          }
+          <p>If you have further questions, please feel free to submit a ticket in our <a href="https://commons.libretexts.org/support/contact" target="_blank">Support Center</a>.</p>
           <p>Best,</p>
           <p>The LibreTexts Team</p>
         `,
@@ -405,7 +420,7 @@ export class VerificationRequestController {
       console.error('Mail sender not ready for verification request change requested user notification.');
       return false;
     }
-    return true; 
+    return true;
   }
 
   public async sendUserRequestDeniedNotification(userEmail: string, comment?: string) {
@@ -437,4 +452,37 @@ export class VerificationRequestController {
     return true;
   }
 
+  /**
+   * Generates an ADAPT access code for a user.
+   * @returns ADAPT access code or false if failed.
+   */
+  private async _generateADAPTAccessCode(): Promise<string | 'error'> {
+    try {
+      if (!process.env.ADAPT_ACCESS_TOKEN) {
+        throw new Error('Missing required environment variable.');
+      }
+
+      const encoded = new TextEncoder().encode(process.env.ADAPT_ACCESS_TOKEN);
+      const jwtToSend = await new SignJWT({}).setProtectedHeader({ alg: 'HS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(encoded);
+
+      const adaptRes = await axios.get<{ type: 'success', access_code: string } | { type: 'error', message: string }>('https://adapt.libretexts.org/api/access-code/instructor', {
+        headers: {
+          Authorization: `Bearer ${jwtToSend}`,
+        },
+      });
+
+      if (adaptRes.data.type === 'error') {
+        throw new Error(adaptRes.data.message);
+      }
+
+      if (!adaptRes.data.access_code) {
+        throw new Error('No access code returned from ADAPT.');
+      }
+
+      return adaptRes.data.access_code;
+    } catch (err) {
+      console.error('Error generating ADAPT access code:', err);
+      return 'error';
+    }
+  }
 }
