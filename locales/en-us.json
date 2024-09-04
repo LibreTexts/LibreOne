@@ -24,7 +24,9 @@
     "select": "Select",
     "comingsoon": "Coming Soon...",
     "here": "here",
-    "donate": "Donate"
+    "donate": "Donate",
+    "note": "Note",
+    "warning": "Warning"
   },
   "welcome": {
     "register": "Register For A LibreOne Account",
@@ -206,7 +208,8 @@
     "verify_reminder_link": "Please click here to start the verification process.",
     "adapt_access_header": "Need an ADAPT Access Code?",
     "adapt_access_msg": "Access codes are sent when your instructor verification is approved. If you need a new code, ",
-    "adapt_access_link": "please click here to request one."
+    "adapt_access_link": "please click here to request one.",
+    "adapt_note": "You have selected ADAPT. If your request is approved, you will receive an access code by email that is valid for 48 hours. Please ensure you monitor your inbox for this approval message."
   },
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",
