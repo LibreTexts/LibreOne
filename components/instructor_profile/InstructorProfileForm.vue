@@ -77,6 +77,9 @@
           class="my-4"
           :msprops="{closeOnSelect: true}"
         />
+        <p v-if="didSelectADAPT" class="italic">
+          <span class="text-blue-600 font-bold">{{ $t('common.note') }}:</span> {{ $t('instructor.adapt_note') }}
+        </p>
         <ThemedSelectInput
           id="libs_select_input"
           :label="$t('instructor.special_libraries')"
@@ -212,6 +215,12 @@
       return app.app_type === 'library' && app.is_default_library === false;
     }) ?? [];
   });
+
+  const didSelectADAPT = computed(() => {
+    const foundID = availableApps.value.find((app) => app.name.toLowerCase() === 'adapt');
+    if(!foundID) return false;
+    return selectedApps.value.includes(foundID.id);
+  })
 
   // Watchers
   watch(
