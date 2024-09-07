@@ -727,6 +727,14 @@ export class AuthController {
       });
     }
 
+    // <update last_access timestamp>
+    try {
+      await foundUser.update({ last_access: new Date() });
+    } catch (err) {
+      console.warn(`Error updating last access time for user ${foundUser.get('uuid')}`);
+    }
+    // </update last_access timestamp>
+
     if (!foundUser.registration_complete) {
       const redirectParams = new URLSearchParams({
         redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
