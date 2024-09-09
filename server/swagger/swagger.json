@@ -1,0 +1,1245 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "LibreOne API",
+        "version": "1.25.0",
+        "description": "API for LibreOne.",
+        "license": {
+            "name": "MIT",
+            "url": "https: //opensource.org/licenses/MIT"
+        },
+        "contact": {
+            "name": "LibreTexts",
+            "url": "https: //libretexts.org"
+        }
+    },
+    "paths": {
+        "/licenses": {
+            "get": {
+                "summary": "Get all licenses",
+                "operationId": "getLicenses",
+                "tags": [
+                    "licenses"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Limit the number of licenses returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Offset the licenses returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": false,
+                        "description": "Search for licenses"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/License"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/licenses/{licenseID}": {
+            "get": {
+                "summary": "Get a license",
+                "operationId": "getLicense",
+                "tags": [
+                    "licenses"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "licenseID",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true,
+                        "description": "License ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/License"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/organizations": {
+            "get": {
+                "summary": "Get all organizations",
+                "operationId": "getOrganizations",
+                "tags": [
+                    "organizations"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Limit the number of organizations returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Offset the organizations returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": false,
+                        "description": "Search for organizations"
+                    },
+                    {
+                        "in": "query",
+                        "name": "onlyUnassociated",
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "required": false,
+                        "description": "Get only organizations that are not associated with a user"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "limit": {
+                                                    "type": "integer"
+                                                },
+                                                "offset": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Organization"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "summary": "Get all users",
+                "operationId": "getUsers",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Limit the number of users returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": false,
+                        "description": "Offset the users returned"
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": false,
+                        "description": "Search for users"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "limit": {
+                                                    "type": "integer"
+                                                },
+                                                "offset": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/principal-attributes": {
+            "get": {
+                "summary": "Get principal attributes",
+                "operationId": "getPrincipalAttributes",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "username",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "Email or uuid of the user"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "uuid": {
+                                            "type": "string"
+                                        },
+                                        "email": {
+                                            "type": "string"
+                                        },
+                                        "first_name": {
+                                            "type": "string"
+                                        },
+                                        "last_name": {
+                                            "type": "string"
+                                        },
+                                        "organizations": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Organization"
+                                            }
+                                        },
+                                        "user_type": {
+                                            "type": "string"
+                                        },
+                                        "bio_url": {
+                                            "type": "string"
+                                        },
+                                        "verify_status": {
+                                            "type": "string"
+                                        },
+                                        "picture": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}": {
+            "get": {
+                "summary": "Get a user",
+                "operationId": "getUser",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Update a user",
+                "operationId": "updateUser",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "bio_url": {
+                                        "type": "string"
+                                    },
+                                    "user_type": {
+                                        "type": "string"
+                                    },
+                                    "verify_status": {
+                                        "type": "string"
+                                    },
+                                    "time_zone": {
+                                        "type": "string"
+                                    },
+                                    "student_id": {
+                                        "type": "string"
+                                    },
+                                    "disabled": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}/applications": {
+            "get": {
+                "summary": "Get a user's applications",
+                "operationId": "getUserApplications",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "standalone",
+                                "library"
+                            ]
+                        },
+                        "required": false,
+                        "description": "Application type"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Application"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{uuid}/organizations": {
+            "get": {
+                "summary": "Get a user's organizations",
+                "operationId": "getUserOrganizations",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Organization"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Add a user to an organization",
+                "operationId": "addUserToOrganization",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "organization_id": {
+                                        "type": "number"
+                                    },
+                                    "use_default_organization": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "uuid": {
+                                        "type": "string"
+                                    },
+                                    "organization_id": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AccessRequest": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "verification_request_id": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "required": true,
+                        "enum": [
+                            "open",
+                            "approved",
+                            "denied",
+                            "partially_approved"
+                        ]
+                    },
+                    "decision_reason": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "AccessRequestApplication": {
+                "type": "object",
+                "properties": {
+                    "access_request_id": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "application_id": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "decision_reason": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "AdminRole": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "label": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Alias": {
+                "type": "object",
+                "properties": {
+                    "alias": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "APIUser": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "required": true,
+                        "unique": true
+                    },
+                    "password": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "last_used": {
+                        "type": "date"
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "APIUserPermissionConfig": {
+                "type": "object",
+                "properties": {
+                    "api_user_id": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "access_requests_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "access_requests_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "api_users_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "api_users_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "applications_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "applications_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "domains_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "domains_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "organizations_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "organizations_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "organization_systems_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "organization_systems_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "services_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "services_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "users_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "users_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "verification_requests_read": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "verification_requests_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Application": {
+                "type": "object",
+                "description": "LibreTexts Application object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "app_type": {
+                        "type": "string",
+                        "enum": [
+                            "standalone",
+                            "library"
+                        ],
+                        "required": true
+                    },
+                    "main_url": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "cas_service_url": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "default_access": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "instructors",
+                            "none"
+                        ],
+                        "required": true
+                    },
+                    "icon": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "primary_color": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "hide_from_apps": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "hide_from_user_apps": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "is_default_library": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "supports_cas": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "auth_service_id": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Domain": {
+                "type": "object",
+                "description": "Domain object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "EmailVerification": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "code": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "expires_at": {
+                        "type": "date",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "License": {
+                "type": "object",
+                "description": "OER License object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "versions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LicenseVersion"
+                        }
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "LicenseVersion": {
+                "type": "object",
+                "properties": {
+                    "license_id": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Organization": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "logo": {
+                        "type": "string"
+                    },
+                    "system_id": {
+                        "type": "string"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "OrganizationDomain": {
+                "type": "object",
+                "properties": {
+                    "organization_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "domain_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "OrganizationSystem": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "logo": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "ResetPasswordToken": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "expires_at": {
+                        "type": "number",
+                        "description": "Unix timestamp",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Service": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "body": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "evaluation_order": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "evaluation_priority": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "service_Id": {
+                        "type": "number",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "TimeZone": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "label": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "uuid": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "user_type": {
+                        "type": "string"
+                    },
+                    "timeZone": {
+                        "type": "string"
+                    },
+                    "student_id": {
+                        "type": "string"
+                    },
+                    "disabled": {
+                        "type": "boolean"
+                    },
+                    "expired": {
+                        "type": "boolean"
+                    },
+                    "registration_complete": {
+                        "type": "boolean"
+                    },
+                    "legacy": {
+                        "type": "boolean"
+                    },
+                    "external_idp": {
+                        "type": "string"
+                    },
+                    "last_access": {
+                        "type": "string"
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "verify_status": {
+                        "type": "string"
+                    },
+                    "last_password_change": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "UserApplication": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "application_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "UserOrganization": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "organization_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "admin_role": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "VerificationRequest": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "required": true,
+                        "enum": [
+                            "open",
+                            "approved",
+                            "denied",
+                            "needs_change"
+                        ]
+                    },
+                    "bio_url": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "decision_reason": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "VerificationRequestHistory": {
+                "type": "object",
+                "properties": {
+                    "verification_request_id": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "required": true,
+                        "enum": [
+                            "open",
+                            "approved",
+                            "denied",
+                            "needs_change"
+                        ]
+                    },
+                    "bio_url": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "decision_reason": {
+                        "type": "string",
+                        "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            }
+        }
+    }
+}

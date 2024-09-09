@@ -17,6 +17,8 @@ import type { PageContextInitCustom } from '@renderer/types';
 import { AuthController } from './controllers/AuthController';
 import { UserController } from './controllers/UserController';
 import { getProductionURL } from './helpers';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger/swagger.json'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +30,7 @@ app.use(helmet.hidePoweredBy()); // TODO: Improve helmet utilization
 app.use(compression());
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
 app.use('/api/v1', APIRouter);
 
