@@ -191,7 +191,7 @@
     "startrequestcta": "Click the button below to start the instructor verification process.",
     "restartrequest": "Restart Verification Request",
     "biourl": "Bio URL",
-    "biourl_desc": "To verify instructor status you must provide a link to a web page showing your faculty status. Links to your institution's web page are NOT sufficient. A URL that shows that you are an instructor is needed. Pages must be publicly accessible (cannot require login).",
+    "biourl_desc": "To verify instructor status you must provide a link to a web page showing your faculty status. Links to your institution's home page are NOT sufficient. A URL that shows that you are an instructor is needed. Pages must be publicly accessible (cannot require login).",
     "biourl_invalid": "Invalid Bio URL, please check your input.",
     "registrationcode": "Registration Code",
     "registrationcode_desc": "If you have were provided a registration code, enter it here. This is not required.",
