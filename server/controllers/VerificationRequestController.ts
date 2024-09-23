@@ -256,6 +256,7 @@ export class VerificationRequestController {
       // Notify conductor of verification update
       const authController = new AuthController();
       await authController.notifyConductorOfVerificationUpdate(foundUser);
+      await authController.notifyADAPTOfVerificationUpdate(foundUser);
 
       // Generate ADAPT access code if it was requested (and approved)
       const foundADAPTApp = approvedApps.find((a) => a.get('name') === 'ADAPT');
