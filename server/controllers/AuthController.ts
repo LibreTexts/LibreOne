@@ -366,14 +366,14 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 604800,
     };
-    
+
     res.cookie(`cas_bridge_token_${source}`, token, cookieConfig);
     if (foundLib) {
       res.cookie(
         `cas_bridge_authorized_${source}`,
         'true',
         cookieConfig,
-      ); 
+      );
     } else if (foundUser.user_type === 'instructor' && foundUser.verify_status !== 'verified') {
       res.cookie(
         `cas_bridge_unverified_${source}`,
@@ -405,7 +405,7 @@ export class AuthController {
       if (!mailSender.isReady()) {
         throw new Error('No mail sender available to issue email verification!');
       }
-    
+
       const hashed = await bcrypt.hash(props.password, 10);
 
       const newUser = await User.create({
@@ -465,7 +465,7 @@ export class AuthController {
     if (!foundVerification || !foundVerification.uuid) {
       return errors.badRequest(res);
     }
-    
+
     const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
     if (!foundUser) {
       return errors.badRequest(res);
@@ -494,7 +494,7 @@ export class AuthController {
    */
   public async completeRegistration(req: Request, res: Response): Promise<Response | void> {
     const { userUUID } = req;
-    const foundUser = await User.findOne({ where: { uuid: userUUID }});
+    const foundUser = await User.findOne({ where: { uuid: userUUID } });
     if (!foundUser) {
       return errors.badRequest(res);
     }
@@ -519,10 +519,8 @@ export class AuthController {
       console.error('Error creating default user applications!', e);
     }
 
-    const notifySuccess = await this._notifyConductorOfNewUser(foundUser);
-    if(!notifySuccess) {
-      console.log('Unable to notify Conductor of new user: ', foundUser.get('uuid')); // no-op if fails
-    }
+    await this._notifyConductorOfNewUser(foundUser);
+    await this._notifyADAPTOfNewUser(foundUser);
 
     let shouldCreateSSOSession = true;
     let redirectCASService = null;
@@ -620,7 +618,7 @@ export class AuthController {
     const discoveryURI = getDiscoveryURI(userData.clientname);
     const discoveryConfig = await axios.get(discoveryURI);
     const jwksURI = discoveryConfig.data.jwks_uri;
-    const jwks = createRemoteJWKSet(new URL (jwksURI));
+    const jwks = createRemoteJWKSet(new URL(jwksURI));
     const { payload } = await jwtVerify(userData.principalattributes.id_token, jwks, {
       issuer: userData.principalattributes.iss,
       audience: userData.principalattributes.aud,
@@ -653,7 +651,7 @@ export class AuthController {
     if (email) {
       criteria.push({ email });
     }
-  
+
     const foundUser = await User.findOne({
       where: criteria.length > 1 ? { [Op.or]: criteria } : criteria[0],
     });
@@ -691,7 +689,7 @@ export class AuthController {
 
   public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
     const { registeredService, username } = req.query as CheckCASInterruptQuery;
-    
+
     // Decide which attribute to match a record with
     const getAttrMatchKey = (username: string) => {
       if (username.includes('@')) {
@@ -870,7 +868,7 @@ export class AuthController {
 
     const networkAgent = process.env.NODE_ENV === 'production'
       ? null
-      : new Agent({ rejectUnauthorized: false }); 
+      : new Agent({ rejectUnauthorized: false });
 
     // Validate ticket
     const validateParams = new URLSearchParams({
@@ -1085,7 +1083,7 @@ export class AuthController {
         headers: this._getConductorWebhookHeaders(),
       });
 
-      if(res.data.err) {
+      if (res.data.err) {
         throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
@@ -1108,6 +1106,7 @@ export class AuthController {
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
+        time_zone: user.time_zone,
         ...(user.avatar && { avatar: user.avatar }),
       };
 
@@ -1115,14 +1114,14 @@ export class AuthController {
         headers: this._getConductorWebhookHeaders(),
       });
 
-      if(res.data.err) {
+      if (res.data.err) {
         throw new Error(res.data.data.errMsg ?? 'Unknown error');
       }
 
       return true;
     } catch (err) {
       console.error({
-        msg: 'Error notifying Conductor of user library access!',
+        msg: 'Error notifying Conductor of new user!',
         error: err,
       });
       return false;
@@ -1133,26 +1132,99 @@ export class AuthController {
     try {
       const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/verify-status' || 'http://localhost:5000/api/v1/central-identity/webhooks/verify-status';
 
-        const payload = {
-            central_identity_id: user.uuid,
-            verify_status: user.verify_status,
-        };
+      const payload = {
+        central_identity_id: user.uuid,
+        verify_status: user.verify_status,
+      };
 
-        const res = await axios.post(conductorWebhookURL, payload, {
-          headers: this._getConductorWebhookHeaders(),
-        });
+      const res = await axios.post(conductorWebhookURL, payload, {
+        headers: this._getConductorWebhookHeaders(),
+      });
 
-        if(res.data.err) {
-          throw new Error(res.data.errMsg ?? 'Unknown error');
-        }
+      if (res.data.err) {
+        throw new Error(res.data.errMsg ?? 'Unknown error');
+      }
 
-        return true;
+      return true;
     } catch (err) {
-        console.error({
-            msg: 'Error notifying Conductor of updated verification status!',
-            error: err,
-        });
-        return false;
+      console.error({
+        msg: 'Error notifying Conductor of updated verification status!',
+        error: err,
+      });
+      return false;
+    }
+  }
+
+  private _getADAPTWebhookHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Authorization': `Bearer ${process.env.ADAPT_API_KEY}`,
+      'Origin': process.env.PRODUCTION_DOMAIN ?? process.env.DOMAIN ?? 'one.libretexts.org',
+    };
+  }
+
+  private _getADAPTWebhookBase() {
+    return process.env.NODE_ENV === 'production' ? 'https://adapt.libretexts.org' : `https://${process.env.ADAPT_WEBHOOK_ENV}.adapt.libretexts.org`;
+  }
+
+  private async _notifyADAPTOfNewUser(user: User) {
+    try {
+      const adaptWebhookBase = this._getADAPTWebhookBase();
+      const adaptWebhookURL = adaptWebhookBase + '/api/oidc/libreone/new-user-created';
+
+      const payload = {
+        central_identity_id: user.uuid,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        time_zone: user.time_zone,
+        ...(user.avatar && { avatar: user.avatar }),
+      };
+
+      const res = await axios.post(adaptWebhookURL, payload, {
+        headers: this._getADAPTWebhookHeaders(),
+      });
+
+      if (res.data.err) {
+        throw new Error(res.data.data.errMsg ?? 'Unknown error');
+      }
+
+      return true;
+    } catch (err) {
+      console.error({
+        msg: 'Error notifying ADAPT of new user!',
+        error: err,
+      });
+      return false;
+    }
+  }
+
+  public async notifyADAPTOfVerificationUpdate(user: User) {
+    try {
+      const adaptWebhookBase = this._getADAPTWebhookBase();
+      const adaptWebhookURL = adaptWebhookBase + '/api/oidc/libreone/instructor-verified';
+
+      const payload = {
+        central_identity_id: user.uuid,
+        verify_status: user.verify_status,
+      };
+
+      const res = await axios.post(adaptWebhookURL, payload, {
+        headers: this._getADAPTWebhookHeaders(),
+      });
+
+      if (res.data.err) {
+        throw new Error(res.data.errMsg ?? 'Unknown error');
+      }
+
+      return true;
+    } catch (err) {
+      console.error({
+        msg: 'Error notifying ADAPT of updated verification status!',
+        error: err,
+      });
+      return false;
     }
   }
 }
