@@ -29,6 +29,14 @@ usersRouter.route('/principal-attributes').get(
   catchInternal((req, res) => controller.resolvePrincipalAttributes(req, res)),
 );
 
+usersRouter.route('/organizations').get(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:read', 'organizations:read']),
+  validate(UserValidator.getMultipleUserOrganizationsSchema, 'query'),
+  catchInternal((req, res) => controller.getMultipleUserOrganizations(req, res)),
+)
+
 usersRouter.route('/:uuid')
   .get(
     verifyAPIAuthentication,

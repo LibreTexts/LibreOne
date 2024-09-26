@@ -112,17 +112,17 @@ export class UserController {
   /**
    * Creates a new UserApplication record and handles provisions necessary auxiliary resources.
    */
-  public async createUserApplicationInternal(uuid: string, application_id: number, transaction?: Transaction) {  
+  public async createUserApplicationInternal(uuid: string, application_id: number, transaction?: Transaction) {
     const foundUser = await User.findOne({ where: { uuid }, transaction });
     if (!foundUser) {
       return false;
     }
-  
+
     const foundApp = await Application.findOne({ where: { id: application_id }, transaction });
     if (!foundApp) {
       return false;
     }
-  
+
     // create or reactivate library user if necessary
     if (foundApp.get('app_type') === 'library') {
       const lib = LibraryController.getLibraryIdentifierFromAppURL(foundApp.get('main_url'));
@@ -155,9 +155,9 @@ export class UserController {
           uuid,
           error: e,
         });
-      }      
+      }
     }
-  
+
     await UserApplication.create({
       user_id: uuid,
       application_id,
@@ -211,7 +211,7 @@ export class UserController {
       },
     });
   }
-  
+
   /**
    * Associates a User with an Organization.
    *
@@ -222,12 +222,12 @@ export class UserController {
   public async createUserOrganization(req: Request, res: Response): Promise<Response> {
     const { uuid } = (req.params as unknown) as UserUUIDParams;
     const props = req.body as CreateUserOrganizationBody;
-  
+
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     let orgID: number;
     if (props.organization_id) {
       const foundOrg = await Organization.findOne({ where: { id: props.organization_id } });
@@ -244,7 +244,7 @@ export class UserController {
     } else {
       return errors.badRequest(res);
     }
-  
+
     const foundUserOrg = await UserOrganization.findOne({
       where: {
         [Op.and]: [
@@ -259,7 +259,7 @@ export class UserController {
         organization_id: orgID,
       });
     }
-  
+
     return res.send({
       data: {
         uuid: foundUser.get('uuid'),
@@ -309,7 +309,7 @@ export class UserController {
 
     return res.status(201).send({ data: verificationRequest.get() });
   }
-  
+
   /**
    * Retrieves an active user from the database.
    *
@@ -319,7 +319,7 @@ export class UserController {
    * @returns The located User, or null if not found.
    */
   public async getUserInternal(uuid: string, includeApps?: boolean): Promise<Record<string, string> | null> {
-    const user = await User.findOne({ where: { uuid }});
+    const user = await User.findOne({ where: { uuid } });
     if (!user) {
       return null;
     }
@@ -363,7 +363,7 @@ export class UserController {
       return acc;
     }, {} as Record<number, Application>));
   }
-  
+
   /**
    * Retrieves information about a single user.
    *
@@ -373,7 +373,7 @@ export class UserController {
    */
   public async getUser(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
-  
+
     const foundUser = await User.findOne({
       where: { uuid },
       include: [{
@@ -392,7 +392,7 @@ export class UserController {
       data: foundUser,
     });
   }
-  
+
   /**
    * Retrieves all users (of any status) with pagination.
    *
@@ -407,7 +407,7 @@ export class UserController {
     const queryCriteria = fuzzyQuery ? {
       [Op.or]: [
         { uuid: { [Op.like]: fuzzyQuery } },
-        { first_name: { [Op.like]: fuzzyQuery} },
+        { first_name: { [Op.like]: fuzzyQuery } },
         { last_name: { [Op.like]: fuzzyQuery } },
         { email: { [Op.like]: fuzzyQuery } },
         { student_id: { [Op.like]: fuzzyQuery } },
@@ -491,7 +491,7 @@ export class UserController {
     });
     return foundLibs.map((l) => l.get()) || [];
   }
-  
+
   /**
    * Retrieves a list of all Organizations a User is associated with.
    *
@@ -511,14 +511,46 @@ export class UserController {
         },
       ],
     });
-  
+
     return res.send({
       data: {
         organizations: foundOrgs.map((o) => o.get()) || [],
       },
     });
   }
-  
+
+  /**
+   * Retrieves a list of all Organizations each of a list of Users is associated with.
+   * 
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns - The fulfilled API response.
+   */
+  public async getMultipleUserOrganizations(req: Request, res: Response): Promise<Response> {
+    const { uuids } = req.query as { uuids: string[] };
+
+    const foundUsers = await User.findAll({
+      where: { uuid: uuids },
+      include: [
+        {
+          model: Organization,
+          attributes: ['name'],
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    // return a map of user UUIDs to their associated organizations
+    const orgMap = foundUsers.reduce((acc, curr) => {
+      acc[curr.get('uuid')] = curr.get('organizations') as { name: string }[] || [];
+      return acc;
+    }, {} as Record<string, { name: string }[]>);
+
+    return res.send({
+      data: orgMap,
+    });
+  }
+
   /**
    * Finds a user by email, then resolves their principal attributes in order to initiate an SSO session.
    *
@@ -528,7 +560,7 @@ export class UserController {
    */
   public async resolvePrincipalAttributes(req: Request, res: Response): Promise<Response> {
     const { username } = req.query as ResolvePrincipalAttributesQuery;
-    
+
     // Decide which attribute to match a record with
     const getAttrMatchKey = (username) => {
       if (username.includes('@')) {
@@ -540,7 +572,7 @@ export class UserController {
       return 'external_subject_id';
     };
     const attrMatch = { [getAttrMatchKey(username)]: username };
-  
+
     const foundUser = await User.findOne({
       where: {
         [Op.and]: [
@@ -563,7 +595,7 @@ export class UserController {
       return errors.notFound(res);
     }
     await foundUser.update({ last_access: new Date() });
-  
+
     return res.send({
       uuid: foundUser.uuid,
       email: foundUser.email,
@@ -576,7 +608,7 @@ export class UserController {
       picture: foundUser.avatar || DEFAULT_AVATAR,
     });
   }
-  
+
   /**
    * Updates a User record.
    *
@@ -587,12 +619,12 @@ export class UserController {
   public async updateUser(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
     const props = req.body as UpdateUserBody;
-  
+
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     const isExternalUser = foundUser.external_subject_id !== null;
     const isAPIUser = !!req.isAPIUser;
     const updateObj: Record<string, string | boolean> = {};
@@ -641,7 +673,7 @@ export class UserController {
       data: foundUser,
     });
   }
-  
+
   public async updateUserAvatar(req: Request, res: Response): Promise<Response> {
     if (
       !process.env.AWS_AVATARS_DOMAIN
@@ -653,19 +685,19 @@ export class UserController {
       console.error('Required environment variables for avatar uploads are missing.');
       return errors.internalServerError(res);
     }
-  
+
     const { uuid } = req.params as UserUUIDParams;
-  
-    const foundUser = await User.findOne({ where: { uuid }});
+
+    const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     const avatarFile = req.file;
     if (!avatarFile) {
       return errors.badRequest(res);
     }
-  
+
     const fileExtension = avatarFile.mimetype?.split('/')[1];
     const fileKey = `avatars/${uuid}.${fileExtension}`;
     let avatarVersion = 1;
@@ -682,7 +714,7 @@ export class UserController {
       width: 500,
       height: 500,
     }).toBuffer();
-  
+
     const storageClient = new S3Client({
       credentials: {
         accessKeyId: process.env.AWS_AVATARS_ACCESS_KEY,
@@ -700,10 +732,10 @@ export class UserController {
     if (uploadRes.$metadata?.httpStatusCode !== 200) {
       throw new Error(`Avatar upload failed ${uuid}`);
     }
-  
+
     const avatarURL = `https://${process.env.AWS_AVATARS_DOMAIN}/${fileKey}?v=${avatarVersion}`;
     await foundUser.update({ avatar: avatarURL });
-  
+
     return res.send({
       data: {
         uuid: foundUser.uuid,
@@ -759,7 +791,7 @@ export class UserController {
       },
     });
   }
-  
+
   /**
    * Updates a User's admin role in a specified Organization.
    *
@@ -770,12 +802,12 @@ export class UserController {
   public async updateUserOrganizationAdminRole(req: Request, res: Response): Promise<Response> {
     const { orgID, uuid } = (req.params as unknown) as UserOrganizationIDParams;
     const { admin_role } = req.body as UpdateUserOrganizationAdminRoleBody;
-  
+
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     const [userOrg, created] = await UserOrganization.findOrCreate({
       where: {
         user_id: uuid,
@@ -786,7 +818,7 @@ export class UserController {
     if (!created) {
       await userOrg.update({ admin_role });
     }
-  
+
     return res.send({
       data: {
         uuid: foundUser.get('uuid'),
@@ -914,7 +946,7 @@ export class UserController {
 
     return res.send({});
   }
-  
+
   /**
    * Removes a User's association with a specified Organization.
    *
@@ -924,12 +956,12 @@ export class UserController {
    */
   public async deleteUserOrganization(req: Request, res: Response): Promise<Response> {
     const { uuid, orgID } = (req.params as unknown) as UserOrganizationIDParams;
-  
+
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     const foundUserOrg = await UserOrganization.findOne({
       where: {
         user_id: uuid,
@@ -939,12 +971,12 @@ export class UserController {
     if (!foundUserOrg) {
       return errors.notFound(res);
     }
-  
+
     await foundUserOrg.destroy();
-  
+
     return res.send({});
   }
-  
+
   /**
    * Removes a User's admin role in a specified Organization.
    *
@@ -954,12 +986,12 @@ export class UserController {
    */
   public async deleteUserOrganizationAdminRole(req: Request, res: Response): Promise<Response> {
     const { uuid, orgID } = (req.params as unknown) as UserOrganizationIDParams;
-  
+
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
       return errors.notFound(res);
     }
-  
+
     const foundUserOrg = await UserOrganization.findOne({
       where: {
         user_id: uuid,
@@ -969,9 +1001,9 @@ export class UserController {
     if (!foundUserOrg) {
       return errors.notFound(res);
     }
-  
+
     await foundUserOrg.update({ admin_role: null });
-  
+
     return res.send({});
   }
 }

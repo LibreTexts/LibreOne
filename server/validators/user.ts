@@ -53,6 +53,10 @@ export const getAllUserApplicationsSchema = joi.object({
   type: applicationTypeValidator,
 });
 
+export const getMultipleUserOrganizationsSchema = joi.object({
+  uuids: joi.array().items(uuidValidator).required().min(1).max(100),
+})
+
 export const updateUserSchema = joi.object({
   first_name: joi.string().min(1).max(100).trim(),
   last_name: joi.string().min(1).max(100).trim(),
