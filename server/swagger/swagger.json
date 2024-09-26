@@ -6,11 +6,11 @@
         "description": "API for LibreOne.",
         "license": {
             "name": "MIT",
-            "url": "https: //opensource.org/licenses/MIT"
+            "url": "https://opensource.org/licenses/MIT"
         },
         "contact": {
             "name": "LibreTexts",
-            "url": "https: //libretexts.org"
+            "url": "https://libretexts.org"
         }
     },
     "paths": {
@@ -320,6 +320,56 @@
                                         },
                                         "picture": {
                                             "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/organizations": {
+            "get": {
+                "summary": "Get organizations for multiple users",
+                "operationId": "getUserOrganizations",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "uuids",
+                        "schema": {
+                            "type": "array"
+                        },
+                        "required": true,
+                        "description": "Array of user UUIDs to get organizations for. Minimum length of 1, maximum length of 100."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "uuid": {
+                                                    "type": "string"
+                                                },
+                                                "organizations": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "name": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
