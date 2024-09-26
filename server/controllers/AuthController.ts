@@ -519,8 +519,12 @@ export class AuthController {
       console.error('Error creating default user applications!', e);
     }
 
-    await this._notifyConductorOfNewUser(foundUser);
-    await this._notifyADAPTOfNewUser(foundUser);
+    const webhookPromises = [
+      this._notifyConductorOfNewUser(foundUser),
+      this._notifyADAPTOfNewUser(foundUser)
+    ];
+
+    await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
 
     let shouldCreateSSOSession = true;
     let redirectCASService = null;
@@ -1155,11 +1159,14 @@ export class AuthController {
     }
   }
 
-  private _getADAPTWebhookHeaders() {
+  private async _getADAPTWebhookHeaders() {
+    const encoded = new TextEncoder().encode(process.env.ADAPT_API_KEY ?? 'unknown');
+    const jwtToSend = await new SignJWT({}).setProtectedHeader({ alg: 'HS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(encoded);
+
     return {
       'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
-      'Authorization': `Bearer ${process.env.ADAPT_API_KEY}`,
+      'Authorization': `Bearer ${jwtToSend}`,
       'Origin': process.env.PRODUCTION_DOMAIN ?? process.env.DOMAIN ?? 'one.libretexts.org',
     };
   }
@@ -1183,7 +1190,7 @@ export class AuthController {
       };
 
       const res = await axios.post(adaptWebhookURL, payload, {
-        headers: this._getADAPTWebhookHeaders(),
+        headers: await this._getADAPTWebhookHeaders(),
       });
 
       if (res.data.err) {
@@ -1211,7 +1218,7 @@ export class AuthController {
       };
 
       const res = await axios.post(adaptWebhookURL, payload, {
-        headers: this._getADAPTWebhookHeaders(),
+        headers: await this._getADAPTWebhookHeaders(),
       });
 
       if (res.data.err) {
