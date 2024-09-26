@@ -255,8 +255,12 @@ export class VerificationRequestController {
 
       // Notify conductor of verification update
       const authController = new AuthController();
-      await authController.notifyConductorOfVerificationUpdate(foundUser);
-      await authController.notifyADAPTOfVerificationUpdate(foundUser);
+      const webhookPromises = [
+        authController.notifyConductorOfVerificationUpdate(foundUser),
+        authController.notifyADAPTOfVerificationUpdate(foundUser)
+      ];
+
+      await Promise.all(webhookPromises); // Both calls return false and log if failed, so one shouldn't affect the other
 
       // Generate ADAPT access code if it was requested (and approved)
       const foundADAPTApp = approvedApps.find((a) => a.get('name') === 'ADAPT');
