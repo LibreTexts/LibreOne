@@ -36,6 +36,7 @@ import type {
   TokenAuthenticationVerificationResult,
   CheckCASInterruptQuery,
 } from '../types/auth';
+import { LoginEventController } from '@server/controllers/LoginEventController';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
@@ -729,13 +730,16 @@ export class AuthController {
       });
     }
 
-    // <update last_access timestamp>
+    // <update last_access timestamp and log event>
     try {
-      await foundUser.update({ last_access: new Date() });
+      const timestamp = new Date();
+      await foundUser.update({ last_access: timestamp });
+      await (new LoginEventController()).log(foundUser.get('uuid'), timestamp);
     } catch (err) {
-      console.warn(`Error updating last access time for user ${foundUser.get('uuid')}`);
+      console.warn(`Error updating last access time or saving login event for user ${foundUser.get('uuid')}`);
+      console.warn(err);
     }
-    // </update last_access timestamp>
+    // </update last_access timestamp and log event>
 
     if (!foundUser.registration_complete) {
       const redirectParams = new URLSearchParams({

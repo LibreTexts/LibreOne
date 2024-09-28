@@ -11,6 +11,7 @@ import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
 import { License } from './License';
 import { LicenseVersion } from './LicenseVersion';
+import { LoginEvent } from './LoginEvent';
 import { Organization } from './Organization';
 import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
@@ -51,6 +52,7 @@ sequelize.addModels([
   EmailVerification,
   License,
   LicenseVersion,
+  LoginEvent,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
@@ -188,6 +190,7 @@ export {
   EmailVerification,
   License,
   LicenseVersion,
+  LoginEvent,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
