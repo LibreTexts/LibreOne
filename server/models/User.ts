@@ -17,6 +17,7 @@ import {
 } from 'sequelize-typescript';
 import { Application } from './Application';
 import { AccessRequest } from './AccessRequest';
+import { LoginEvent } from '@server/models/LoginEvent';
 import { Organization } from './Organization';
 import { TimeZone } from './TimeZone';
 import { UserOrganization } from './UserOrganization';
@@ -107,6 +108,9 @@ export class User extends Model {
 
   @HasMany(() => AccessRequest)
   access_requests?: Array<AccessRequest>;
+
+  @HasMany(() => LoginEvent)
+  login_events?: Array<LoginEvent>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;
