@@ -1190,6 +1190,8 @@ export class AuthController {
         last_name: user.last_name,
         email: user.email,
         time_zone: user.time_zone,
+        user_type: user.user_type,
+        verify_status: user.verify_status,
         ...(user.avatar && { avatar: user.avatar }),
       };
 
@@ -1218,6 +1220,7 @@ export class AuthController {
 
       const payload = {
         central_identity_id: user.uuid,
+        user_type: user.user_type,
         verify_status: user.verify_status,
       };
 
