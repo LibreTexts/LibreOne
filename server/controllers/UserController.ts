@@ -403,14 +403,17 @@ export class UserController {
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
     const { offset, limit, query } = (req.query as unknown) as GetAllUsersQuery;
 
-    const fuzzyQuery = query ? `%${query}%` : null;
-    const queryCriteria = fuzzyQuery ? {
+    // handle space in query (e.g. for full name search)
+    const splitQueryParts = query?.split(' ');
+    const fuzzyQueryParts = splitQueryParts?.map((p) => `%${p}%`);
+
+    const queryCriteria = fuzzyQueryParts && fuzzyQueryParts?.length > 0 ? {
       [Op.or]: [
-        { uuid: { [Op.like]: fuzzyQuery } },
-        { first_name: { [Op.like]: fuzzyQuery } },
-        { last_name: { [Op.like]: fuzzyQuery } },
-        { email: { [Op.like]: fuzzyQuery } },
-        { student_id: { [Op.like]: fuzzyQuery } },
+        { uuid: { [Op.like]: fuzzyQueryParts[0]} },
+        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
+        { last_name: { [Op.like]: fuzzyQueryParts.length === 2 ? fuzzyQueryParts[1] : fuzzyQueryParts[0]} }, // if full name search, use second part for last name
+        { email: { [Op.like]: fuzzyQueryParts[0] } },
+        { student_id: { [Op.like]: fuzzyQueryParts[0] } },
       ],
     } : null;
 
