@@ -1163,9 +1163,11 @@ export class AuthController {
     }
   }
 
-  private async _getADAPTWebhookHeaders() {
+  private async _getADAPTWebhookHeaders(data?: Record<string, string>) {
     const encoded = new TextEncoder().encode(process.env.ADAPT_API_KEY ?? 'unknown');
-    const jwtToSend = await new SignJWT({}).setProtectedHeader({ alg: 'HS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(encoded);
+    const jwtToSend = await new SignJWT({
+      ...(data ?? {}),
+    }).setProtectedHeader({ alg: 'HS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(encoded);
 
     return {
       'Content-Type': 'application/json',
@@ -1176,7 +1178,14 @@ export class AuthController {
   }
 
   private _getADAPTWebhookBase() {
-    return process.env.NODE_ENV === 'production' ? 'https://adapt.libretexts.org' : `https://${process.env.ADAPT_WEBHOOK_ENV}.adapt.libretexts.org`;
+    switch (process.env.ADAPT_WEBHOOK_ENV) {
+      case 'dev':
+        return 'https://dev.adapt.libretexts.org';
+      case 'staging':
+        return 'https://staging-adapt.libretexts.org';
+      default:
+        return 'https://adapt.libretexts.org';
+    }
   }
 
   private async _notifyADAPTOfNewUser(user: User) {
@@ -1190,18 +1199,29 @@ export class AuthController {
         last_name: user.last_name,
         email: user.email,
         time_zone: user.time_zone,
-        user_type: user.user_type,
+        role: user.user_type,
         verify_status: user.verify_status,
         ...(user.avatar && { avatar: user.avatar }),
       };
 
       const res = await axios.post(adaptWebhookURL, payload, {
-        headers: await this._getADAPTWebhookHeaders(),
+        headers: await this._getADAPTWebhookHeaders({
+          central_identity_id: user.uuid,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          time_zone: user.time_zone,
+          role: user.user_type ?? 'student',
+          verify_status: user.verify_status,
+          ...(user.avatar && { avatar: user.avatar }),
+        }),
       });
 
-      if (res.data.err) {
-        throw new Error(res.data.data.errMsg ?? 'Unknown error');
+      if (!res.data || res.data.type === 'error') {
+        throw new Error(res.data.message ?? 'Unknown error');
       }
+
+      console.log(res.data)
 
       return true;
     } catch (err) {
@@ -1225,12 +1245,17 @@ export class AuthController {
       };
 
       const res = await axios.post(adaptWebhookURL, payload, {
-        headers: await this._getADAPTWebhookHeaders(),
+        headers: await this._getADAPTWebhookHeaders({
+          central_identity_id: user.uuid,
+          verify_status: user.verify_status,
+        }),
       });
 
-      if (res.data.err) {
-        throw new Error(res.data.errMsg ?? 'Unknown error');
+      if (!res.data || res.data.type === 'error') {
+        throw new Error(res.data.message ?? 'Unknown error');
       }
+
+      console.log(res.data)
 
       return true;
     } catch (err) {
