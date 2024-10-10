@@ -12,6 +12,11 @@ import {
 import { User } from './User';
 
 @Table({
+  indexes: [{
+    fields: ['user_id', 'timestamp'],
+    name: 'login_events_user_id_timestamp_unique',
+    unique: true,
+  }],
   timestamps: true,
   tableName: 'login_events',
 })
