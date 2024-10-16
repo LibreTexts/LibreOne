@@ -50,3 +50,11 @@ export type ResetPasswordBody = {
   token: string;
   password: string;
 };
+
+export type AutoProvisionUserBody = {
+  email: string;
+  first_name: string;
+  last_name: string;
+  user_type: 'student' | 'instructor';
+  time_zone: string;
+};

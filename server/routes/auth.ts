@@ -42,6 +42,14 @@ authRouter.route('/external-provision').post(
   catchInternal((req, res) => controller.createUserFromExternalIdentityProvider(req, res)),
 );
 
+authRouter.route('/auto-provision').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write']),
+  validate(AuthValidator.autoProvisionUserSchema, 'body'),
+  catchInternal((req, res) => controller.autoProvisionUser(req, res)),
+)
+
 authRouter.route('/cas-interrupt-check').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,

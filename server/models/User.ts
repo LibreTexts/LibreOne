@@ -103,6 +103,9 @@ export class User extends Model {
   @Column(DataType.DATE)
   declare last_password_change: Date;
 
+  @Column(DataType.ENUM('self', 'api'))
+  declare registration_type: string;
+
   @BelongsToMany(() => Application, () => UserApplication)
   applications?: Array<Application & { UserApplication: UserApplication }>;
 

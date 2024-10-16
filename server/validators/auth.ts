@@ -1,9 +1,17 @@
 import joi from 'joi';
-import { passwordValidator } from './shared';
+import { passwordValidator, timeZoneValidator } from './shared';
 
 export const registerSchema = joi.object({
   email: joi.string().email().required(),
   password: passwordValidator,
+});
+
+export const autoProvisionUserSchema = joi.object({
+  email: joi.string().email().required(),
+  first_name: joi.string().min(1).max(100).trim().required(),
+  last_name: joi.string().min(1).max(100).trim().required(),
+  user_type: joi.string().valid('student', 'instructor').required(),
+  time_zone: timeZoneValidator.required(),
 });
 
 export const verifyEmailSchema = joi.object({
