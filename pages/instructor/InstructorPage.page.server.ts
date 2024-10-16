@@ -14,6 +14,11 @@ export async function onBeforeRender(pageContext: PageContextServer) {
     redirectTo = `/api/v1/auth/login?${params}`;
   }
 
+  // Redirect to home if user is not instructor
+  if (pageContext.user && pageContext.user.user_type !== 'instructor') {
+    redirectTo = '/home';
+  }
+
   // Fetch applications (for verification requests)
   const appsController = new ApplicationController();
   const res = await appsController.getAllApplicationsInternal({});
