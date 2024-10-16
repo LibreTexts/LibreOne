@@ -500,10 +500,6 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
-    if (foundUser.user_type === 'student' && !foundUser.student_id) {
-      return errors.badRequest(res);
-    }
-
     foundUser.registration_complete = true;
     await foundUser.save();
 
