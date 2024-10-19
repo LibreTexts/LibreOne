@@ -35,6 +35,7 @@ import type {
   ResetPasswordBody,
   TokenAuthenticationVerificationResult,
   CheckCASInterruptQuery,
+  AutoProvisionUserBody,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 
@@ -420,6 +421,7 @@ export class AuthController {
         legacy: false,
         ip_address: ip,
         verify_status: 'not_attempted',
+        registration_type: 'self',
       });
       const verifyCode = await verificationController.createVerification(
         newUser.get('uuid'),
@@ -671,6 +673,7 @@ export class AuthController {
         verify_status: 'not_attempted',
         external_idp: userData.clientname,
         last_access: new Date(),
+        registration_type: 'self'
       });
     } else {
       await foundUser.update({
@@ -686,6 +689,61 @@ export class AuthController {
     }
 
     return res.status(200).send({});
+  }
+
+    /**
+   * Creates a new user via a request from an authorized LibreOne application. Used to generate user
+   * accounts on-demand for scenarios like Canvas LTI. In these cases, LibreOne is still the identity provider,
+   * so this would not be handled in the same manner as external identity providers.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async autoProvisionUser(req: Request, res: Response): Promise<Response> {
+    const { email, first_name, last_name, user_type, time_zone } = req.body as AutoProvisionUserBody;
+
+    const foundUser = await User.findOne({
+      where: { email }
+    });
+
+    let resultingUUID = '';
+
+    if (!foundUser) {
+      resultingUUID = uuidv4();
+      await User.create({
+        uuid: resultingUUID,
+        email,
+        first_name: first_name?.trim() ?? DEFAULT_FIRST_NAME,
+        last_name: last_name?.trim() ?? DEFAULT_LAST_NAME,
+        user_type,
+        time_zone,
+        avatar: DEFAULT_AVATAR,
+        disabled: false,
+        expired: false,
+        legacy: false,
+        verify_status: 'not_attempted',
+        last_access: new Date(),
+        registration_type: 'api',
+        registration_complete: true,
+      });
+    } else {
+      resultingUUID = foundUser.uuid
+      await foundUser.update({
+        email,
+        first_name: first_name?.trim() ?? DEFAULT_FIRST_NAME,
+        last_name: last_name?.trim() ?? DEFAULT_LAST_NAME,
+        last_access: new Date(),
+      });
+    }
+
+    if(!resultingUUID) {
+      return errors.internalServerError(res);
+    }
+
+    return res.status(200).send({
+      central_identity_id: resultingUUID
+    });
   }
 
   public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
