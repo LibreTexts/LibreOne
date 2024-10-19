@@ -155,9 +155,11 @@
   const props = withDefaults(
     defineProps<{
       authorized?: boolean;
+      userRole?: string;
     }>(),
     {
       authorized: false,
+      userRole: undefined
     },
   );
 
@@ -177,15 +179,23 @@
     {
       title: 'Security',
       link: '/security',
-    },
+    }
+  ];
+  const instructorItems = [
     {
       title: 'Instructor',
       link: '/instructor',
-    },
-  ];
+    }
+  ]
 
   const navItems = computed<NavItem[]>(() => {
-    return [...baseItems, ...(props.authorized ? authItems : [])];
+    if (props.userRole === 'instructor' && props.authorized) {
+      return [...baseItems, ...authItems, ...instructorItems];
+    }
+    if (props.userRole === 'student' && props.authorized) {
+      return [...baseItems, ...authItems];
+    }
+    return baseItems;
   });
 
   // Methods

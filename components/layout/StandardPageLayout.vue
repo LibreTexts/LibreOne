@@ -1,5 +1,5 @@
 <template>
-  <LibreOneHeader :authorized="isAuthorized" />
+  <LibreOneHeader :authorized="isAuthorized" :userRole="userRole"/>
   <div
     class="bg-zinc-100 flex flex-column justify-center items-start min-h-screen shadow-inner pr-2 pb-10"
   >
@@ -28,6 +28,7 @@
   import { computed } from 'vue';
   import LibreOneHeader from '@components/layout/LibreOneHeader.vue';
   import { useAuthStatus } from '@renderer/useAuthStatus';
+  import { useUserRole } from '@renderer/useUserRole';
 
   // Props & Context
   const props = defineProps({
@@ -37,6 +38,7 @@
     },
   });
   const isAuthorized = useAuthStatus();
+  const userRole = useUserRole();
 
   const sizeClasses = computed(() => {
     return props.fillHeight ? ' h-5/6' : ' h-auto';
