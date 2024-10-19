@@ -51,9 +51,6 @@
   const RoleForm = defineAsyncComponent(
     () => import('@components/complete_registration/RoleForm.vue'),
   );
-  const StudentIdForm = defineAsyncComponent(
-    () => import('@components/complete_registration/StudentIdForm.vue'),
-  );
   const TimezoneForm = defineAsyncComponent(
     () => import('@components/complete_registration/TimezoneForm.vue'),
   );
@@ -68,9 +65,6 @@
       }
       case 'role': {
         return RoleForm;
-      }
-      case 'student-id': {
-        return StudentIdForm;
       }
       case 'timezone': {
         return TimezoneForm;
@@ -93,9 +87,6 @@
       case RoleForm: {
         return { uuid: pageContext.user?.uuid };
       }
-      case StudentIdForm: {
-        return { uuid: pageContext.user?.uuid };
-      }
       case TimezoneForm: {
         return { uuid: pageContext.user?.uuid };
       }
@@ -111,9 +102,6 @@
       }
       case RoleForm: {
         return { 'role-update': handleRoleSelectionComplete };
-      }
-      case StudentIdForm: {
-        return { 'student-id-update': handleStudentIdComplete };
       }
       default: {
         return { 'name-update': handleNameInputComplete };
@@ -149,17 +137,10 @@
   }
 
   /**
-   * Advances the page to the Timezone selection OR Student ID stage upon receiving the 'org-update' event.
+   * Advances the page to the Timezone selection stage upon receiving the 'org-update' event.
    */
   function handleOrgSelectionComplete() {
-    // If the user is an student, advance to the Student ID stage.
-    if (pageContext?.user?.user_type === 'student') {
-      handleNavigation('/complete-registration/student-id');
-    }
-    // Otherwise, advance to the Timezone stage.
-    else {
-      handleNavigation('/complete-registration/timezone');
-    }
+    handleNavigation('/complete-registration/timezone');
   }
 
   /**

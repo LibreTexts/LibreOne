@@ -20,7 +20,7 @@
         <input
           id="first_input"
           type="text"
-          placeholder="Deanna"
+          placeholder="Benny"
           v-model="firstName"
           aria-required
           :class="['border', firstErr ? 'border-red-600' : 'border-gray-300', 'block', 'h-10', 'mt-2', 'w-full', 'rounded-md', 'px-2', 'placeholder:text-slate-400', 'placeholder:font-light']"
@@ -36,7 +36,7 @@
         <input
           id="last_input"
           type="text"
-          placeholder="Troi"
+          placeholder="Owl"
           v-model="lastName"
           aria-required
           :class="['border', lastErr ? 'border-red-600' : 'border-gray-300', 'block', 'h-10', 'mt-2', 'w-full', 'rounded-md', 'px-2', 'placeholder:text-slate-400', 'placeholder:font-light']"
