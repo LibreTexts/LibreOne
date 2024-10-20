@@ -73,6 +73,10 @@ export const updateUserEmailSchema = joi.object({
   email: joi.string().email().required(),
 });
 
+export const updateUserEmailDirectSchema = joi.object({
+  email: joi.string().email().required(),
+});
+
 export const updateUserOrganizationAdminRoleSchema = joi.object({
   admin_role: joi.string().valid(...Object.keys(UserOrganizationAdminRoleEnum)).required(),
 });

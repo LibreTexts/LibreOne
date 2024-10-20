@@ -167,6 +167,38 @@ export class UserController {
   }
 
   /**
+   * Directly updates a User's email address without verification or validation.
+   * Intended for use by API actors with elevated permissions only.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+    public async updateUserEmailDirect(req: Request, res: Response): Promise<Response> {
+      const { uuid } = req.params as UserUUIDParams;
+      const { email } = req.body as CreateUserEmailChangeRequestBody;
+  
+      const foundUser = await User.findOne({ where: { uuid } });
+      if (!foundUser) {
+        return errors.notFound(res);
+      }
+  
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return errors.badRequest(res, 'Email already in use.');
+      }
+      
+      await foundUser.update({ email });
+  
+      return res.send({
+        data: {
+          central_identity_id: foundUser.uuid,
+          email,
+        },
+      });
+    }
+
+  /**
    * Creates a new EmailVerification opportunity for a user to change their email address.
    *
    * @param req - Incoming API request.
