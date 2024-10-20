@@ -127,6 +127,15 @@ usersRouter.route('/:uuid/avatar').post(
   catchInternal((req, res) => controller.updateUserAvatar(req, res)),
 );
 
+usersRouter.route('/:uuid/email-change-direct').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write']),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.updateUserEmailDirectSchema, 'body'),
+  catchInternal((req, res) => controller.updateUserEmailDirect(req, res)),
+);
+
 usersRouter.route('/:uuid/email-change').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
