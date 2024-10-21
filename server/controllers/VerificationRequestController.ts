@@ -38,17 +38,24 @@ export class VerificationRequestController {
    * @returns The newly created Request.
    */
   public async createVerificationRequest(uuid: string, props: CreateVerificationRequestProps): Promise<VerificationRequest> {
-    const { bio_url, applications } = props;
+    const { bio_url, addtl_info,  applications } = props;
+
+    if(!bio_url && !addtl_info) {
+      throw new Error('bad_request');
+    }
+
     const createdRequest = await sequelize.transaction(async (transaction) => {
       const newRequest = await VerificationRequest.create({
         user_id: uuid,
         status: 'open',
-        bio_url,
+        bio_url: bio_url || null,
+        addtl_info: addtl_info || null,
       }, { validate: true, transaction });
       await VerificationRequestHistory.create({
         verification_request_id: newRequest.id,
         status: 'open',
-        bio_url,
+        bio_url: bio_url || null,
+        addtl_info: addtl_info || null,
       }, { validate: true, transaction });
       if (applications) {
         const newAccessRequest = await AccessRequest.create({
