@@ -32,9 +32,11 @@ export class VerificationRequest extends Model {
   @Column(DataType.ENUM('approved', 'denied', 'needs_change', 'open'))
   declare status: VerificationRequestStatus;
 
-  @AllowNull(false)
   @Column(DataType.STRING)
   declare bio_url: string;
+
+  @Column(DataType.TEXT)
+  declare addtl_info: string;
 
   @Column(DataType.TEXT)
   declare decision_reason: string;

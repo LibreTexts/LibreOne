@@ -6,7 +6,8 @@ export type VerificationRequestIDParams = {
 };
 
 export type CreateVerificationRequestProps = {
-  bio_url: string;
+  bio_url?: string;
+  addtl_info?: string;
   applications?: number[]; 
 };
 

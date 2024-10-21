@@ -43,11 +43,19 @@
           id="bio_url_input"
           :label="$t('instructor.biourl')"
           :instructions="$t('instructor.biourl_desc')"
-          aria-required="true"
           v-model="bioURL"
           placeholder="https://example.com/my-bio"
           class="my-4"
-          required
+        />
+        <ThemedTextarea
+          id="add_info_input"
+          :label="$t('instructor.addtl_info')"
+          :instructions="$t('instructor.addtl_info_desc')"
+          v-model="addtlInfo"
+          placeholder="Additional information"
+          class="my-4"
+          :maxlength="500"
+          :showCharacterCount="true"
         />
         <!--
         <ThemedInput
@@ -129,6 +137,7 @@
   import ThemedButton from '../ThemedButton.vue';
   import ThemedInput from '../ThemedInput.vue';
   import ThemedSelectInput from '../ThemedSelectInput.vue';
+  import ThemedTextarea from '../ThemedTextarea.vue';
   import { Application } from '../../server/types/applications';
   import { isInstructorVerificationStatus } from '@renderer/utils/typeHelpers';
   import { useI18n } from 'vue-i18n';
@@ -156,6 +165,7 @@
   const formStep = ref(1);
   const formValid = ref(false);
   const bioURL = ref('');
+  const addtlInfo = ref('');
   //const registrationCode = ref('');
   const selectedApps = ref<string[]>([]);
   const selectedSpecialLibs = ref<string[]>([]);
@@ -224,7 +234,7 @@
 
   // Watchers
   watch(
-    () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value],
+    () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value, addtlInfo.value],
     () => {
       formValid.value = validateForm(false);
     },
@@ -250,9 +260,27 @@
   function validateForm(setErrors = false) {
     validationErrors.value = [];
     let isValid = true;
-    if (!isValidUrl(bioURL.value)) {
+
+    // Addtl Info OR Bio URL is required
+    if (!addtlInfo.value.trim() && !bioURL.value.trim()) {
+      if (setErrors) {
+        validationErrors.value.push(t('instructor.no_bio_addtl_info'));
+      }
+      isValid = false;
+    }
+
+    // If Bio URL is provided, it must be a valid URL
+    if (bioURL.value.trim() && !isValidUrl(bioURL.value.trim())) {
       if (setErrors) {
         validationErrors.value.push(t('instructor.biourl_invalid'));
+      }
+      isValid = false;
+    }
+
+    // If Addtl Info is provided, it must be between 5 and 500 characters
+    if (addtlInfo.value.trim() && (addtlInfo.value.trim().length < 5 ||addtlInfo.value.trim().length > 500)) {
+      if (setErrors) {
+        validationErrors.value.push(t('instructor.addtl_info_max'));
       }
       isValid = false;
     }
@@ -267,7 +295,8 @@
       if (!validateForm(true)) return;
 
       const res = await axios.post(`/users/${pageContext.user.uuid}/verification-request`, {
-        bio_url: bioURL.value,
+        bio_url: bioURL.value.trim(),
+        addtl_info: addtlInfo.value.trim(),
         ...((selectedApps.value.length || selectedSpecialLibs.value.length) && {
           applications: [...selectedApps.value, ...selectedSpecialLibs.value],
         }),

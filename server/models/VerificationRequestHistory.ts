@@ -26,9 +26,11 @@ export class VerificationRequestHistory extends Model {
   @Column((DataType.ENUM(...verificationRequestStatuses)))
   declare status: VerificationRequestStatus;
 
-  @AllowNull(false)
   @Column(DataType.STRING)
   declare bio_url: string;
+
+  @Column(DataType.TEXT)
+  declare addtl_info: string;
 
   @Column(DataType.TEXT)
   declare decision_reason: string;

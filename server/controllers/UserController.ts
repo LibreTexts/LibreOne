@@ -332,7 +332,16 @@ export class UserController {
       }
     }
 
-    const verificationRequest = await new VerificationRequestController().createVerificationRequest(uuid, props);
+    let verificationRequest: VerificationRequest | null;
+    try {
+      verificationRequest = await new VerificationRequestController().createVerificationRequest(uuid, props)
+    } catch (e) {
+      if(e instanceof Error && e.message === 'bad_request'){
+        return errors.badRequest(res);
+      }
+      verificationRequest = null;
+    }
+    
     if (!verificationRequest) {
       return errors.internalServerError(res);
     }
