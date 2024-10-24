@@ -728,13 +728,7 @@ export class AuthController {
         registration_complete: true,
       });
     } else {
-      resultingUUID = foundUser.uuid
-      await foundUser.update({
-        email,
-        first_name: first_name?.trim() ?? DEFAULT_FIRST_NAME,
-        last_name: last_name?.trim() ?? DEFAULT_LAST_NAME,
-        last_access: new Date(),
-      });
+      return errors.conflict(res, "User already exists");
     }
 
     if(!resultingUUID) {
