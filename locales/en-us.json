@@ -176,7 +176,8 @@
   },
   "instructor": {
     "yourprofile": "Your Instructor Profile",
-    "yourprofiletagline": "Verified instructors can edit and contribute to the LibreTexts libraries. Either a Bio URL or Additional Information is required to submit your verification request.",
+    "yourprofiletagline": "Verified instructors can edit and contribute to the LibreTexts libraries.",
+    "yourprofilerequirements": "Either a Bio URL or Additional Information is required to submit your verification request.",
     "status_not_attempted": "Not Attempted",
     "status_pending": "Pending",
     "status_needs_review": "Needs Review",
@@ -191,7 +192,7 @@
     "startrequestcta": "Click the button below to start the instructor verification process.",
     "restartrequest": "Restart Verification Request",
     "biourl": "Bio URL",
-    "biourl_desc": "To verify instructor status you please provide a link to a web page showing your faculty status. Links to your institution's home page are NOT sufficient. A URL that shows that you are an instructor is needed. Pages must be publicly accessible (cannot require login).",
+    "biourl_desc": "To verify instructor status, please provide a link to a web page showing your faculty status. Links to your institution's home page are NOT sufficient. A URL that shows that you are an instructor is needed. Pages must be publicly accessible (cannot require login).",
     "biourl_invalid": "Invalid Bio URL, please check your input.",
     "registrationcode": "Registration Code",
     "registrationcode_desc": "If you have were provided a registration code, enter it here. This is not required.",
@@ -212,6 +213,7 @@
     "adapt_note": "You have selected ADAPT. If your request is approved, you will receive an access code by email that is valid for 48 hours. Please ensure you monitor your inbox for this approval message.",
     "addtl_info": "Additional Information",
     "addtl_info_desc": "If you don't have a URL showing your faculty status, please provide us with additional information or links that can help us verify your instructor status.",
+    "addtl_info_max": "Additional information must be less than 500 characters.",
     "no_bio_addtl_info": "You must provide either a Bio URL or Additional Information."
   },
   "instructor_getting_started": {

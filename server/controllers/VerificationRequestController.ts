@@ -14,16 +14,15 @@ import {
 import errors from '../errors';
 import { MailController } from './MailController';
 import {
-  CreateVerificationRequestProps,
   GetAllVerificationRequestsQuery,
-  UpdateVerificationRequestBody,
-  UpdateVerificationRequestByUserProps,
+  UpdateVerificationRequestByAdminBody,
   VerificationRequestIDParams,
 } from '../types/verificationrequests';
 import { UserController } from './UserController';
 import { AuthController } from "@server/controllers/AuthController";
 import { SignJWT } from 'jose';
 import axios from 'axios';
+import { CreateUserVerificationRequestBody, UpdateUserVerificationRequestBody } from '@server/types/users';
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
@@ -37,7 +36,7 @@ export class VerificationRequestController {
    * @param props - Verification Request inputs.
    * @returns The newly created Request.
    */
-  public async createVerificationRequest(uuid: string, props: CreateVerificationRequestProps): Promise<VerificationRequest> {
+  public async createVerificationRequest(uuid: string, props: CreateUserVerificationRequestBody): Promise<VerificationRequest> {
     const { bio_url, addtl_info,  applications } = props;
 
     if(!bio_url && !addtl_info) {
@@ -152,7 +151,7 @@ export class VerificationRequestController {
    */
   public async updateVerificationRequest(req: Request, res: Response): Promise<Response> {
     const { verificationRequestID } = (req.params as unknown) as VerificationRequestIDParams;
-    const props = req.body as UpdateVerificationRequestBody;
+    const props = req.body as UpdateVerificationRequestByAdminBody;
 
     const foundReq = await VerificationRequest.findByPk(verificationRequestID);
     if (!foundReq) {
@@ -185,6 +184,7 @@ export class VerificationRequestController {
           verification_request_id: foundReq.id,
           status: 'needs_change',
           bio_url: foundReq.get('bio_url'),
+          addtl_info: foundReq.get('addtl_info'),
           ...(props.reason && { decision_reason: props.reason }),
         }, { validate: true, transaction });
         await this.sendUserRequestChangeRequestedNotification(foundUser.get('email'), props.reason);
@@ -203,6 +203,7 @@ export class VerificationRequestController {
           verification_request_id: foundReq.id,
           status: 'denied',
           bio_url: foundReq.get('bio_url'),
+          addtl_info: foundReq.get('addtl_info'),
           ...(props.reason && { decision_reason: props.reason }),
         }, { validate: true, transaction });
         if (foundAccessReq) {
@@ -224,6 +225,7 @@ export class VerificationRequestController {
           verification_request_id: foundReq.id,
           status: 'approved',
           bio_url: foundReq.get('bio_url'),
+          addtl_info: foundReq.get('addtl_info'),
           ...(props.reason && { decision_reason: props.reason }),
         }, { validate: true, transaction });
 
@@ -292,20 +294,20 @@ export class VerificationRequestController {
    * @param props - Update inputs.
    * @returns The updated Request or null if failed.
    */
-  public async updateVerificationRequestByUser(verification_request_id: number, props: UpdateVerificationRequestByUserProps) {
+  public async updateVerificationRequestByUser(verification_request_id: number, props: UpdateUserVerificationRequestBody) {
     const foundVerifyReq = await VerificationRequest.findByPk(verification_request_id);
     if (!foundVerifyReq) {
       return null;
     }
 
     const prevStatus = foundVerifyReq.get('status');
-    const { bio_url, status } = props;
+    const { bio_url, addtl_info } = props;
     const updatedReq = await sequelize.transaction(async (transaction) => {
       await foundVerifyReq.update({ ...props }, { transaction });
       await VerificationRequestHistory.create({
         verification_request_id: foundVerifyReq.id,
-        status: status || foundVerifyReq.get('status'),
-        bio_url,
+        bio_url: bio_url ?? foundVerifyReq.get('bio_url'),
+        addtl_info: addtl_info ?? foundVerifyReq.get('addtl_info'),
       }, { validate: true, transaction });
       return foundVerifyReq;
     });

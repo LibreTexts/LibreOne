@@ -90,5 +90,8 @@ export const updateUserPasswordSchema = joi.object({
 });
 
 export const updateUserVerificationRequestSchema = joi.object({
-  bio_url: joi.string().uri().required(),
-});
+  bio_url: joi.string().uri().allow(''),
+  addtl_info: joi.string().max(500).allow(''),
+}).or('bio_url', 'addtl_info', {isPresent: (data) => {
+  return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
+}});
