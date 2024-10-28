@@ -17,15 +17,10 @@ export type GetAllVerificationRequestsQuery = {
   status?: VerificationRequestStatus;
 };
 
-export type UpdateVerificationRequestBody = {
+export type UpdateVerificationRequestByAdminBody = {
   effect: VerificationRequestEffect;
   reason?: string;
   approved_applications?: number[];
   library_access_option: 'all' | 'default' | 'specific';
   libraries?: number[];
-};
-
-export type UpdateVerificationRequestByUserProps = {
-  bio_url: string;
-  status?: string;
 };

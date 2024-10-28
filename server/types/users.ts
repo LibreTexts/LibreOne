@@ -48,7 +48,8 @@ export type CreateUserOrganizationBody = {
 };
 
 export type CreateUserVerificationRequestBody = {
-  bio_url: string;
+  bio_url?: string;
+  addtl_info?: string;
   applications?: number[];
 };
 
@@ -88,7 +89,8 @@ export type UpdateUserPasswordBody = {
 };
 
 export type UpdateUserVerificationRequestBody = {
-  bio_url: string;
+  bio_url?: string;
+  addtl_info?: string;
 };
 
 export type ResolvePrincipalAttributesQuery = {

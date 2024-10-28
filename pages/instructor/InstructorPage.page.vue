@@ -8,7 +8,7 @@
             {{ $t("instructor.yourprofile") }}
           </p>
           <p class="mt-2 text-slate-500">
-            {{ $t("instructor.yourprofiletagline") }}
+            {{ $t("instructor.yourprofiletagline") }} {{ instructorStatus !== 'verified' ? $t("instructor.yourprofilerequirements") : '' }}
           </p>
         </div>
       </div>
