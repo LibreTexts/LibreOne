@@ -384,11 +384,10 @@ export class VerificationRequestController {
             </ul>
           ` : ''}
           ${adaptAccessCode && adaptAccessCode !== 'error' ? `
-            <p><strong>Your ADAPT access code is: ${adaptAccessCode}</strong> . You can create your ADAPT instructor account <a href="https://adapt.libretexts.org/register/instructor" target="_blank">here</a>. Please note, access codes are only valid for 48 hours from their creation.</p>
-            <p><strong>Remember:</strong> ADAPT isn't integrated with LibreOne yet. You'll need to create separate credentials for use with ADAPT until that time.</p>
+            <p><strong>IMPORTANT:</strong> ADAPT isn't fully integrated with LibreOne yet, but your email address has been automatically sent to ADAPT. You'll need to <a href="https://adapt.libretexts.org/password/reset" target="_blank">reset your ADAPT password</a> using your email address first to access your account.</p>
           ` : 
             adaptAccessCode === 'error' ? `
-              <p>There was an issue generating your ADAPT access code. Please contact support.</p>
+              <p>There was an issue provisioning your ADAPT account. Please contact support.</p>
               ` : ''
           }
           <p>If you have further questions, please feel free to submit a ticket in our <a href="https://commons.libretexts.org/support/contact" target="_blank">Support Center</a>.</p>
