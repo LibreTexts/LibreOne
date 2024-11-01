@@ -93,7 +93,13 @@
       loading.value = true;
       await axios.patch(`/users/${props.uuid}`, data);
 
-      const finishResult = await axios.post('/auth/complete-registration');
+      let fromADAPT = false;
+      const queryParams = new URLSearchParams(window.location.search);
+      if(queryParams.has('source') && queryParams.get('source') === 'adapt-registration') {
+        fromADAPT = true;
+      }
+
+      const finishResult = await axios.post('/auth/complete-registration', fromADAPT && { source: 'adapt-registration' });  
       if (finishResult.data.data?.initSessionURL) {
         window.location.assign(finishResult.data.data.initSessionURL);
       }

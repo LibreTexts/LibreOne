@@ -122,7 +122,11 @@
         code: code.value,
       });
       loading.value = false;
-      window.location.assign('/complete-registration');
+
+      const queryParams = new URLSearchParams(window.location.search);
+      console.log(queryParams);
+      console.log(queryParams.toString());
+      window.location.assign('/complete-registration' + (queryParams.toString() ? `?${queryParams.toString()}` : ''));
     } catch (e) {
       console.log(e);
       loading.value = false;

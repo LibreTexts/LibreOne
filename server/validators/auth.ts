@@ -30,6 +30,10 @@ export const completeLoginSchema = joi.object({
   ticket: joi.string(),
 });
 
+export const completeRegistrationSchema = joi.object({
+  source: joi.string().valid('adapt-registration').optional(),
+});
+
 export const initResetPasswordSchema = joi.object({
   email: joi.string().email().required(),
   redirectURI: joi.string().uri(),

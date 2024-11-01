@@ -32,6 +32,7 @@ authRouter.route('/verify-email').post(
 
 authRouter.route('/complete-registration').post(
   verifyAPIAuthentication,
+  validate(AuthValidator.completeRegistrationSchema, 'body'),
   catchInternal((req, res) => controller.completeRegistration(req, res)),
 );
 

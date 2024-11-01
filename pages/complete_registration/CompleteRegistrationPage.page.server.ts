@@ -14,14 +14,16 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   }
 
   const routeParams = pageContext.routeParams;
+  const queryParams = new URLSearchParams(pageContext.urlParsed.search); // carry over query params
   const stageParam = routeParams['*'];
+
   if (!stageParam) {
-    redirectTo = '/complete-registration/name';
+    redirectTo = '/complete-registration/name' + (queryParams.toString() ? `?${queryParams}` : '');
   }
 
   // Users from an external IdP do not need to enter their name
   if (pageContext.user?.external_subject_id !== null && (!stageParam || stageParam === 'name')) {
-    redirectTo = '/complete-registration/role';
+    redirectTo = '/complete-registration/role' + (queryParams.toString() ? `?${queryParams}` : '');
   }
 
   return {

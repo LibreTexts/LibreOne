@@ -41,6 +41,10 @@ export type CompleteLoginQuery = {
   ticket: string;
 };
 
+export type completeRegistrationBody = {
+  source?: 'adapt-registration';
+};
+
 export type InitResetPasswordBody = {
   email: string;
   redirectURI?: string;

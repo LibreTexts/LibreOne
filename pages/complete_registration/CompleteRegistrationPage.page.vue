@@ -112,7 +112,8 @@
   onMounted(() => (formVisible.value = true));
 
   function handleNavigation(href: string) {
-    nextNavigationURL.value = href;
+    const queryParams = new URLSearchParams(window.location.search);
+    nextNavigationURL.value = href + (queryParams.toString() ? `?${queryParams.toString()}` : ''); // carry over any query params
     formVisible.value = false;
   }
 
