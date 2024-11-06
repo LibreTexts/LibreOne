@@ -1211,6 +1211,32 @@ export class AuthController {
     }
   }
 
+  public async notifyConductorOfDeleteAccountRequest(user: User) {
+    try {
+      const conductorWebhookURL = process.env.CONDUCTOR_WEBHOOK_BASE + '/delete-account' || 'http://localhost:5000/api/v1/central-identity/webhooks/delete-account';
+
+      const payload = {
+        central_identity_id: user.uuid
+      };
+
+      const res = await axios.post(conductorWebhookURL, payload, {
+        headers: this._getConductorWebhookHeaders(),
+      });
+
+      if (res.data.err) {
+        throw new Error(res.data.errMsg ?? 'Unknown error');
+      }
+
+      return true;
+    } catch (err) {
+      console.error({
+        msg: 'Error notifying Conductor of delete account request!',
+        error: err,
+      });
+      return false;
+    }
+  }
+
   private async _getADAPTWebhookHeaders(data?: Record<string, string>) {
     const encoded = new TextEncoder().encode(process.env.ADAPT_API_KEY ?? 'unknown');
     const jwtToSend = await new SignJWT({
@@ -1309,6 +1335,37 @@ export class AuthController {
     } catch (err) {
       console.error({
         msg: 'Error notifying ADAPT of updated verification status!',
+        error: err,
+      });
+      return false;
+    }
+  }
+
+  public async notifyADAPTOfDeleteAccountRequest(user: User): Promise<boolean> {
+    try {
+      const adaptWebhookBase = this._getADAPTWebhookBase();
+      const adaptWebhookURL = adaptWebhookBase + '/api/pending-delete-user';
+
+      const payload = {
+        central_identity_id: user.uuid
+      };
+
+      const res = await axios.post(adaptWebhookURL, payload, {
+        headers: await this._getADAPTWebhookHeaders({
+          central_identity_id: user.uuid,
+        }),
+      });
+
+      if (!res.data || res.data.type === 'error') {
+        throw new Error(res.data.message ?? 'Unknown error');
+      }
+
+      console.log(res.data)
+
+      return true;
+    } catch (err) {
+      console.error({
+        msg: 'Error notifying ADAPT of delete account request!',
         error: err,
       });
       return false;

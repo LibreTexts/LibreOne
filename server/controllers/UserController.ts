@@ -38,6 +38,8 @@ import type {
 } from '../types/users';
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
+import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
+import { addDays } from 'date-fns';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -1049,5 +1051,88 @@ export class UserController {
     await foundUserOrg.update({ admin_role: null });
 
     return res.send({});
+  }
+
+  /**
+   * Initiates a request to delete a user account. This will create a new DeleteAccountRequest.
+   * If the user is an admin in any organization, the request will be rejected and must be handled manually.
+   * 
+   * @param req - Incoming API request
+   * @param res - Outgoing API response
+   * @returns - The fulfilled API response
+   */
+  public async initDeleteAccount(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if(!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const foundUserOrgs = await UserOrganization.findAll({
+      where: { user_id: uuid },
+    });
+
+    // Check if user has admin role in any organization
+    const adminOrgs = foundUserOrgs.filter((uo) => uo.admin_role) || [];
+    if (adminOrgs.length > 0) {
+      return errors.badRequest(res, "User is an admin in one or more organizations. Please contact support to proceed with account deletion.");
+    }
+
+    const foundRequest = await DeleteAccountRequest.findOne({
+      where: { user_id: uuid },
+      order: [['requested_at', 'DESC']],
+    });
+    if(foundRequest){
+      return errors.badRequest(res, "A request to delete this account has already been initiated.");
+    }
+
+    await DeleteAccountRequest.create({
+      user_id: uuid,
+      status: 'pending',
+      requested_at: new Date(),
+    });
+
+    const authController = new AuthController();
+    const webhookPromises = [
+      authController.notifyConductorOfDeleteAccountRequest(foundUser),
+      authController.notifyADAPTOfDeleteAccountRequest(foundUser),
+    ];
+
+    await Promise.allSettled(webhookPromises); // fire and forget
+
+    return res.send({
+      msg: "Request to delete account has been successfully initiated.",
+      data: {}
+    })
+  }
+
+  public async checkAccountDeletionStatusInternal(uuid: string): Promise<{
+    pending: boolean,
+    final_date: string
+  } | {
+    pending: false
+  }> {
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if(!foundUser) {
+      return { pending: false };
+    }
+
+    const foundRequest = await DeleteAccountRequest.findOne({
+      where: { user_id: uuid },
+      order: [['requested_at', 'DESC']],
+    });
+
+    if(!foundRequest) {
+      return { pending: false };
+    }
+
+    const finalDate = addDays(foundRequest.requested_at, 30);
+
+    return {
+      pending: foundRequest.status === 'pending',
+      final_date: finalDate.toISOString(),
+    }
   }
 }
