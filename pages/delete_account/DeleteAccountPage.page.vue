@@ -79,7 +79,6 @@
 
 <script lang="ts" setup>
 import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
-import { usePageContext } from "@renderer/usePageContext";
 import { useAuthStatus } from "@renderer/useAuthStatus";
 
 const isAuthorized = useAuthStatus();

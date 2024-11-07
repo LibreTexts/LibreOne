@@ -128,7 +128,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, computed, h, Teleport } from 'vue';
+  import { ref, watch, computed } from 'vue';
   import ThemedButton from '../ThemedButton.vue';
   import NewEmailForm from './NewEmailForm.vue';
   import NewPasswordForm from './NewPasswordForm.vue';

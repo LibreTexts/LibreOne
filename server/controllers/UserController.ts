@@ -39,7 +39,6 @@ import type {
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
-import { addDays } from 'date-fns';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -1095,7 +1094,7 @@ export class UserController {
 
     const authController = new AuthController();
     const webhookPromises = [
-      authController.notifyConductorOfDeleteAccountRequest(foundUser),
+      //authController.notifyConductorOfDeleteAccountRequest(foundUser),
       authController.notifyADAPTOfDeleteAccountRequest(foundUser),
     ];
 
@@ -1128,11 +1127,11 @@ export class UserController {
       return { pending: false };
     }
 
-    const finalDate = addDays(foundRequest.requested_at, 30);
+    const finalDate = foundRequest.requested_at.setDate(foundRequest.requested_at.getDate() + 30);
 
     return {
       pending: foundRequest.status === 'pending',
-      final_date: finalDate.toISOString(),
+      final_date: new Date(finalDate).toISOString(),
     }
   }
 }

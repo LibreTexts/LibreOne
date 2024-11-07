@@ -5,7 +5,13 @@
     </p>
     <i18n-t keypath="delete-account.pending_infoline" tag="p" class="">
       <template #deletiondate v-if="deletionDate">
-        <span>{{ format(parseISO(deletionDate), "MM/dd/yyyy") }}</span>
+        <span>{{
+          new Intl.DateTimeFormat("en-us", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date(props.deletionDate))
+        }}</span>
       </template>
       <template #supportlink>
         <a
@@ -22,8 +28,6 @@
 </template>
 
 <script lang="ts" setup>
-import { format, parseISO } from "date-fns";
-
 const props = defineProps<{
   deletionDate: string;
 }>();

@@ -27,9 +27,6 @@ export class DeleteAccountRequest extends Model {
   @Column(DataType.DATE)
   declare requested_at: Date;
 
-  @Column(DataType.DATE)
-  declare completed_at: Date;
-
   @CreatedAt
   declare created_at: Date;
 
