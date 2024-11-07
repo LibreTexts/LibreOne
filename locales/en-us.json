@@ -26,7 +26,8 @@
     "here": "here",
     "donate": "Donate",
     "note": "Note",
-    "warning": "Warning"
+    "warning": "Warning",
+    "cancel": "Cancel"
   },
   "welcome": {
     "register": "Register For A LibreOne Account",
@@ -172,7 +173,31 @@
     "cannotbecurrent": "New password cannot be the same as the current password.",
     "passwordchanged": "Password changed successfully!",
     "redirecting": "We're redirecting you back to the security management page...",
-    "external": "It looks like you're using an external login provider. You can change your email or password with them."
+    "external": "It looks like you're using an external login provider. You can change your email or password with them.",
+    "dangerzone": "Danger Zone",
+    "deleteaccount": "Delete Account"
+  },
+  "delete-account": {
+    "header": "Delete Your LibreOne Account",
+    "infoline_1": "If you wish to delete your account and remove all associated data, please follow the steps below. Deleting your account is permanent and cannot be undone. Once your account is deleted:",
+    "consequences_1": "All personal information, including your profile, preferences, and data, will be permanently removed from our servers.",
+    "consequences_2": "Any saved courses, progress, or content will be lost.",
+    "consequences_3": "You will no longer be able to access all LibreTexts applications using this account including: ADAPT, Conductor, all libraries (editing access), Studio, etc.",
+    "infoline_2": "We will retain only the information necessary to comply with legal or regulatory requirements, and that data will be securely stored for up to 7 years as outlined in our {privpolicy}.",
+    "steps_header": "Steps to Delete Your Account",
+    "steps_infoline": "Please follow the steps below to delete your account:",
+    "step_1": "Log into your LibreOne account by clicking 'Sign In' at the top right of this page.",
+    "step_2": "Navigate to the {securitylink} page.",
+    "step_3": "Scroll to the section labeled 'Danger Zone' and click 'Delete Account'.",
+    "step_4": "Follow the prompts to confirm the deletion of your account.",
+    "step_5": "You will receive an email confirming the deletion of your account.",
+    "result": "Once your confirmed, your account and data will be permanently deleted across all LibreTexts applications and services after 30 days. If you change your mind, you can contact us to cancel this request within that time frame, as long as you provide at least 72 hours of notice before the deletion date.",
+    "contact": "For any questions or concerns, please contact our support team {supportlink}.",
+    "thankyou": "Thank you for supporting the LibreTexts mission.",
+    "confirm": "Are you sure you want to delete your account? You must contact us within 27 days to cancel this request. Otherwise, your account and data will be permanently deleted.",
+    "delete": "Delete Account",
+    "pending_header": "Account Deletion Pending",
+    "pending_infoline": "Your account deletion request has been received and will be finalized {deletiondate}. You will receive an email confirming the deletion of your account. If you change your mind, please contact us {supportlink} immediately to cancel this request."
   },
   "instructor": {
     "yourprofile": "Your Instructor Profile",

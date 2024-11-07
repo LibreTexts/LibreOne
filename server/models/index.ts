@@ -25,6 +25,7 @@ import { UserOrganization } from './UserOrganization';
 import { VerificationRequest } from './VerificationRequest';
 import { VerificationRequestHistory } from './VerificationRequestHistory';
 import { defaultLicenses } from '@server/licenses';
+import { DeleteAccountRequest } from './DeleteAccountRequest';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -48,6 +49,7 @@ sequelize.addModels([
   Application,
   AccessRequest,
   AccessRequestApplication,
+  DeleteAccountRequest,
   Domain,
   EmailVerification,
   License,
@@ -186,6 +188,7 @@ export {
   APIUser,
   APIUserPermissionConfig,
   Application,
+  DeleteAccountRequest,
   Domain,
   EmailVerification,
   License,

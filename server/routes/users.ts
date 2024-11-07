@@ -160,6 +160,13 @@ usersRouter.route('/:uuid/password-change').post(
   catchInternal((req, res) => controller.updateUserPassword(req, res)),
 );
 
+usersRouter.route('/:uuid/init-delete-account').post(
+  verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  catchInternal((req, res) => controller.initDeleteAccount(req, res)),
+);
+
 export {
   usersRouter,
 };

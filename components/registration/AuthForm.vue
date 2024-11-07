@@ -149,7 +149,7 @@
       >
         <template #privpolicy>
           <a
-            href="https://libretexts.org/legal/privacy-policy.html"
+            href="https://libretexts.org/privacy"
             target="_blank"
             rel="noreferer"
             class="text-accent"
@@ -159,7 +159,7 @@
         </template>
         <template #tos>
           <a
-            href="https://libretexts.org/legal/terms-of-service-agreement.html"
+            href="https://libretexts.org/terms-of-service/"
             target="_blank"
             rel="noreferer"
             class="text-accent"

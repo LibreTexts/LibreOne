@@ -52,6 +52,9 @@
         variantClasses =
           'bg-transparent border border-primary text-sky-700 text-primary';
         break;
+      case 'danger':
+        variantClasses = 'bg-red-500 hover:bg-red-600';
+        break;
       default:
         variantClasses = 'bg-primary hover:bg-sky-700';
         break;
