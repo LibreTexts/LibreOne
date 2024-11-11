@@ -81,27 +81,27 @@
             {{ $t("security.changepassword") }}
           </ThemedButton>
         </div>
-        <div class="mt-10">
-          <div class="flex flex-row cursor-pointer" @click="() => (showDangerZone = !showDangerZone)">
-            <p class="text-sm font-semibold text-red-500">
-              {{ $t("security.dangerzone") }}
-            </p>
-            <FontAwesomeIcon
-              :icon="['fa-solid', showDangerZone ? 'chevron-down' : 'chevron-right']"
-              class="text-red-500 ml-2 mt-[5px] h-3"
-            />
-          </div>
-          <ThemedButton
-            variant="danger"
-            class='mt-4'
-            @click="openDeleteAccountModal"
-            small
-            v-if="showDangerZone && !pendingDeletion"
-          >
-            {{ $t("security.deleteaccount") }}
-          </ThemedButton>
-        </div>
       </div>
+    </div>
+    <div class="mt-10">
+      <div class="flex flex-row cursor-pointer" @click="() => (showDangerZone = !showDangerZone)">
+        <p class="text-sm font-semibold text-red-500">
+          {{ $t("security.dangerzone") }}
+        </p>
+        <FontAwesomeIcon
+          :icon="['fa-solid', showDangerZone ? 'chevron-down' : 'chevron-right']"
+          class="text-red-500 ml-2 mt-[5px] h-3"
+        />
+      </div>
+      <ThemedButton
+        variant="danger"
+        class='mt-4'
+        @click="openDeleteAccountModal"
+        small
+        v-if="showDangerZone && !pendingDeletion"
+      >
+        {{ $t("security.deleteaccount") }}
+      </ThemedButton>
     </div>
       <ThemedModal ref="deleteAccountModal">
         <p class="text-center text-2xl font-medium">{{ $t('delete-account.header')}}</p>

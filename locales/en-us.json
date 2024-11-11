@@ -197,7 +197,8 @@
     "confirm": "Are you sure you want to delete your account? You must contact us within 27 days to cancel this request. Otherwise, your account and data will be permanently deleted.",
     "delete": "Delete Account",
     "pending_header": "Account Deletion Pending",
-    "pending_infoline": "Your account deletion request has been received and will be finalized {deletiondate}. You will receive an email confirming the deletion of your account. If you change your mind, please contact us {supportlink} immediately to cancel this request."
+    "pending_infoline": "Your account deletion request has been received and will be finalized {deletiondate}. You will receive an email confirming the deletion of your account. If you change your mind, please contact us {supportlink} immediately to cancel this request.",
+    "request": "Request Account Deletion"
   },
   "instructor": {
     "yourprofile": "Your Instructor Profile",
