@@ -21,6 +21,9 @@
           @data-updated="handleDataUpdated"
           @set-unknown-error="(val) => (unknownerror = val)"
         />
+        <a href="/delete-account" class="text-center text-slate-500 mt-4 text-sm hover:underline">
+          {{ $t("delete-account.request") }}
+      </a>
       </div>
     </div>
   </StandardPageLayout>

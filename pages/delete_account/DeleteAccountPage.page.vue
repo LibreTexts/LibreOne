@@ -68,7 +68,7 @@
               </a>
             </template>
           </i18n-t>
-          <p class="mt-8 text-lg text-slate-500">
+          <p class="mt-8 text-lg text-slate-500 italic">
             {{ $t("delete-account.thankyou") }}
           </p>
         </div>
