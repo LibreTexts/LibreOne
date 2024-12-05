@@ -55,6 +55,7 @@
   import ThemedSelectInput from '../ThemedSelectInput.vue';
   import ThemedButton from '../ThemedButton.vue';
   import { TimezoneOpts } from '@renderer/utils/timezones';
+import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
 
   // Local Types
   type TimezonePatch = {
@@ -93,7 +94,21 @@
       loading.value = true;
       await axios.patch(`/users/${props.uuid}`, data);
 
-      const finishResult = await axios.post('/auth/complete-registration');
+      const queryParams = new URLSearchParams(window.location.search);
+
+      let fromADAPT = false;
+      let adaptSpecialRole: string | null = null;
+      if(queryParams.has('source') && queryParams.get('source') === 'adapt-registration') {
+        fromADAPT = true;
+      }
+      if(queryParams.has('adapt_role') && ADAPT_SPECIAL_ROLES.includes(queryParams.get('adapt_role') || "") ){
+        adaptSpecialRole = queryParams.get('adapt_role');
+      }
+
+      const finishResult = await axios.post('/auth/complete-registration', {
+        ...(fromADAPT ? { source: 'adapt-registration' } : {}),
+        ...(adaptSpecialRole ? { adapt_role: adaptSpecialRole } : {}), 
+      });
       if (finishResult.data.data?.initSessionURL) {
         window.location.assign(finishResult.data.data.initSessionURL);
       }
