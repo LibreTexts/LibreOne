@@ -124,9 +124,8 @@
       loading.value = false;
 
       const queryParams = new URLSearchParams(window.location.search);
-      console.log(queryParams);
-      console.log(queryParams.toString());
-      window.location.assign('/complete-registration' + (queryParams.toString() ? `?${queryParams.toString()}` : ''));
+      const queryString = queryParams.toString();
+      window.location.assign('/complete-registration' + (queryString ? `?${queryString}` : ''));
     } catch (e) {
       console.log(e);
       loading.value = false;
