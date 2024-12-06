@@ -158,7 +158,7 @@ export class AuthController {
       .setIssuedAt()
       .setIssuer(SESSION_DOMAIN)
       .setAudience(SESSION_DOMAIN)
-      .setExpirationTime('3d')
+      .setExpirationTime('7d')
       .sign(SESSION_SECRET);
   }
 
@@ -190,7 +190,7 @@ export class AuthController {
       secure: true,
       domain: COOKIE_DOMAIN,
       sameSite: 'lax',
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
     res.cookie('one_access', access, {
       path: '/',
