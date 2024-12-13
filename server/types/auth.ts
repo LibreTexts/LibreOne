@@ -1,5 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 
+export type ADAPTSpecialRole = 'instructor' | 'grader' | 'question-editor' | 'tester';
+
 export type TokenAuthenticationVerificationResult = {
   expired: boolean;
   isAuthenticated: boolean;
@@ -39,6 +41,11 @@ export type InitLoginQuery = {
 
 export type CompleteLoginQuery = {
   ticket: string;
+};
+
+export type completeRegistrationBody = {
+  source?: 'adapt-registration';
+  adapt_role?: ADAPTSpecialRole;
 };
 
 export type InitResetPasswordBody = {
