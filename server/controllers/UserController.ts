@@ -649,6 +649,7 @@ export class UserController {
       organizations: foundUser.get('organizations') || [],
       user_type: foundUser.user_type || null,
       bio_url: foundUser.bio_url || '',
+      time_zone: foundUser.time_zone || '',
       verify_status: foundUser.verify_status,
       picture: foundUser.avatar || DEFAULT_AVATAR,
     });

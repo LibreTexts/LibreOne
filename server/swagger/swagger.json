@@ -315,6 +315,9 @@
                                         "bio_url": {
                                             "type": "string"
                                         },
+                                        "time_zone": {
+                                            "type": "string"
+                                        },
                                         "verify_status": {
                                             "type": "string"
                                         },
