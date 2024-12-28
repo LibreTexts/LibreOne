@@ -122,7 +122,10 @@
         code: code.value,
       });
       loading.value = false;
-      window.location.assign('/complete-registration');
+
+      const queryParams = new URLSearchParams(window.location.search);
+      const queryString = queryParams.toString();
+      window.location.assign('/complete-registration' + (queryString ? `?${queryString}` : ''));
     } catch (e) {
       console.log(e);
       loading.value = false;

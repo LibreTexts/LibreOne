@@ -36,6 +36,8 @@ import type {
   TokenAuthenticationVerificationResult,
   CheckCASInterruptQuery,
   AutoProvisionUserBody,
+  completeRegistrationBody,
+  ADAPTSpecialRole,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 
@@ -497,6 +499,8 @@ export class AuthController {
    */
   public async completeRegistration(req: Request, res: Response): Promise<Response | void> {
     const { userUUID } = req;
+    const { source, adapt_role } = req.body as completeRegistrationBody;
+
     const foundUser = await User.findOne({ where: { uuid: userUUID } });
     if (!foundUser) {
       return errors.badRequest(res);
@@ -520,10 +524,10 @@ export class AuthController {
 
     const webhookPromises = [
       this._notifyConductorOfNewUser(foundUser),
-      this._notifyADAPTOfNewUser(foundUser)
+      this._notifyADAPTOfNewUser(foundUser, source, adapt_role)
     ];
 
-    await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
+    const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
 
     let shouldCreateSSOSession = true;
     let redirectCASService = null;
@@ -542,6 +546,17 @@ export class AuthController {
       }
     }
 
+    const adaptToken = webhookResults[1];
+    const getRedirectURI = (source?: string, tkn?: string | boolean) => {
+      // If source was ADAPT and we have a token, use it to redirect to ADAPT, otherwise fallback to registration-complete
+      if(source === 'adapt-registration' && tkn && typeof tkn === 'string') {
+        const ADAPT_BASE = this._getADAPTWebhookBase();
+        return `${ADAPT_BASE}/login-by-jwt/${tkn}`;
+      }
+
+      return `${SESSION_DOMAIN}/registration-complete`;
+    }
+
     // create SSO session tokens
     let casJWE: string | null = null;
     if (shouldCreateSSOSession) {
@@ -558,7 +573,7 @@ export class AuthController {
         .setProtectedHeader({ alg: 'A256KW', enc: 'A256GCM' })
         .encrypt(casEncryptSecret);
       const state = JSON.stringify({
-        redirectURI: `${SESSION_DOMAIN}/registration-complete`,
+        redirectURI: getRedirectURI(source, adaptToken),
       });
       const prodCookieConfig: CookieOptions = {
         sameSite: 'lax',
@@ -1262,7 +1277,7 @@ export class AuthController {
     }
   }
 
-  private async _notifyADAPTOfNewUser(user: User) {
+  private async _notifyADAPTOfNewUser(user: User, source?: string, adapt_role?: ADAPTSpecialRole): Promise<string | boolean> {
     try {
       const adaptWebhookBase = this._getADAPTWebhookBase();
       const adaptWebhookURL = adaptWebhookBase + '/api/oidc/libreone/new-user-created';
@@ -1273,29 +1288,25 @@ export class AuthController {
         last_name: user.last_name,
         email: user.email,
         time_zone: user.time_zone,
-        role: user.user_type,
+        role: adapt_role ? adapt_role : user.user_type ?? 'student', // default to student if no role provided or otherwise can't be determined
         verify_status: user.verify_status,
         ...(user.avatar && { avatar: user.avatar }),
+        ...(source && { source }),
       };
 
       const res = await axios.post(adaptWebhookURL, payload, {
-        headers: await this._getADAPTWebhookHeaders({
-          central_identity_id: user.uuid,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          time_zone: user.time_zone,
-          role: user.user_type ?? 'student',
-          verify_status: user.verify_status,
-          ...(user.avatar && { avatar: user.avatar }),
-        }),
+        headers: await this._getADAPTWebhookHeaders(payload),
       });
 
       if (!res.data || res.data.type === 'error') {
         throw new Error(res.data.message ?? 'Unknown error');
       }
 
-      return true;
+      if(source === 'adapt-registration' && !res.data.token) {
+        throw new Error('No token returned from ADAPT');
+      }
+
+      return source === 'adapt-registration' ? res.data.token : true;
     } catch (err) {
       console.error({
         msg: 'Error notifying ADAPT of new user!',

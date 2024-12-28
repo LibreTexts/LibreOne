@@ -1,5 +1,6 @@
 import joi from 'joi';
 import { passwordValidator, timeZoneValidator } from './shared';
+import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
 
 export const registerSchema = joi.object({
   email: joi.string().email().required(),
@@ -28,6 +29,11 @@ export const initLoginQuerySchema = joi.object({
 
 export const completeLoginSchema = joi.object({
   ticket: joi.string(),
+});
+
+export const completeRegistrationSchema = joi.object({
+  source: joi.string().valid('adapt-registration').optional(),
+  adapt_role: joi.string().valid(...ADAPT_SPECIAL_ROLES).optional(),
 });
 
 export const initResetPasswordSchema = joi.object({
