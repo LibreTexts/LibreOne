@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, defineAsyncComponent, ref, shallowRef } from 'vue';
+  import { computed, defineAsyncComponent, onMounted, ref, shallowRef } from 'vue';
   import AuthForm from '@components/registration/AuthForm.vue';
   const VerifyEmail = defineAsyncComponent(() => import('@components/registration/VerifyEmail.vue'));
   
@@ -41,10 +41,18 @@
     recoveryURL: string;
     googleRegisterURL: string;
     microsoftRegisterURL: string;
+    serviceURL?: string;
   }>();
 
   const stage = shallowRef(AuthForm);
   const email = ref('');
+
+  onMounted(() => {
+    if(props.serviceURL){
+      // Set a cookie to remember the service URL
+      document.cookie = `post_register_service_url=${props.serviceURL}; path=/; SameSite=Strict`;
+    }
+  });
 
   const componentProps = computed(() => {
     switch (stage.value) {

@@ -53,6 +53,20 @@ export function getProductionLoginURL(): string {
 }
 
 /**
+ * Checks that a given service URI is a valid URL and that it is a *.libretexts.org URL.
+ * @param serviceURI - The service URI to check.
+ * @returns {boolean} - True if the serviceURI is a valid *.libretexts.org URL, false otherwise.
+ */
+export function isValidServiceURIForRedirect(serviceURI: string): boolean {
+  try {
+    const url = new URL(serviceURI);
+    return url.hostname.endsWith('.libretexts.org'); // Ensure that the serviceURI is a *.libretexts.org URL
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Tries to parse a JSON string into an object.
  *
  * @param input - JSON string to parse/check.

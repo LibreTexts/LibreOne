@@ -1,6 +1,6 @@
 import { buildLocalizedServerRedirectURL } from '@renderer/helpers';
 import type { PageContextServer } from '@renderer/types';
-import { getCASBaseURL, getProductionLoginURL } from '@server/helpers';
+import { getCASBaseURL, getProductionLoginURL, isValidServiceURIForRedirect} from '@server/helpers';
 
 /**
  * Reads search parameters provided in the URL and transforms them to component props. Redirects
@@ -23,6 +23,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
   const origSearchParams = pageContext.urlParsed.search;
   const searchParams = new URLSearchParams(origSearchParams);
   const redirectURI = searchParams.get('redirect_uri');
+  const serviceParam = searchParams.get('service');
 
   const loginParams = new URLSearchParams({
     ...origSearchParams,
@@ -49,6 +50,7 @@ export async function onBeforeRender(pageContext: PageContextServer) {
         recoveryURL: `/passwordrecovery?${recoveryParams.toString()}`,
         googleRegisterURL: `${getCASBaseURL()}/cas/clientredirect?${googleParams.toString()}`,
         microsoftRegisterURL: `${getCASBaseURL()}/cas/clientredirect?${microsoftParams.toString()}`,
+        serviceURL: serviceParam && isValidServiceURIForRedirect(serviceParam) ? serviceParam : undefined,
       },
     },
   };
