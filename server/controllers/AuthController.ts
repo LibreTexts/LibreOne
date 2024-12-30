@@ -530,7 +530,8 @@ export class AuthController {
     const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
 
     let shouldCreateSSOSession = true;
-    let redirectCASService = null;
+    let redirectCASService: string | null = null;
+    let afterRegisterRedirect: string | null = null;
     if (req.cookies.cas_state) {
       try {
         const cas_state = JSON.parse(req.cookies.cas_state);
@@ -545,6 +546,11 @@ export class AuthController {
         console.warn('Error parsing cookie value as JSON.');
       }
     }
+    if(req.cookies.post_register_service_url){
+      shouldCreateSSOSession = true;
+      afterRegisterRedirect = encodeURI(req.cookies.post_register_service_url);
+    }
+
 
     const adaptToken = webhookResults[1];
     const getRedirectURI = (source?: string, tkn?: string | boolean) => {
@@ -591,7 +597,7 @@ export class AuthController {
       initSessionURL = redirectCASService;
     } else {
       const casParams = new URLSearchParams({
-        service: CAS_CALLBACK,
+        service: afterRegisterRedirect ?? CAS_CALLBACK,
         ...(casJWE && { token: casJWE }),
       });
       initSessionURL = `${CAS_LOGIN}?${casParams.toString()}`;
