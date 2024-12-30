@@ -1003,6 +1003,18 @@ export class AuthController {
       httpOnly: true,
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
+    res.clearCookie('one_tried_gateway', {
+      httpOnly: true,
+      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+    })
+    res.clearCookie('cas_state', {
+      httpOnly: true,
+      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+    });
+    res.clearCookie('post_register_service_url', {
+      httpOnly: true,
+      ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
+    })
     return res.redirect(CAS_LOGOUT);
   }
 
