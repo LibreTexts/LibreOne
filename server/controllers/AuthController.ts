@@ -839,6 +839,15 @@ export class AuthController {
         });
       }
 
+      // If the app is set to default access, we can skip the user app check
+      if(foundApp.default_access === 'all') {
+        return res.send({
+          interrupt: false,
+          block: false,
+          ssoEnabled: true,
+        });
+      }
+
       const foundUserApp = await UserApplication.findOne({
         where: {
           user_id: foundUser.get('uuid'),
