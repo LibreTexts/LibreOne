@@ -271,15 +271,10 @@ export class VerificationRequestController {
 
       await Promise.all(webhookPromises); // Both calls return false and log if failed, so one shouldn't affect the other
 
-      // Generate ADAPT access code if it was requested (and approved)
-      const foundADAPTApp = approvedApps.find((a) => a.get('name') === 'ADAPT');
-      const adaptAccessCode = foundADAPTApp ? await this._generateADAPTAccessCode() : null;
-
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),
         props.reason,
         approvedApps.map((a) => a.get('name')),
-        adaptAccessCode || undefined,
       );
       return foundReq;
     });
@@ -364,7 +359,7 @@ export class VerificationRequestController {
     return true;
   }
 
-  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string, applicationNames?: string[], adaptAccessCode?: string | null) {
+  public async sendUserRequestApprovedNotification(userEmail: string, comment?: string, applicationNames?: string[]) {
     const mailSender = new MailController();
     if (mailSender.isReady()) {
       const emailRes = await mailSender.send({
@@ -383,13 +378,6 @@ export class VerificationRequestController {
             ${applicationNames.map((a) => `<li>${a}</li>`).join('')}
             </ul>
           ` : ''}
-          ${adaptAccessCode && adaptAccessCode !== 'error' ? `
-            <p><strong>IMPORTANT:</strong> ADAPT isn't fully integrated with LibreOne yet, but your email address has been automatically sent to ADAPT. You'll need to <a href="https://adapt.libretexts.org/password/reset" target="_blank">reset your ADAPT password</a> using your email address first to access your account.</p>
-          ` : 
-            adaptAccessCode === 'error' ? `
-              <p>There was an issue provisioning your ADAPT account. Please contact support.</p>
-              ` : ''
-          }
           <p>If you have further questions, please feel free to submit a ticket in our <a href="https://commons.libretexts.org/support/contact" target="_blank">Support Center</a>.</p>
           <p>Best,</p>
           <p>The LibreTexts Team</p>
@@ -463,39 +451,5 @@ export class VerificationRequestController {
       return false;
     }
     return true;
-  }
-
-  /**
-   * Generates an ADAPT access code for a user.
-   * @returns ADAPT access code or false if failed.
-   */
-  private async _generateADAPTAccessCode(): Promise<string | 'error'> {
-    try {
-      if (!process.env.ADAPT_ACCESS_TOKEN) {
-        throw new Error('Missing required environment variable.');
-      }
-
-      const encoded = new TextEncoder().encode(process.env.ADAPT_ACCESS_TOKEN);
-      const jwtToSend = await new SignJWT({}).setProtectedHeader({ alg: 'HS256', typ: 'JWT' }).setIssuedAt().setExpirationTime('1h').sign(encoded);
-
-      const adaptRes = await axios.get<{ type: 'success', access_code: string } | { type: 'error', message: string }>('https://adapt.libretexts.org/api/access-code/instructor', {
-        headers: {
-          Authorization: `Bearer ${jwtToSend}`,
-        },
-      });
-
-      if (adaptRes.data.type === 'error') {
-        throw new Error(adaptRes.data.message);
-      }
-
-      if (!adaptRes.data.access_code) {
-        throw new Error('No access code returned from ADAPT.');
-      }
-
-      return adaptRes.data.access_code;
-    } catch (err) {
-      console.error('Error generating ADAPT access code:', err);
-      return 'error';
-    }
   }
 }
