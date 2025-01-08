@@ -784,7 +784,7 @@ export class AuthController {
         interrupt: true,
         block: true,
         ssoEnabled: false,
-        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+        message: 'Sorry, we couldn\'t find a LibreOne account associated with that username. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
         links: {},
       });
     }
@@ -794,7 +794,7 @@ export class AuthController {
         interrupt: true,
         block: true,
         ssoEnabled: false,
-        message: 'This account has been disabled. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> to regain access.',
+        message: 'This account has been disabled. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
         links: {},
       });
     }
@@ -834,7 +834,7 @@ export class AuthController {
           interrupt: true,
           block: true,
           ssoEnabled: false,
-          message: 'Sorry, we don\'t recognize the application you\'re trying to access. Please contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+          message: 'Sorry, we don\'t recognize the application you\'re trying to access. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
           links: {},
         });
       }
@@ -859,7 +859,7 @@ export class AuthController {
           interrupt: true,
           block: true,
           ssoEnabled: false,
-          message: 'Sorry, you don\'t have access to this application. Please request access in <a href="https://commons.libretexts.org">LibreTexts Conductor</a> or contact <a href="mailto:support@libretexts.org">support@libretexts.org</a> for assistance.',
+          message: 'Sorry, you don\'t have access to this application. Please request access in your <a href="https://one.libretexts.org/instructor">LibreOne instructor profile</a> or <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
           links: {},
         });
       }
