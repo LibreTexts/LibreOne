@@ -5,6 +5,7 @@ type ErrorObject = {
   code: string,
   title: string,
   detail: string,
+  additional?: Record<string, any>,
 };
 
 /**
@@ -96,12 +97,13 @@ function notFound(res: Response, detail?: string): Response {
  * @param detail - A custom detailed error message.
  * @returns The fulfilled API response.
  */
-function conflict(res: Response, detail?: string): Response {
+function conflict(res: Response, detail?: string, addtlFields?: Record<string, any>): Response {
   return sendErrorResponse(res, {
     status: '409',
     code: 'resource_conflict',
     title: 'Conflict',
     detail: detail || 'Sorry, a resource with that identifier already exists.',
+    additional: addtlFields,
   });
 }
 

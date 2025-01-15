@@ -749,7 +749,9 @@ export class AuthController {
         registration_complete: true,
       });
     } else {
-      return errors.conflict(res, "User already exists");
+      return errors.conflict(res, "User already exists", {
+        "central_identity_id": foundUser.uuid
+      });
     }
 
     if(!resultingUUID) {
