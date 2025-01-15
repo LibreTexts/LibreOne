@@ -4,6 +4,7 @@ import {
   Column,
   CreatedAt,
   DataType,
+  DefaultScope,
   Index,
   Model,
   Table,
@@ -15,6 +16,11 @@ import { ApplicationType } from '../types/applications';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 
+@DefaultScope(() => ({
+  attributes: {
+    exclude: ['jwt_secret'],
+  },
+}))
 @Table({
   timestamps: true,
   tableName: 'applications',
@@ -36,6 +42,22 @@ export class Application extends Model {
   @AllowNull(false)
   @Column(DataType.STRING)
   declare cas_service_url: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  declare user_provisioning_url: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  declare user_update_url: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  declare user_deprovisioning_url: string;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  declare jwt_secret: string;
 
   /** User groups that can access the application by default */
   @AllowNull(false)
