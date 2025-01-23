@@ -23,6 +23,7 @@ import { TimeZone } from './TimeZone';
 import { UserOrganization } from './UserOrganization';
 import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
+import { Session } from './Session';
 
 @DefaultScope(() => ({
   attributes: {
@@ -114,6 +115,9 @@ export class User extends Model {
 
   @HasMany(() => LoginEvent)
   login_events?: Array<LoginEvent>;
+
+  @HasMany(() => Session)
+  sessions?: Array<Session>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

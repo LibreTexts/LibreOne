@@ -4,6 +4,7 @@ export type ADAPTSpecialRole = 'instructor' | 'grader' | 'question-editor' | 'te
 
 export type TokenAuthenticationVerificationResult = {
   expired: boolean;
+  sessionInvalid: boolean;
   isAuthenticated: boolean;
   userUUID: string | null;
 };
@@ -64,4 +65,12 @@ export type AutoProvisionUserBody = {
   last_name: string;
   user_type: 'student' | 'instructor';
   time_zone: string;
+};
+
+export type BackChannelSLOBody = {
+  logoutRequest?: string;
+};
+
+export type BackChannelSLOQuery = {
+  logoutRequest?: string;
 };

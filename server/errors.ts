@@ -46,7 +46,7 @@ function badRequest(res: Response, detail?: string): Response {
  * @param realm - A custom "realm" message; activates the "WWW-Authenticate" header.
  * @returns The fulfilled API response.
  */
-function unauthorized(res: Response, detail?: string, realm?: string): Response {
+function unauthorized(res: Response, detail?: string, realm?: string, addtlFields?: Record<string, any>): Response {
   if (realm) {
     res.set('WWW-Authenticate', `Basic realm="${realm}"`);
   }
@@ -55,6 +55,7 @@ function unauthorized(res: Response, detail?: string, realm?: string): Response 
     code: 'unauthorized',
     title: 'Unauthorized',
     detail: detail || 'Authorization is required to access this resource.',
+    additional: addtlFields,
   });
 }
 

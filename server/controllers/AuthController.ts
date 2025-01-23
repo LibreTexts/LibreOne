@@ -18,7 +18,7 @@ import { URLSearchParams } from 'url';
 import { Agent } from 'https';
 import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
 import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
-import { Application, ResetPasswordToken, sequelize, User, UserApplication } from '../models';
+import { Application, ResetPasswordToken, sequelize, Session, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
@@ -38,12 +38,16 @@ import type {
   AutoProvisionUserBody,
   completeRegistrationBody,
   ADAPTSpecialRole,
+  BackChannelSLOBody,
+  BackChannelSLOQuery,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
+import { XMLParser } from 'fast-xml-parser';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
 const COOKIE_DOMAIN = SESSION_DOMAIN.replace('https://', '');
+const SESSION_DEFAULT_EXPIRY_MINUTES = 7 * 24 * 60; // 7 days
 
 const SELF_PROTO = process.env.NODE_ENV === 'production' ? 'https' : 'http';
 const SELF_BASE = `${SELF_PROTO}://${process.env.DOMAIN}`;
@@ -112,6 +116,7 @@ export class AuthController {
    */
   static async extractUserFromToken(req: Request): Promise<TokenAuthenticationVerificationResult> {
     let expired = false;
+    let sessionInvalid = false;
     let isAuthenticated = false;
     let userUUID: string | null = null;
     try {
@@ -120,14 +125,31 @@ export class AuthController {
         issuer: SESSION_DOMAIN,
         audience: SESSION_DOMAIN,
       });
-      if (payload.sub) {
-        isAuthenticated = true;
-        userUUID = payload.sub;
+
+      const session_id = payload.session_id;
+      if(!session_id) {
+        throw new Error('INVALID_SESSION');
       }
-    } catch (e) {
-      expired = true;
+
+      const session = await Session.findByPk(session_id.toString());
+      if(!session || !session.valid) {
+        throw new Error('INVALID_SESSION');
+      }
+
+      if(session.expires_at.getTime() < Date.now()) {
+        throw new Error('EXPIRED_SESSION');
+      }
+
+      userUUID = payload.sub ?? null;
+      isAuthenticated = true;
+    } catch (e: any) {
+      if(e.message === 'INVALID_SESSION') {
+        sessionInvalid = true;
+      } else {
+        expired = true;
+      }
     }
-    return { expired, isAuthenticated, userUUID };
+    return { expired, sessionInvalid, isAuthenticated, userUUID };
   }
 
   /**
@@ -142,6 +164,7 @@ export class AuthController {
     }
     return {
       expired: false,
+      sessionInvalid: false,
       isAuthenticated: false,
       userUUID: null,
     };
@@ -151,10 +174,11 @@ export class AuthController {
    * Creates a JWT for a local session.
    *
    * @param uuid - The User UUID to initialize the session for.
+   * @param session_id - The session ID to initialize the session for.
    * @returns The generated JWT.
    */
-  static async createSessionJWT(uuid: string): Promise<string> {
-    return await new SignJWT({ uuid })
+  static async createSessionJWT(uuid: string, session_id: string): Promise<string> {
+    return await new SignJWT({ uuid, session_id: session_id })
       .setSubject(uuid)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -183,9 +207,22 @@ export class AuthController {
    *
    * @param res - The response object to attach the session cookies to.
    * @param uuid - The User UUID to initialize the session for.
+   * @param ticket - The CAS service ticket identifier for the session.
    */
-  public async createAndAttachLocalSession(res: Response, uuid: string): Promise<void> {
-    const sessionJWT = await AuthController.createSessionJWT(uuid);
+  public async createAndAttachLocalSession(res: Response, uuid: string, ticket?: string, expiryMinutes?: number): Promise<void> {
+    const sessionID = uuidv4();
+    const sessionCreated = new Date();
+    const sessionExpiry = new Date(sessionCreated.getTime() + (expiryMinutes || SESSION_DEFAULT_EXPIRY_MINUTES) * 60 * 1000);
+    await Session.create({
+      session_id: sessionID,
+      user_id: uuid,
+      valid: true,
+      created_at: new Date(),
+      expires_at: sessionExpiry,
+      ...(ticket && { session_ticket: ticket})
+    });
+
+    const sessionJWT = await AuthController.createSessionJWT(uuid, sessionID);
     const [access, signed] = AuthController.splitSessionJWT(sessionJWT);
 
     const prodCookieConfig: CookieOptions = {
@@ -479,8 +516,10 @@ export class AuthController {
     foundUser.disabled = false;
     await foundUser.save();
 
-    // create a local session
-    await this.createAndAttachLocalSession(res, foundUser.uuid);
+    // Create a short-lived local session
+    // User will be directed to CAS at the end of registration
+    // where they will get a real long-lived CAS session ticket.
+    await this.createAndAttachLocalSession(res, foundUser.uuid, undefined, 30);
 
     return res.send({
       data: {
@@ -975,7 +1014,7 @@ export class AuthController {
 
     // create local session
     const uuid = validData.serviceResponse.authenticationSuccess.user;
-    await this.createAndAttachLocalSession(res, uuid);
+    await this.createAndAttachLocalSession(res, uuid, ticket);
     const prodCookieConfig: CookieOptions = {
       sameSite: 'lax',
       domain: COOKIE_DOMAIN,
@@ -1033,6 +1072,64 @@ export class AuthController {
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     })
     return res.redirect(CAS_LOGOUT);
+  }
+
+  public async backChannelSLO(req: Request, res: Response): Promise<Response> {
+    console.log('Received back-channel SLO request!');
+    const body = req.body as BackChannelSLOBody;
+    const query = req.query as BackChannelSLOQuery;
+
+    // Load balancer/Cloudflare may rewrite the body as query param, so
+    // check both, but favor the body if both are present.
+    const logoutRequest = body.logoutRequest || query.logoutRequest;
+    console.log('LOGOUT_REQUEST:', logoutRequest);
+    if (!logoutRequest || typeof logoutRequest !== 'string') {
+      return errors.badRequest(res, "No logout token provided");
+    }
+
+    // Parse the SAML logout request
+    const parser = new XMLParser();
+    const parsed = parser.parse(logoutRequest);
+    const sessionIndex = parsed?.['samlp:LogoutRequest']?.['samlp:SessionIndex'];
+    const userID = parsed?.['samlp:LogoutRequest']?.['saml:NameID'];
+    if (!sessionIndex || !userID) {
+      return errors.badRequest(res, "Missing session index or user identifier in logout request");
+    }
+
+    const foundSession = await Session.findOne({
+      where: {
+        session_ticket: sessionIndex,
+        valid: true,
+      },
+      include: [
+        {
+          model: User,
+          where: {
+            [Op.or]: [
+              { uuid: userID },
+              { email: userID }
+            ]
+          },
+          attributes: ['uuid']
+        },
+      ]
+    });
+
+    if (!foundSession) {
+      return res.status(200).send({}); // If no matching session, just return 200
+    }
+
+    console.log(`Received logout request for user ${foundSession.user_id}`);
+    await Session.update({
+      valid: false,
+    }, {
+      where: {
+        session_ticket: sessionIndex,
+        user_id: foundSession.user_id,
+      }
+    });
+
+    return res.status(200).send({});
   }
 
   /**
