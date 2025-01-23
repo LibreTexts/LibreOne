@@ -55,7 +55,7 @@ if (isProduction) {
 const clientRouter = express.Router();
 clientRouter.route('*').get(async (req: Request, res: Response, next: NextFunction) => {
   const userController = new UserController();
-  const { expired, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
+  const { expired, sessionInvalid, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
   let user;
   if (isAuthenticated && userUUID) {
     user = await userController.getUserInternal(userUUID, true);
@@ -63,7 +63,7 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
 
   const gatewayExcludePathPrefixes = ['/passwordrecovery', '/complete-registration'];
   const pathExcluded = !!gatewayExcludePathPrefixes.find((p) => req.path.includes(p));
-  
+
   const triedGateway = process.env.NODE_ENV === 'development' ? true : req.cookies.one_tried_gateway;
 
   if (!isAuthenticated && !pathExcluded && !triedGateway) {
@@ -74,10 +74,20 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
     return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
   }
 
+  if(expired) {
+    const redirParams = new URLSearchParams({
+      redirectURI: encodeURIComponent(req.url),
+    });
+    return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
+  }
+
+  if(sessionInvalid) {
+    return res.redirect(307, '/api/v1/auth/logout');
+  }
+
   const pageContextInit: PageContextInitCustom = {
     isAuthenticated,
     urlOriginal: req.originalUrl,
-    expiredAuth: expired,
     productionURL: getProductionURL(),
     ...(user && { user }),
   };

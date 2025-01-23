@@ -10,6 +10,7 @@ import {
   verifyAPIAuthentication,
 } from '../middleware';
 import { catchInternal } from '../helpers';
+import bodyParser from 'body-parser';
 
 const authRouter = express.Router();
 const controller = new AuthController();
@@ -70,6 +71,11 @@ authRouter.route('/cas-callback').get(
 
 authRouter.route('/logout').get(
   catchInternal((req, res) => controller.logout(req, res)),
+);
+
+authRouter.route('/back-channel-slo').post(
+  bodyParser.urlencoded({ extended: false }), // CAS sends form data
+  catchInternal((req, res) => controller.backChannelSLO(req, res)),
 );
 
 authRouter.route('/passwordrecovery').post(

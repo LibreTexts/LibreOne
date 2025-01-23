@@ -17,6 +17,7 @@ import { OrganizationAlias } from './OrganizationAlias';
 import { OrganizationDomain } from './OrganizationDomain';
 import { ResetPasswordToken } from './ResetPasswordToken';
 import { Service } from './Service';
+import { Session } from './Session';
 import { OrganizationSystem } from './OrganizationSystem';
 import { TimeZone } from './TimeZone';
 import { User } from './User';
@@ -60,6 +61,7 @@ sequelize.addModels([
   OrganizationDomain,
   ResetPasswordToken,
   Service,
+  Session,
   TimeZone,
   OrganizationSystem,
   User,
@@ -199,6 +201,7 @@ export {
   OrganizationDomain,
   ResetPasswordToken,
   Service,
+  Session,
   TimeZone,
   OrganizationSystem,
   User,

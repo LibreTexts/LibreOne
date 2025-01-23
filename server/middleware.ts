@@ -21,16 +21,16 @@ type AsyncMiddleware = (request: Request, response: Response, next: NextFunction
  * @returns The result of the next middleware, or an error response.
  */
 export async function verifyTokenAuthentication(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
-  const { expired, isAuthenticated, userUUID } = await AuthController.extractUserFromToken(req);
+  const { expired, sessionInvalid, isAuthenticated, userUUID } = await AuthController.extractUserFromToken(req);
   if (isAuthenticated && userUUID) {
     req.isAuthenticated = true;
     req.userUUID = userUUID;
     return next();
   }
-  if (expired) {
-    return errors.forbidden(res);
+  if (expired || sessionInvalid) {
+    return errors.unauthorized(res, undefined, undefined, { expired, sessionInvalid });
   }
-  return errors.unauthorized(res);
+  return errors.unauthorized(res); // Fallback to generic unauthorized error.
 }
 
 /**
