@@ -58,6 +58,22 @@
           required
           class="my-4"
         />
+        <div class="my-4">
+        <p class="text-sm font-light mt-4">
+          {{ $t("common.email") }}
+        </p>
+        <p class="font-medium">
+          {{ pageContext.user?.email }}
+        </p>
+        <ThemedButton
+            small
+            variant="outlined"
+            @click="handleGoToSecurity"
+            class="mt-1 w-auto px-2"
+          >
+            <span>{{ $t("profile.changeemail") }}</span>
+        </ThemedButton>
+      </div>
       </form>
     </div>
     <div v-else>
@@ -87,6 +103,15 @@
         </p>
         <p class="font-medium">
           {{ pageContext.user?.last_name }}
+        </p>
+      </div>
+
+      <div class="my-4">
+        <p class="text-sm font-light mt-4">
+          {{ $t("common.email") }}
+        </p>
+        <p class="font-medium">
+          {{ pageContext.user?.email }}
         </p>
       </div>
     </div>
@@ -155,6 +180,10 @@
     if (target.files) {
       fileToUploadName.value = target.files[0].name;
     }
+  }
+
+  function handleGoToSecurity() {
+    window.location.href = '/security';
   }
 
   /**

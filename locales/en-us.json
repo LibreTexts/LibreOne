@@ -155,7 +155,8 @@
     "lastname": "Last Name",
     "avatar": "Avatar",
     "uploadavatar": "Upload Avatar",
-    "personalinfo": "Personal Information"
+    "personalinfo": "Personal Information",
+    "changeemail": "Change in Security Settings"
   },
   "security": {
     "header": "Account Security Management",
