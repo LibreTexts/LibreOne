@@ -1,10 +1,13 @@
-import joi from 'joi';
-import { applicationIDValidator, applicationTypeValidator } from './applications';
-import { orgIDValidator } from './organizations';
-import { passwordValidator, timeZoneValidator } from './shared';
-import { UserOrganizationAdminRoleEnum } from '../controllers/PermissionsController';
+import joi from "joi";
+import {
+  applicationIDValidator,
+  applicationTypeValidator,
+} from "./applications";
+import { orgIDValidator } from "./organizations";
+import { passwordValidator, timeZoneValidator } from "./shared";
+import { UserOrganizationAdminRoleEnum } from "../controllers/PermissionsController";
 
-const uuidValidator = joi.string().uuid({ version: 'uuidv4' }).required();
+const uuidValidator = joi.string().uuid({ version: "uuidv4" }).required();
 
 export const uuidParamSchema = joi.object({
   uuid: uuidValidator,
@@ -34,13 +37,17 @@ export const createUserOrganizationSchema = joi.object({
   use_default_organization: joi.boolean(),
 });
 
-export const createUserVerificationRequestSchema = joi.object({
-  bio_url: joi.string().uri().allow(''),
-  addtl_info: joi.string().max(500).allow(''),
-  applications: joi.array().items(joi.number().integer()).optional(),
-}).or('bio_url', 'addtl_info', {isPresent: (data) => {
-  return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
-}});
+export const createUserVerificationRequestSchema = joi
+  .object({
+    bio_url: joi.string().uri().allow(""),
+    addtl_info: joi.string().max(500).allow(""),
+    applications: joi.array().items(joi.number().integer()).optional(),
+  })
+  .or("bio_url", "addtl_info", {
+    isPresent: (data) => {
+      return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
+    },
+  });
 
 export const createUserEmailChangeRequestSchema = joi.object({
   email: joi.string().email().required(),
@@ -58,14 +65,24 @@ export const getAllUserApplicationsSchema = joi.object({
 
 export const getMultipleUserOrganizationsSchema = joi.object({
   uuids: joi.array().items(uuidValidator).required().min(1).max(100),
-})
+});
+
+export const resolvePrincipalAttributesSchema = joi.object({
+  username: joi
+    .alternatives()
+    .try(
+      joi.string().email().message("Invalid email address"),
+      joi.string().uuid().message("Invalid UUID")
+    )
+    .required(),
+});
 
 export const updateUserSchema = joi.object({
   first_name: joi.string().min(1).max(100).trim(),
   last_name: joi.string().min(1).max(100).trim(),
   bio_url: joi.string().uri(), // TODO: stricter validation?
-  user_type: joi.string().valid('student', 'instructor'),
-  verify_status: joi.string().valid('not_attempted', 'denied', 'verified'),
+  user_type: joi.string().valid("student", "instructor"),
+  verify_status: joi.string().valid("not_attempted", "denied", "verified"),
   time_zone: timeZoneValidator,
   student_id: joi.string().min(3).max(50),
   disabled: joi.boolean(),
@@ -81,7 +98,10 @@ export const updateUserEmailDirectSchema = joi.object({
 });
 
 export const updateUserOrganizationAdminRoleSchema = joi.object({
-  admin_role: joi.string().valid(...Object.keys(UserOrganizationAdminRoleEnum)).required(),
+  admin_role: joi
+    .string()
+    .valid(...Object.keys(UserOrganizationAdminRoleEnum))
+    .required(),
 });
 
 export const updateUserPasswordSchema = joi.object({
@@ -89,9 +109,13 @@ export const updateUserPasswordSchema = joi.object({
   new_password: passwordValidator,
 });
 
-export const updateUserVerificationRequestSchema = joi.object({
-  bio_url: joi.string().uri().allow(''),
-  addtl_info: joi.string().max(500).allow(''),
-}).or('bio_url', 'addtl_info', {isPresent: (data) => {
-  return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
-}});
+export const updateUserVerificationRequestSchema = joi
+  .object({
+    bio_url: joi.string().uri().allow(""),
+    addtl_info: joi.string().max(500).allow(""),
+  })
+  .or("bio_url", "addtl_info", {
+    isPresent: (data) => {
+      return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
+    },
+  });
