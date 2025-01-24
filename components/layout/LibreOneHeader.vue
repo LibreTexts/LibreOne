@@ -9,12 +9,15 @@
           class="ml-2 pt-1"
           v-if="$props.authorized"
         />
-        <img
-          src="@renderer/libretexts_logo.png"
-          alt="LibreTexts Logo"
-          class="h-9 w-auto mb-1"
-          v-else
-        >
+        <a
+          href="/home"
+          v-else>
+          <img
+            src="@renderer/libretexts_logo.png"
+            alt="Home"
+            class="h-9 w-auto mb-1"
+          >
+        </a>
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
           <a
             v-for="(item, idx) in navItems"
