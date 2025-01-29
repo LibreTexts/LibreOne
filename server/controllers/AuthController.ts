@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { randomBytes } from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 import bcrypt from 'bcryptjs';
 import {
   CompactEncrypt,
@@ -209,13 +209,28 @@ export class AuthController {
    * @param uuid - The User UUID to initialize the session for.
    * @param ticket - The CAS service ticket identifier for the session.
    */
-  public async createAndAttachLocalSession(res: Response, uuid: string, ticket?: string, expiryMinutes?: number): Promise<void> {
+  public async createAndAttachLocalSession(res: Response, uuid: string, ticket?: string, expiryMinutes?: number): Promise<{
+    user_id: string;
+    session_id: string;
+  }> {
     const sessionID = uuidv4();
     const sessionCreated = new Date();
     const sessionExpiry = new Date(sessionCreated.getTime() + (expiryMinutes || SESSION_DEFAULT_EXPIRY_MINUTES) * 60 * 1000);
+
+    // If uuid received is not a valid UUID, we may have received a external subject ID
+    // from an external identity provider. Check if we can find a user with that external ID.
+    let finalUserUUID = uuid;
+    if (!validateUUID(uuid)) {
+      const foundUser = await User.findOne({ where: { external_subject_id: uuid } });
+      if (!foundUser) {
+        throw new Error('User not found for external subject ID! Cannot create session record.');
+      }
+      finalUserUUID = foundUser.uuid;
+    }
+
     await Session.create({
       session_id: sessionID,
-      user_id: uuid,
+      user_id: finalUserUUID,
       valid: true,
       created_at: new Date(),
       expires_at: sessionExpiry,
@@ -240,6 +255,8 @@ export class AuthController {
       httpOnly: true,
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
+
+    return { user_id: finalUserUUID, session_id: sessionID };
   }
 
   /**
@@ -1014,7 +1031,7 @@ export class AuthController {
 
     // create local session
     const uuid = validData.serviceResponse.authenticationSuccess.user;
-    await this.createAndAttachLocalSession(res, uuid, ticket);
+    const { user_id: localUUID } = await this.createAndAttachLocalSession(res, uuid, ticket);
     const prodCookieConfig: CookieOptions = {
       sameSite: 'lax',
       domain: COOKIE_DOMAIN,
@@ -1026,7 +1043,7 @@ export class AuthController {
     });
 
     // check registration status
-    const foundUser = await User.findOne({ where: { uuid } });
+    const foundUser = await User.findOne({ where: { uuid: localUUID } });
     if (!foundUser) {
       return errors.badRequest(res);
     }
