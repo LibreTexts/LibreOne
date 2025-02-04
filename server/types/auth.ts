@@ -74,3 +74,8 @@ export type BackChannelSLOBody = {
 export type BackChannelSLOQuery = {
   logoutRequest?: string;
 };
+
+export type EmailVerificationTokenPayload = {
+  email: string;
+  code: number;
+}

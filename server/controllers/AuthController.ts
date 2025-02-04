@@ -40,6 +40,7 @@ import type {
   ADAPTSpecialRole,
   BackChannelSLOBody,
   BackChannelSLOQuery,
+  EmailVerificationTokenPayload,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 import { XMLParser } from 'fast-xml-parser';
@@ -830,16 +831,6 @@ export class AuthController {
       });
     }
 
-    if (foundUser.disabled) {
-      return res.send({
-        interrupt: true,
-        block: true,
-        ssoEnabled: false,
-        message: 'This account has been disabled. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
-        links: {},
-      });
-    }
-
     // <update last_access timestamp and log event>
     try {
       const timestamp = new Date();
@@ -850,6 +841,19 @@ export class AuthController {
       console.warn(err);
     }
     // </update last_access timestamp and log event>
+
+    // < initiate email verification if needed >
+    if (foundUser.disabled){
+      await this._initEmailVerificationRecovery(foundUser.uuid, foundUser.email);
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: '\nThanks for registering with LibreOne. We need to verify your email address before you can log in. Please check your email for a verification link. If you don\'t see it, please check your spam folder.\n You can safely close this browser tab or window.',
+        links: {},
+      });
+    }
+    // </initiate email verification if needed>
 
     if (!foundUser.registration_complete) {
       const redirectParams = new URLSearchParams({
@@ -1255,6 +1259,82 @@ export class AuthController {
     }
 
     return res.send('Password updated.');
+  }
+
+  /**
+   * Verifies a provided email verification token, then re-enables the user's account.
+   * @param token - The email verification token.
+   * @returns - True if the verification was successful, false otherwise.
+   */
+  public async handleEmailVerificationRecovery(token?: string | null): Promise<boolean> {
+    try {
+      if(!token) return false;
+
+      const { payload } = await jwtVerify(token, SESSION_SECRET, {
+        issuer: SESSION_DOMAIN,
+        audience: SESSION_DOMAIN,
+      });
+
+      const { email, code } = payload as EmailVerificationTokenPayload;
+      const verificationController = new EmailVerificationController();
+      const foundVerification = await verificationController.checkVerification(email, code);
+      if (!foundVerification) {
+        return false;
+      }
+      const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
+      if (!foundUser) {
+        return false;
+      }
+
+      foundUser.disabled = false;
+      await foundUser.save();
+
+      return true;
+    } catch (err){
+      console.error({
+        msg: 'Error verifying email verification recovery token',
+        error: err,
+      });
+
+      return false;
+    }
+  }
+
+  /**
+   * Initiates the email verification self-recovery flow by sending an email to the user.
+   * @param uuid - The UUID of the user.
+   * @param email - The email address of the user.
+   */
+  private async _initEmailVerificationRecovery(uuid: string, email: string): Promise<void> {
+    try {
+      const mailSender = new MailController();
+      const verificationController = new EmailVerificationController();
+
+      const verifCode = await verificationController.createVerification(uuid, email);
+      const verifToken = await new SignJWT({ email, code: verifCode })
+        .setSubject(uuid).setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setIssuer(SESSION_DOMAIN)
+        .setAudience(SESSION_DOMAIN)
+        .setExpirationTime('1d')
+        .sign(SESSION_SECRET);
+      
+      const emailRes = await verificationController.sendVerificationEmailLink(
+        mailSender,
+        email,
+        verifToken,
+      )
+
+      mailSender.destroy();
+      if (!emailRes) {
+        throw new Error('Unable to send email verification!');
+      }
+    } catch (err){
+      console.error({
+        msg: 'Error initiating email verification recovery for user: ' + uuid,
+        error: err,
+      });
+    }
   }
 
   private _getConductorWebhookHeaders() {

@@ -54,7 +54,10 @@
     "verify_message": "We just sent a six-digit confirmation code to {email}. Please enter the code here to finish registering. If you did not receive a code, please check your spam folder.",
     "verify_code": "Confirmation Code",
     "verify_invalid": "Invalid code, please check your input.",
-    "verify_thanks": "Thanks for helping to keep our community safe!"
+    "verify_thanks": "Thanks for helping to keep our community safe!",
+    "verify_recovery_success_header": "Email confirmed!",
+    "verify_recovery_failure_header": "Email Confirmation Failed",
+    "verify_recovery_failure_message": "We were unable to confirm your email address. Please try again later or contact support {supportlink}."
   },
   "complete_registration_name": {
     "header": "First things first.",
