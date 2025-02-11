@@ -237,7 +237,7 @@ export class AuthController {
       ...(ticket && { session_ticket: ticket})
     });
 
-    const sessionJWT = await AuthController.createSessionJWT(uuid, sessionID);
+    const sessionJWT = await AuthController.createSessionJWT(finalUserUUID, sessionID);
     const [access, signed] = AuthController.splitSessionJWT(sessionJWT);
 
     const prodCookieConfig: CookieOptions = {
