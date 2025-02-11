@@ -1,5 +1,5 @@
-import type { PageContextBuiltIn } from 'vite-plugin-ssr';
-import type { PageContextBuiltInClient } from 'vite-plugin-ssr/client'; // When using Server Routing
+import type { PageContextBuiltIn } from 'vike/types';
+import type { PageContextBuiltInClient } from 'vike/types';
 import type { App, ComponentPublicInstance } from 'vue';
 import { Application } from '@server/types/applications';
 import { User } from '@server/types/users';

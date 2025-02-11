@@ -7,7 +7,7 @@ import helmet from 'helmet';
 import sirv from 'sirv';
 import * as vite from 'vite';
 import compression from 'compression';
-import { renderPage } from 'vite-plugin-ssr';
+import { renderPage } from 'vike/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './models';

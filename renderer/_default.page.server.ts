@@ -1,5 +1,5 @@
 import { renderToNodeStream } from '@vue/server-renderer';
-import { escapeInject } from 'vite-plugin-ssr';
+import { escapeInject } from 'vike/server';
 import { createApp } from './app';
 import faviconURL from './favicon.ico';
 import type { PageContextServer } from './types';
