@@ -397,7 +397,7 @@ export class UserController {
       const isLibrary = curr.get('app_type') === 'library';
       const isUnsupported = curr.get('supports_cas') === false;
       if (
-        (isLibrary || isUnsupported || userApps.find((a) => a.get('id') === curr.get('id')))
+        (isLibrary || isUnsupported || curr.default_access === 'all' || userApps.find((a) => a.get('id') === curr.get('id')))
         && !acc[curr.get('id')]
       ) {
         acc[curr.get('id')] = curr.get();
@@ -497,6 +497,10 @@ export class UserController {
       criteria.push({ app_type: type });
     }
 
+    const defaultAccessApps = await Application.findAll({
+      where: { default_access: 'all' },
+    });
+
     const foundApps = await Application.findAll({
       where: criteria.length > 1 ? { [Op.and]: criteria } : criteria[0],
       include: [
@@ -509,9 +513,16 @@ export class UserController {
       ],
     });
 
+    const appIds = new Set<number>();
+    const uniqueApps = [...defaultAccessApps, ...foundApps].map((a) => a.get()).filter((a) => {
+      if (appIds.has(a.id)) return false;
+      appIds.add(a.id);
+      return true;
+    });
+
     return res.send({
       data: {
-        applications: foundApps.map((a) => a.get()) || [],
+        applications: uniqueApps,
       },
     });
   }
