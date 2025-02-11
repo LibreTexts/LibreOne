@@ -67,11 +67,13 @@
       </li>
     </ul>
   </button>
+  <a href="/home">
     <img
       src="@renderer/libretexts_logo.png"
-      alt="LibreTexts Logo"
+      alt="Home"
       class="h-9 w-auto"
     >
+  </a>
 </template>
 
 <script lang="ts" setup>
