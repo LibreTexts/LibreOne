@@ -1,5 +1,5 @@
 import { locales } from '@locales/index';
-import type { PageContextBuiltIn } from 'vite-plugin-ssr';
+import type { PageContextBuiltIn } from 'vike/types';
 
 interface LocaleURLExtraction {
   locale: string;

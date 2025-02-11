@@ -1,6 +1,6 @@
 import path from 'path';
 import vue from '@vitejs/plugin-vue';
-import ssr from 'vite-plugin-ssr/plugin';
+import vike from 'vike/plugin';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import { UserConfig } from 'vite';
 // @ts-ignore
@@ -12,7 +12,7 @@ const config: UserConfig = {
   },
   plugins: [
     vue(),
-    ssr(),
+    vike(),
     VueI18nPlugin({
       include: path.resolve(__dirname, 'locales/**'),
     }),
