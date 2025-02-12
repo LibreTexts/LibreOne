@@ -1,7 +1,7 @@
 import { usePageContext } from "./usePageContext";
 
 export const useUserRole = () => {
-  const pageContext = usePageContext();
+  const pageContext = usePageContext().value;
   if (!(!!pageContext.user && !!pageContext.user.uuid)) {
     return undefined;
   }

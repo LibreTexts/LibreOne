@@ -146,7 +146,7 @@
   import { usePageContext } from '@renderer/usePageContext';
   import UserAvatar from '../account_management/UserAvatar.vue';
 
-  const pageContext = usePageContext();
+  const pageContext = usePageContext().value;
 
   // Local Types
   type NavItem = {

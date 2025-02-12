@@ -98,7 +98,7 @@ const props = defineProps<{ uuid: string }>();
 const emit = defineEmits<{
   (e: "role-update", role: string, adapt_role?: string): void;
 }>();
-const pageContext = usePageContext();
+const pageContext = usePageContext().value;
 const axios = useAxios();
 
 const loading = ref(false);

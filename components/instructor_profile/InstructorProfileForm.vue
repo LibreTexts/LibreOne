@@ -145,7 +145,7 @@
   // Props & Hooks
   const { t } = useI18n();
   const axios = useAxios();
-  const pageContext = usePageContext();
+  const pageContext = usePageContext().value;
   const isVerified = pageContext?.user?.verify_status == 'verified';
   const props = withDefaults(
     defineProps<{

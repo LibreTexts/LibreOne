@@ -178,18 +178,18 @@
   // Methods
   async function loadUsersApps() {
     try {
-      if (!pageContext?.user?.uuid) {
+      if (!pageContext.value?.user?.uuid) {
         throw new Error('nouuid');
       }
-      if (pageContext.user?.apps) {
-        apps.value = pageContext.user.apps.filter((a) => a.app_type === 'standalone');
-        libs.value = pageContext.user.apps.filter((a) => a.app_type === 'library');
+      if (pageContext.value.user?.apps) {
+        apps.value = pageContext.value.user.apps.filter((a) => a.app_type === 'standalone');
+        libs.value = pageContext.value.user.apps.filter((a) => a.app_type === 'library');
         return;
       }
 
       loading.value = true;
       [apps.value, libs.value] = await getUserAppsAndLibraries(
-        pageContext.user.uuid,
+        pageContext.value.user.uuid,
       );
     } catch (err) {
       console.error(err);

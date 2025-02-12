@@ -125,7 +125,7 @@
 
       const queryParams = new URLSearchParams(window.location.search);
       const queryString = queryParams.toString();
-      window.location.assign('/complete-registration' + (queryString ? `?${queryString}` : ''));
+      window.location.assign('/complete-registration/index' + (queryString ? `?${queryString}` : ''));
     } catch (e) {
       console.log(e);
       loading.value = false;

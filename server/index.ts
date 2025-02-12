@@ -5,20 +5,19 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import helmet from 'helmet';
 import sirv from 'sirv';
-import * as vite from 'vite';
 import compression from 'compression';
-import { renderPage } from 'vike/server';
+import { createDevMiddleware, renderPage } from 'vike/server';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './models';
 import { APIRouter } from './routes';
 import type { Request, Response, NextFunction } from 'express';
-import type { PageContextInitCustom } from '@renderer/types';
 import { AuthController } from './controllers/AuthController';
 import { UserController } from './controllers/UserController';
 import { getProductionURL } from './helpers';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swagger.json'
+import { PageContext } from '@renderer/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,13 +42,8 @@ await connectDatabase();
 if (isProduction) {
   app.use(sirv('dist/client'));
 } else {
-  const viteDevMiddleware = (
-    await vite.createServer({
-      root,
-      server: { middlewareMode: true },
-    })
-  ).middlewares;
-  app.use(viteDevMiddleware);
+  const { devMiddleware } = await createDevMiddleware({ root });
+  app.use(devMiddleware);
 }
 
 const clientRouter = express.Router();
@@ -85,19 +79,27 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
     return res.redirect(307, '/api/v1/auth/logout');
   }
 
-  const pageContextInit: PageContextInitCustom = {
+  const pageContextInit: PageContext = {
     isAuthenticated,
     urlOriginal: req.originalUrl,
     productionURL: getProductionURL(),
     ...(user && { user }),
   };
+
   const { httpResponse, redirectTo } = await renderPage(pageContextInit);
+  const { statusCode, headers } = httpResponse || {};
+  
   if (redirectTo) {
     return res.redirect(307, redirectTo);
   }
   if (!httpResponse) {
     return next();
   }
+
+  res.status(statusCode);
+  headers.forEach(([name, val]) => {
+    res.setHeader(name, val);
+  });
   httpResponse.pipe(res);
 });
 app.use('/', clientRouter);

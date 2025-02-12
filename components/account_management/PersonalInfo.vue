@@ -140,7 +140,7 @@
     (e: 'data-updated'): void;
   }>();
   const axios = useAxios();
-  const pageContext = usePageContext();
+  const pageContext = usePageContext().value; // Page context is a ref
 
   // Data & UI
   const editMode = ref(false);
