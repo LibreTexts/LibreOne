@@ -1,17 +1,17 @@
-import { App, InjectionKey, inject } from 'vue';
-import { PageContext } from './types';
+import { App, InjectionKey, inject, Ref } from "vue";
+import { PageContext } from "vike/types";
 
-const key: InjectionKey<PageContext> = Symbol();
+const key: InjectionKey<Ref<PageContext>> = Symbol();
 
 /**
  * Inject the PageContext into a component.
  *
  * @returns The current PageContext.
  */
-export function usePageContext() {
+export function usePageContext(): Ref<PageContext> {
   const pageContext = inject(key);
   if (!pageContext) {
-    throw new Error('setPageContext() not called in parent');
+    throw new Error("setPageContext() not called in parent");
   }
   return pageContext;
 }
@@ -22,6 +22,6 @@ export function usePageContext() {
  * @param app - The Vue app instance.
  * @param pageContext - The current page rendering context.
  */
-export function setPageContext(app: App, pageContext: PageContext) {
+export function setPageContext(app: App, pageContext: Ref<PageContext>): void {
   app.provide(key, pageContext);
 }
