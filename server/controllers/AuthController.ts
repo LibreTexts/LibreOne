@@ -1049,7 +1049,7 @@ export class AuthController {
     }
 
     if (!foundUser.registration_complete) {
-      redirectURI = '/complete-registration';
+      redirectURI = '/complete-registration/index';
     }
     return res.redirect(redirectURI);
   }

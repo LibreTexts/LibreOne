@@ -4,7 +4,7 @@
   "main": "server/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec tsx server/index.ts",
+    "dev": "node -e \"require('fs').mkdirSync('dist/client', { recursive: true });\" && nodemon --exec tsx server/index.ts",
     "lint": "eslint . --ext .ts,.vue",
     "clean": "rimraf ./dist",
     "prod": "npm run client:build && npm run server:prod",

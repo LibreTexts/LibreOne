@@ -83,7 +83,7 @@
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
 
-  const pageContext = usePageContext();
+  const pageContext = usePageContext().value;
 
   const isOpen = ref<boolean>(false);
   const apps = ref<Application[]>([]);
