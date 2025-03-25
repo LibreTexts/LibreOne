@@ -26,6 +26,7 @@ declare global {
       locale: string;
       abortReason?: string;
       urlOriginal: string;
+      urlLogical?: string;
       productionURL: string;
       isAuthenticated: boolean;
       expiredAuth: boolean;
