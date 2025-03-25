@@ -17,7 +17,8 @@
     "updating": "Actualizando"
   },
   "welcome": {
-    "getstarted": "Comenzar"
+    "register": "Registrarse para una cuenta LibreOne",
+    "signin": "Iniciar sesión con una cuenta LibreOne existente"
   },
   "profile": {
     "firstname": "Nombre",
