@@ -361,9 +361,20 @@ export class AuthController {
       return errors.badRequest(res);
     }
 
-    if (!principal?.attributes?.uuid) {
+    let resolvedUUID = principal.attributes.uuid;
+
+    // If there was no UUID or it was invalid, check if we have a user attribute (i.e. an external subject ID)
+    if((!resolvedUUID || !validateUUID(resolvedUUID)) && principal.attributes.user && typeof principal.attributes.user === 'string') {
+      const fromExternal = await User.findOne({ where: { external_subject_id: principal.attributes.user } });
+      if (fromExternal?.uuid) {
+        resolvedUUID = fromExternal.uuid;
+      }
+    }
+
+    // resolvedUUID should be a valid UUID at this point, if not, don't proceed
+    if (!resolvedUUID || !validateUUID(resolvedUUID)) {
       console.error({
-        msg: 'CAS Bridge authentication failed: no user identifier available!',
+        msg: 'CAS Bridge authentication failed: no valid user identifier available!',
         principal,
       });
       return errors.badRequest(res);
@@ -379,7 +390,7 @@ export class AuthController {
         cookies,
       });
     }
-    const foundUser = await User.findByPk(principal.attributes.uuid, {
+    const foundUser = await User.findByPk(resolvedUUID, {
       include: [
         {
           model: Application,
@@ -410,7 +421,7 @@ export class AuthController {
 
     const privKey = await this.retrieveCASBridgePrivateKey();
     const token = await new SignJWT(payload)
-      .setSubject(principal.attributes.uuid)
+      .setSubject(resolvedUUID)
       .setProtectedHeader({ alg: 'RS256' })
       .setIssuedAt()
       .setIssuer(SESSION_DOMAIN)
