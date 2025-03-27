@@ -132,6 +132,7 @@
   import ThemedInput from '../ThemedInput.vue';
   import UserAvatar from './UserAvatar.vue';
   import { usePageContext } from '@renderer/usePageContext';
+  import { usePlainLayout } from '@renderer/usePlainLayout';
   const VALID_FILE_EXTS = ['.jpeg', '.png', '.gif', '.jpg'];
 
   // Props & Hooks
@@ -141,6 +142,7 @@
   }>();
   const axios = useAxios();
   const pageContext = usePageContext().value; // Page context is a ref
+  const plainLayout = usePlainLayout();
 
   // Data & UI
   const editMode = ref(false);
@@ -183,7 +185,7 @@
   }
 
   function handleGoToSecurity() {
-    window.location.href = '/security';
+    window.location.href = `/security${plainLayout.value ? '?plain_layout=true' : ''}`;
   }
 
   /**

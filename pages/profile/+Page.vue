@@ -10,10 +10,7 @@
         </p>
       </div>
       <div class="flex flex-col mt-10">
-        <p
-          class="text-error font-medium text-center mb-4"
-          v-if="unknownerror"
-        >
+        <p class="text-error font-medium text-center mb-4" v-if="unknownerror">
           {{ $t("common.unknownerror") }}
         </p>
         <PersonalInfo
@@ -21,25 +18,30 @@
           @data-updated="handleDataUpdated"
           @set-unknown-error="(val) => (unknownerror = val)"
         />
-        <a href="/delete-account" class="text-center text-slate-500 mt-4 text-sm hover:underline">
+        <a
+          :href="`/delete-account${plainLayout ? '?plain_layout=true' : ''}`"
+          class="text-center text-slate-500 mt-4 text-sm hover:underline"
+        >
           {{ $t("delete-account.request") }}
-      </a>
+        </a>
       </div>
     </div>
   </StandardPageLayout>
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  import PersonalInfo from '../../components/account_management/PersonalInfo.vue';
-  import { usePageContext } from '@renderer/usePageContext';
-  import StandardPageLayout from '../../components/layout/StandardPageLayout.vue';
+import { ref } from "vue";
+import PersonalInfo from "../../components/account_management/PersonalInfo.vue";
+import { usePageContext } from "@renderer/usePageContext";
+import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
+import { usePlainLayout } from "@renderer/usePlainLayout";
 
-  const pageContext = usePageContext().value;
+const pageContext = usePageContext().value;
+const plainLayout = usePlainLayout();
 
-  const unknownerror = ref(false);
+const unknownerror = ref(false);
 
-  const handleDataUpdated = () => {
-    window.location.reload();
-  };
+const handleDataUpdated = () => {
+  window.location.reload();
+};
 </script>
