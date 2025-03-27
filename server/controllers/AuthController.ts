@@ -364,8 +364,8 @@ export class AuthController {
     let resolvedUUID = principal.attributes.uuid;
 
     // If there was no UUID or it was invalid, check if we have a user attribute (i.e. an external subject ID)
-    if((!resolvedUUID || !validateUUID(resolvedUUID)) && principal.attributes.user && typeof principal.attributes.user === 'string') {
-      const fromExternal = await User.findOne({ where: { external_subject_id: principal.attributes.user } });
+    if((!resolvedUUID || !validateUUID(resolvedUUID)) && principal.user && typeof principal.user === 'string') {
+      const fromExternal = await User.findOne({ where: { external_subject_id: principal.user } });
       if (fromExternal?.uuid) {
         resolvedUUID = fromExternal.uuid;
       }
