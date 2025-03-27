@@ -70,12 +70,15 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { useAxios } from '@renderer/useAxios';
+  import { usePageContext } from '@renderer/usePageContext';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import createPathWithLocale from '@locales/createPathWithLocale';
 
   const props = defineProps<{
     email: string;
   }>();
   const axios = useAxios();
+  const pageContext = usePageContext().value;
 
   const code = ref('');
   const codeErr = ref(false);
@@ -125,9 +128,10 @@
 
       const queryParams = new URLSearchParams(window.location.search);
       const queryString = queryParams.toString();
-      window.location.assign('/complete-registration/index' + (queryString ? `?${queryString}` : ''));
+      const newPath = createPathWithLocale('/complete-registration/index', pageContext);
+      window.location.assign(`${newPath}` + (queryString ? `?${queryString}` : ''));
     } catch (e) {
-      console.log(e);
+      console.error(e);
       loading.value = false;
       verifyErr.value = true;
     }

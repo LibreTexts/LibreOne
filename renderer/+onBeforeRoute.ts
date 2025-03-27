@@ -11,7 +11,6 @@ const onBeforeRoute: OnBeforeRouteSync = (
     pathname: urlPathnameWithoutLocale,
   });
 
-  // We specifically do not return the whole pageContext object here per https://vike.dev/pageContext-manipulation#do-not-return-entire-pagecontext
   return { pageContext: { locale, urlLogical } };
 };
 

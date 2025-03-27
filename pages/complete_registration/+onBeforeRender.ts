@@ -1,3 +1,4 @@
+import createPathWithLocale from "@locales/createPathWithLocale";
 import { PageContextServer } from "vike/types";
 
 /**
@@ -9,7 +10,8 @@ import { PageContextServer } from "vike/types";
 export default async function onBeforeRender(pageContext: PageContextServer) {
   let redirectTo: string | null = null;
   if (!pageContext.user) {
-    const params = new URLSearchParams({ redirectURI: '/complete-registration/index' });
+    const newPath = createPathWithLocale('/complete-registration/index', pageContext);
+    const params = new URLSearchParams({ redirectURI: newPath }).toString();
     redirectTo = `/api/v1/auth/login?${params}`;
   }
 
@@ -19,12 +21,14 @@ export default async function onBeforeRender(pageContext: PageContextServer) {
   const stageParam = routeParams['*'];
 
   if (!stageParam || stageParam === 'index') {
-    redirectTo = '/complete-registration/name' + (queryString ? `?${queryParams}` : '');
+    const newPath = createPathWithLocale('/complete-registration/name', pageContext);
+    redirectTo = newPath + (queryString ? `?${queryParams}` : '');
   }
 
   // Users from an external IdP do not need to enter their name
   if (pageContext.user?.external_subject_id !== null && (!stageParam || stageParam === 'name')) {
-    redirectTo = '/complete-registration/role' + (queryString ? `?${queryParams}` : '');
+    const newPath = createPathWithLocale('/complete-registration/role', pageContext);
+    redirectTo = newPath + (queryString ? `?${queryParams}` : '');
   }
 
   return {
