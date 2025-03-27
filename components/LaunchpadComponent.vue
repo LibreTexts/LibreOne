@@ -63,7 +63,7 @@
       </div>
     </div>
     <div>
-      <div class="mt-2">
+      <div class="mt-8 lg:mt-2">
         <p class="text-3xl font-medium">
           {{ $t("launchpad_auth.libraries") }}
         </p>
