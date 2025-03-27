@@ -412,12 +412,15 @@ export class AuthController {
     const foundLib = userLibs?.find((u) => u === `https://${source}`);
 
     const payload = {
-      first_name: principal.attributes?.first_name,
-      last_name: principal.attributes?.last_name,
+      first_name: principal.attributes?.first_name ?? principal.attributes?.given_name,
+      last_name: principal.attributes?.last_name ?? principal.attributes?.family_name,
       email: principal.attributes?.email,
       picture: principal.attributes?.picture,
       educational: /(?<=.*?)@.*?\.edu/.test(principal.attributes?.email),
     };
+
+    console.log(`CAS Bridge authentication successful for user ${resolvedUUID} (${foundUser.get('email')})`);
+    console.log(`Payload: ${JSON.stringify(payload)}`);
 
     const privKey = await this.retrieveCASBridgePrivateKey();
     const token = await new SignJWT(payload)
