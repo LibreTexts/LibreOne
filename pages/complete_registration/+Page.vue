@@ -45,6 +45,7 @@
   import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
   import { usePageContext } from '@renderer/usePageContext';
   import NameForm from '@components/complete_registration/NameForm.vue';
+  import createPathWithLocale from '@locales/createPathWithLocale';
   const OrgForm = defineAsyncComponent(
     () => import('@components/complete_registration/OrgForm.vue'),
   );
@@ -112,6 +113,7 @@
   onMounted(() => (formVisible.value = true));
 
   function handleNavigation(href: string, newParams?: Record<string, string>) {
+    const newPath = createPathWithLocale(href, pageContext);
     const queryParams = new URLSearchParams(window.location.search);
     if (newParams) {
       for (const [key, value] of Object.entries(newParams)) {
@@ -119,7 +121,7 @@
       }
     }
     const queryString = queryParams.toString();
-    nextNavigationURL.value = href + (queryString ? `?${queryString}` : ''); // carry over any query params
+    nextNavigationURL.value = newPath + (queryString ? `?${queryString}` : ''); // carry over any query params
     formVisible.value = false;
   }
 
