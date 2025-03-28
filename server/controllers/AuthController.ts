@@ -431,6 +431,7 @@ export class AuthController {
       .setAudience('libretexts.org')
       .setExpirationTime('7d')
       .sign(privKey);
+      console.log(`Token: ${token}`);
     const cookieConfig: CookieOptions = {
       path: '/',
       secure: true,
