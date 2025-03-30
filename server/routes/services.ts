@@ -19,7 +19,7 @@ servicesRouter.route('/')
     catchInternal((req, res) => controller.createService(req, res)),
   );
 
-servicesRouter.route('/:serviceID')
+servicesRouter.route('/:id')
   .get(
     ensureAPIUserHasPermission(['services:read']),
     catchInternal((req, res) => controller.getService(req, res)),

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Service, sequelize } from '../models';
 import { getProductionURL, safeJSONParse } from '../helpers';
 import errors from '../errors';
+import { Op } from "sequelize";
 
 export class ServiceController {
   /**
@@ -53,11 +54,29 @@ export class ServiceController {
   public async getAllServices(req: Request, res: Response): Promise<Response> {
     const offset = Number(req.query.offset);
     const limit = Number(req.query.limit);
+    const query = req.query.query as string;
+
+    const splitQueryParts = query?.split(" ");
+    const fuzzyQueryParts = splitQueryParts?.map((p) => `%${p}%`);
+
+    const queryCriteria = fuzzyQueryParts?.length
+        ? {
+            [Op.or]: [
+                { service_Id: { [Op.like]: fuzzyQueryParts[0] } },
+                { name: { [Op.like]: fuzzyQueryParts[0] } },
+            ],
+        }
+        : {};
+
+
     const { count, rows } = await Service.findAndCountAll({
+      ...(queryCriteria && {
+        where: queryCriteria,
+      }),
       offset,
       limit,
       order: sequelize.col('name'),
-      attributes: ['id', 'name', 'service_Id'],
+      // attributes: ['id', 'name', 'service_Id'], // temporary
     });
     return res.send({
       meta: {
@@ -77,19 +96,19 @@ export class ServiceController {
    * @returns The fulfilled API response.
    */
   public async updateService(req: Request, res: Response): Promise<Response> {
-    const { id } = req.params;
-    const serviceID = Number(id);
+    let { id } = req.params;
     const parsedServiceBody = safeJSONParse(req.body.body);
     if (!parsedServiceBody) {
       return errors.badRequest(res);
     }
-    const [numUpdated] = await Service.update(req.body, {
-      where: { id: serviceID },
+
+    const [numUpdated] = await Service.update(JSON.parse(req.body.body), {
+      where: { id: id },
     });
     if (numUpdated !== 1) {
       return errors.internalServerError(res);
     }
-    return res.status(200);
+    return res.status(200).json({ message: "Service updated successfully" });
   }
 
   /**
