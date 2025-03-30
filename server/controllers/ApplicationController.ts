@@ -100,6 +100,7 @@ export class ApplicationController {
       order: sequelize.literal('name'),
     });
     const results = rows.map((row) => row.get());
+    console.log("results:", results);
 
     return res.send({
       meta: {
