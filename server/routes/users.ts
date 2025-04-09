@@ -26,7 +26,6 @@ usersRouter.route('/principal-attributes').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:read']),
-  validate(UserValidator.resolvePrincipalAttributesSchema, 'query'),
   catchInternal((req, res) => controller.resolvePrincipalAttributes(req, res)),
 );
 
