@@ -437,7 +437,7 @@ export class AuthController {
       secure: true,
       domain: 'libretexts.org',
       sameSite: 'lax',
-      maxAge: 604800,
+      maxAge: 604800, // 10 minutes
     };
 
     res.cookie(`cas_bridge_token_${source}`, token, cookieConfig);
@@ -454,6 +454,12 @@ export class AuthController {
         cookieConfig,
       );
     }
+
+    // Set a longer term cookie to indicate that the CAS Bridge authentication was used (not sufficient for authorization)
+    res.cookie('cas_bridge_used', 'true', {
+      ...cookieConfig,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     if (redirect) {
       return res.redirect(redirect);
