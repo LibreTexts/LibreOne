@@ -26,6 +26,8 @@ import { UserOrganization } from './UserOrganization';
 import { VerificationRequest } from './VerificationRequest';
 import { VerificationRequestHistory } from './VerificationRequestHistory';
 import { defaultLicenses } from '@server/licenses';
+import { Language } from './Language';
+import { defaultLanguages } from '@server/languages';
 import { DeleteAccountRequest } from './DeleteAccountRequest';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
@@ -55,6 +57,7 @@ sequelize.addModels([
   EmailVerification,
   License,
   LicenseVersion,
+  Language,
   LoginEvent,
   Organization,
   OrganizationAlias,
@@ -149,6 +152,20 @@ async function createDefaultLicenses() {
   }
 }
 
+async function createDefaultLanguages() {
+  try {
+    console.log('[DB] Creating default languages...');
+    const existing = await Language.findAll();
+    const existingTags = existing.map((r) => r.tag);
+    const newLanguages = defaultLanguages.filter((r) => !existingTags.includes(r.tag));
+    await Language.bulkCreate(newLanguages);
+    console.log('[DB] Created default languages.');
+  } catch (e) {
+    console.error('[DB] Error creating default languages:', e);
+  }
+}
+
+
 /**
  * Initializes the database with default values.
  */
@@ -158,6 +175,7 @@ export async function initDatabase() {
     await createDefaultAdminRoles();
     await createDefaultTimeZones();
     await createDefaultLicenses();
+    await createDefaultLanguages();
     console.log('[DB] Database initialized with default values.');
   } catch (e) {
     console.error('[DB] Error initializing database:', e);
