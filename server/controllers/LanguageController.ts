@@ -1,5 +1,6 @@
 import errors from '../errors';
 import { Language, sequelize } from '../models';
+import { GetAllLanguagesQuery, LanguageIDParams } from '@server/types/languages';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 
@@ -12,7 +13,7 @@ export class LanguageController {
    * @returns The fulfilled API response.
    */
   public async getAllLanguages(req: Request, res: Response): Promise<Response> {
-    const { query } = req.query as { query?: string };
+    const { query } = req.query as unknown as GetAllLanguagesQuery;
 
     const fuzzyQuery = query ? `%${query}%` : null;
     const whereCriteria = query ? {
@@ -44,10 +45,10 @@ export class LanguageController {
    * @returns The fulfilled API response.
    */
   public async getLanguage(req: Request, res: Response): Promise<Response> {
-    const { tag } = req.params;
+    const { langid } = req.params as unknown as LanguageIDParams;
     
     const language = await Language.findOne({
-      where: { tag },
+      where: { tag: langid },
       attributes: ['tag', 'english_name']
     });
 
