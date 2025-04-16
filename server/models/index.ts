@@ -211,6 +211,7 @@ export {
   DeleteAccountRequest,
   Domain,
   EmailVerification,
+  Language,
   License,
   LicenseVersion,
   LoginEvent,
