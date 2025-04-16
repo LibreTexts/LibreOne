@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BelongsTo,
   BelongsToMany,
   Column,
   CreatedAt,
@@ -17,6 +18,7 @@ import {
 } from 'sequelize-typescript';
 import { Application } from './Application';
 import { AccessRequest } from './AccessRequest';
+import { Language } from './Language';
 import { LoginEvent } from '@server/models/LoginEvent';
 import { Organization } from './Organization';
 import { TimeZone } from './TimeZone';
@@ -66,6 +68,18 @@ export class User extends Model {
   @Column(DataType.STRING)
   declare time_zone: string;
 
+  @ForeignKey(() => Language)
+  @Default('en-US')
+  @AllowNull(false)
+  @Column({
+    type: DataType.STRING,
+    references: {
+      model: Language,
+      key: 'tag' 
+    }
+  })
+  declare lang: string;
+
   @Column(DataType.STRING)
   declare student_id: string;
 
@@ -106,6 +120,12 @@ export class User extends Model {
 
   @Column(DataType.ENUM('self', 'api'))
   declare registration_type: string;
+
+  @BelongsTo(() => Language, {
+    foreignKey: 'lang',
+    targetKey: 'tag' 
+  })
+  language?: Language;
 
   @BelongsToMany(() => Application, () => UserApplication)
   applications?: Array<Application & { UserApplication: UserApplication }>;
