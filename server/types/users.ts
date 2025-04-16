@@ -72,6 +72,7 @@ export type UpdateUserBody = {
   time_zone?: string;
   student_id?: string;
   disabled?: boolean;
+  lang?: string;
 };
 
 export type UpdateUserEmailBody = {
