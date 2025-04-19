@@ -38,11 +38,10 @@ describe('Languages', async () => {
       expect(response.status).to.equal(200);
       expect(response.body?.data).to.have.lengthOf.at.least(1);
       
-      // Verify each language has required fields
       response.body?.data.forEach((language: any) => {
         expect(language).to.have.all.keys(['id', 'english_name', 'tag']);
         expect(language.tag).to.match(/^[a-zA-Z]{2}(-[a-zA-Z]{2})?$/);
-      });
+      }); 
     });
 
     it('should search languages by english name (default values)', async () => {

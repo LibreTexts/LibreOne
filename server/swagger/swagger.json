@@ -14,6 +14,106 @@
         }
     },
     "paths": {
+        "/languages": {
+            "get": {
+                "summary": "Get all languages",
+                "operationId": "getAllLanguages",
+                "tags": [
+                    "languages"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": false,
+                        "description": "Search for languages by tag or English name"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Language"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/languages/{langid}": {
+            "get": {
+                "summary": "Get a specific language",
+                "operationId": "getLanguage",
+                "tags": [
+                    "languages"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "langid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "Language tag"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Language"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Language not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/licenses": {
             "get": {
                 "summary": "Get all licenses",
@@ -1009,6 +1109,23 @@
                     "expires_at": {
                         "type": "date",
                         "required": true
+                    },
+                    "created_at": {
+                        "type": "date"
+                    },
+                    "updated_at": {
+                        "type": "date"
+                    }
+                }
+            },
+            "Language": {
+                "type": "object",
+                "properties": {
+                    "tag": {
+                        "type": "string"
+                    },
+                    "english_name": {
+                        "type": "string"
                     },
                     "created_at": {
                         "type": "date"
