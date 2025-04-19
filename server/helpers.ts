@@ -88,3 +88,4 @@ export function safeJSONParse(input: string): object | boolean {
 
 export const DEFAULT_FIRST_NAME = 'LibreTexts';
 export const DEFAULT_LAST_NAME = 'User';
+export const DEFAULT_LANGUAGE = 'en-us';

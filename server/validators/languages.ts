@@ -1,9 +1,9 @@
 import Joi from 'joi';
 
 export const getAllLanguagesSchema = Joi.object({
-  query: Joi.string().optional(),
+  query: Joi.string().allow('').optional(),
 });
 
 export const languageIDParamSchema = Joi.object({
-  tag: Joi.string().required(),
+  langid: Joi.string().required(),
 });

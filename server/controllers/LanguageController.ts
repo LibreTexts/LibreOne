@@ -26,7 +26,7 @@ export class LanguageController {
     const { count, rows } = await Language.findAndCountAll({
       where: whereCriteria,
       order: sequelize.col('english_name'),
-      attributes: ['tag', 'english_name']
+      attributes: ['id', 'tag', 'english_name']
     });
 
     return res.send({
@@ -49,7 +49,7 @@ export class LanguageController {
     
     const language = await Language.findOne({
       where: { tag: langid },
-      attributes: ['tag', 'english_name']
+      attributes: ['id', 'tag', 'english_name']
     });
 
     if (!language) {

@@ -251,5 +251,10 @@
   "instructor_getting_started": {
     "header": "Getting Started Tutorials",
     "infoline": "Learn how to use the LibreTexts libraries and applications. Here are some tutorials to get you started."
+  },
+  "complete_registration_lang": {
+    "header": "Hi, {name}",
+    "tagline": "What is your preferred language?",
+    "tagline_note": "This will help us to better tailor your LibreTexts experience as we enhance support for various languages"
   }
 }

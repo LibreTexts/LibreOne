@@ -86,6 +86,7 @@ export const updateUserSchema = joi.object({
   time_zone: timeZoneValidator,
   student_id: joi.string().min(3).max(50),
   disabled: joi.boolean(),
+  lang: joi.string().min(2).max(10),
 });
 
 export const updateUserEmailSchema = joi.object({
