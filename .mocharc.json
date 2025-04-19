@@ -9,5 +9,6 @@
     "server"
   ],
   "recursive": true,
-  "exit": true
+  "exit": true,
+  "node-option": ["import=tsx"]
 }

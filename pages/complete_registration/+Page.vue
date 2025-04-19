@@ -45,6 +45,7 @@
   import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
   import { usePageContext } from '@renderer/usePageContext';
   import NameForm from '@components/complete_registration/NameForm.vue';
+  import LanguageForm from '@components/complete_registration/LanguageForm.vue';
   import createPathWithLocale from '@locales/createPathWithLocale';
   const OrgForm = defineAsyncComponent(
     () => import('@components/complete_registration/OrgForm.vue'),
@@ -61,6 +62,9 @@
   const stage = computed(() => {
     const stageId = pageContext.routeParams?.stageId;
     switch (stageId) {
+      case 'language': {
+        return LanguageForm;
+      }
       case 'organization': {
         return OrgForm;
       }
@@ -79,6 +83,9 @@
   const nextNavigationURL = ref<string | null>(null);
   const componentProps = computed(() => {
     switch (stage.value) {
+      case LanguageForm: {
+        return { uuid: pageContext.user?.uuid, firstName: pageContext.user?.first_name };
+      }
       case NameForm: {
         return { uuid: pageContext.user?.uuid, firstName: pageContext.user?.first_name, lastName: pageContext.user?.last_name };
       }
@@ -98,6 +105,9 @@
   });
   const componentEvents = computed(() => {
     switch (stage.value) {
+      case LanguageForm: {
+        return { 'language-update': handleLanguageSelectionComplete };
+      }
       case OrgForm: {
         return { 'org-update': handleOrgSelectionComplete };
       }
@@ -135,7 +145,7 @@
    * Advances the page to the Role selection stage upon receiving the 'name-update' event.
    */
   function handleNameInputComplete() {
-    handleNavigation('/complete-registration/role');
+    handleNavigation('/complete-registration/language');
   }
 
   /**
@@ -150,6 +160,13 @@
    */
   function handleOrgSelectionComplete() {
     handleNavigation('/complete-registration/timezone');
+  }
+
+   /**
+   * Advances the page to the Name input stage upon receiving the 'language-update' event.
+   */
+   function handleLanguageSelectionComplete() {
+    handleNavigation('/complete-registration/role');
   }
 
   /**

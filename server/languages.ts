@@ -1,0 +1,22 @@
+export const defaultLanguages = [
+    { english_name: "English", tag: "en" },
+    { english_name: "English (United States)", tag: "en-US" },
+    { english_name: "English (Great Britain)", tag: "en-GB" },
+    { english_name: "French", tag: "fr" },
+    { english_name: "German", tag: "de" },
+    { english_name: "Polish", tag: "pl" },
+    { english_name: "Dutch", tag: "nl" },
+    { english_name: "Finnish", tag: "fi" },
+    { english_name: "Swedish", tag: "sv" },
+    { english_name: "Italian", tag: "it" },
+    { english_name: "Spanish (Spain)", tag: "es" },
+    { english_name: "Spanish (Mexico)", tag: "es-MX" },
+    { english_name: "Portuguese (Portugal)", tag: "pt" },
+    { english_name: "Russian", tag: "ru" },
+    { english_name: "Portuguese (Brazil)", tag: "pt-BR" },
+    { english_name: "Chinese (PRC)", tag: "zh-CN" },
+    { english_name: "Chinese (Taiwan)", tag: "zh-TW" },
+    { english_name: "Japanese", tag: "ja" },
+    { english_name: "Korean", tag: "ko" },
+  ];
+  

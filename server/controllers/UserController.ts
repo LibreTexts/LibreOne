@@ -12,6 +12,7 @@ import { MailController } from './MailController';
 import { VerificationRequestController } from './VerificationRequestController';
 import {
   Application,
+  Language,
   Organization,
   OrganizationSystem,
   User,
@@ -425,6 +426,10 @@ export class UserController {
         include: [
           { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
         ],
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     if (!foundUser) {
@@ -469,6 +474,10 @@ export class UserController {
         model: Organization,
         attributes: ['id', 'name', 'logo', 'system_id'],
         through: { attributes: [] },
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     return res.send({
@@ -645,6 +654,10 @@ export class UserController {
         }],
         attributes: ['id', 'name', 'logo'],
         through: { attributes: [] },
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     if (!foundUser) {
@@ -663,6 +676,7 @@ export class UserController {
       time_zone: foundUser.time_zone || '',
       verify_status: foundUser.verify_status,
       picture: foundUser.avatar || DEFAULT_AVATAR,
+      lang: foundUser.get('language')?.tag || 'en-US',
     });
   }
 
@@ -694,6 +708,7 @@ export class UserController {
       'student_id',
       'disabled',
       'verify_status',
+      'lang',
     ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
     const apiUserOnlyKeys = ['disabled', 'verify_status'];
