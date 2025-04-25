@@ -53,6 +53,10 @@ export const createUserEmailChangeRequestSchema = joi.object({
   email: joi.string().email().required(),
 });
 
+export const disableUserSchema = joi.object({
+  disabled_reason: joi.string().min(1).max(255).required()
+});
+  
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
@@ -85,7 +89,7 @@ export const updateUserSchema = joi.object({
   verify_status: joi.string().valid("not_attempted", "denied", "verified"),
   time_zone: timeZoneValidator,
   student_id: joi.string().min(3).max(50),
-  disabled: joi.boolean(),
+  disabled: joi.boolean(),   
 });
 
 export const updateUserEmailSchema = joi.object({

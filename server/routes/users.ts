@@ -73,6 +73,15 @@ usersRouter.route('/:uuid/applications/:applicationID').delete(
   catchInternal((req, res) => controller.deleteUserApplication(req, res)),
 );
 
+usersRouter.route('/:uuid/disable').patch(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write']),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.disableUserSchema, 'body'),
+  catchInternal((req, res) => controller.disableUser(req, res))
+);
+
 usersRouter.route('/:uuid/organizations')
   .all(
     verifyAPIAuthentication,

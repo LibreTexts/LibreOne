@@ -103,3 +103,7 @@ export type InstructorVerificationStatus =
   'needs_review' |
   'denied' |
   'verified';
+
+  export type DisableUserBody = {
+    disabled_reason: string;
+  };
