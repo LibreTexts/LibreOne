@@ -53,6 +53,10 @@ export const createUserEmailChangeRequestSchema = joi.object({
   email: joi.string().email().required(),
 });
 
+export const disableUserSchema = joi.object({
+  disabled_reason: joi.string().min(1).max(255).required()
+});
+  
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
