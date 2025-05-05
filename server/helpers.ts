@@ -19,7 +19,7 @@ export function catchInternal(fn: APIFunction | AsyncAPIFunction): AsyncAPIFunct
       console.error(e);
       return errors.internalServerError(res);
     }
-  }; 
+  };
 }
 
 /**
@@ -88,4 +88,4 @@ export function safeJSONParse(input: string): object | boolean {
 
 export const DEFAULT_FIRST_NAME = 'LibreTexts';
 export const DEFAULT_LAST_NAME = 'User';
-export const DEFAULT_LANGUAGE = 'en-us';
+export const DEFAULT_LANGUAGE = 'en-US';
