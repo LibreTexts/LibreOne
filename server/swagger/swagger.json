@@ -1121,17 +1121,14 @@
             "Language": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "type": "number"
+                    },
                     "tag": {
                         "type": "string"
                     },
                     "english_name": {
                         "type": "string"
-                    },
-                    "created_at": {
-                        "type": "date"
-                    },
-                    "updated_at": {
-                        "type": "date"
                     }
                 }
             },
