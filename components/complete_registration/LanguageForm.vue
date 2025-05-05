@@ -48,6 +48,7 @@ import { useAxios } from '@renderer/useAxios';
 import LoadingIndicator from '@components/LoadingIndicator.vue';
 import ThemedSelectInput from '../ThemedSelectInput.vue';
 import ThemedButton from '../ThemedButton.vue';
+import { DEFAULT_LANGUAGE } from '@server/helpers';
 
 type Language = {
   id: number;
@@ -66,7 +67,7 @@ const axios = useAxios();
 const loading = ref(true);
 const updating = ref(false);
 const languages = ref<Language[]>([]);
-const selectedLanguageTag = ref('');
+const selectedLanguageTag = ref(DEFAULT_LANGUAGE);
 
 onMounted(async () => {
   try {
@@ -81,13 +82,13 @@ onMounted(async () => {
 
 async function submitForm() {
   if (!selectedLanguageTag.value) return;
-  
+
   updating.value = true;
   try {
     await axios.patch(`/users/${props.uuid}`, {
       lang: selectedLanguageTag.value
     });
-    emit('language-update'); 
+    emit('language-update');
   } catch (error) {
     console.error('Failed to update language:', error);
   } finally {
