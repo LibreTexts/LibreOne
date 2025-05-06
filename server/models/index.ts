@@ -31,6 +31,7 @@ import { defaultLicenses } from '@server/licenses';
 import { Language } from './Language';
 import { defaultLanguages } from '@server/languages';
 import { DeleteAccountRequest } from './DeleteAccountRequest';
+import { UserNote } from './UserNote';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -73,6 +74,7 @@ sequelize.addModels([
   OrganizationSystem,
   User,
   UserApplication,
+  UserNote,
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
@@ -232,4 +234,5 @@ export {
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
+  UserNote,
 };

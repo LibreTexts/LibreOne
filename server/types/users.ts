@@ -106,3 +106,17 @@ export type InstructorVerificationStatus =
   'needs_review' |
   'denied' |
   'verified';
+
+
+export type UserNoteIDParams = {
+  noteID: string; 
+};
+
+export type UserNotesQuery = {
+  page?: number;  
+  limit?: number;  
+};
+
+export type UserNoteBody = {
+  content: string; 
+};
