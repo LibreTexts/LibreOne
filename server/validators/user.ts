@@ -124,3 +124,21 @@ export const updateUserVerificationRequestSchema = joi
       return !!data; // Check that field is not undefined, null, or empty string (joi default only checks for undefined)
     },
   });
+
+  export const getUserNotesSchema = joi.object({
+    page: joi.number().integer().min(1).default(1),
+    limit: joi.number().integer().min(1).max(100).default(25),
+  });
+  
+  export const userNoteParamSchema = joi.object({
+    uuid: uuidValidator,
+    noteID: uuidValidator,
+  });
+  
+  export const createUserNoteSchema = joi.object({
+    content: joi.string().max(3000).required(),
+  });
+  
+  export const updateUserNoteSchema = joi.object({
+    content: joi.string().max(3000).required(),
+  });

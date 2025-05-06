@@ -36,12 +36,16 @@ import type {
   UserApplicationIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
+  UserNoteIDParams,
+  UserNotesQuery,
+  UserNoteBody
   DisableUserBody
 } from '../types/users';
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
+import { UserNote } from '../models/UserNote'; 
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -1211,5 +1215,101 @@ export class UserController {
         disabled_date: foundUser.disabled_date
       }
     });
+  }
+
+  public async getNotes(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { page = 1, limit = 25 } = req.query as UserNotesQuery;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const notes = await UserNote.findAll({
+      where: { user_id: uuid },
+      include: [
+        { model: User, as: 'created_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'updated_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+      ],
+      order: [['created_at', 'DESC']],
+      offset,
+      limit: Number(limit),
+    });
+
+    const total = await UserNote.count({ where: { user_id: uuid } });
+    const has_more = offset + notes.length < total;
+
+    return res.send({
+      notes,
+      has_more,
+    });
+  }
+
+  public async createNote(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { content } = req.body as UserNoteBody;
+    const created_by_id = req.userUUID; 
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    const newNote = await UserNote.create({
+      user_id: uuid,
+      note: content,
+      created_by_id,
+      updated_by_id: created_by_id,
+    });
+
+    await newNote.reload({
+      include: [
+        { model: User, as: 'created_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'updated_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+      ],
+    });
+
+    return res.status(201).send({ data: newNote });
+  }
+
+  public async updateNote(req: Request, res: Response): Promise<Response> {
+    const { noteID } = req.params as UserNoteIDParams;
+    const { content } = req.body as UserNoteBody;
+    const updated_by_id = req.userUUID;
+
+    const foundNote = await UserNote.findByPk(noteID);
+    if (!foundNote) {
+      return errors.notFound(res);
+    }
+
+    await foundNote.update({
+      note: content,
+      updated_by_id,
+    });
+
+    await foundNote.reload({
+      include: [
+        { model: User, as: 'created_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+        { model: User, as: 'updated_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
+      ],
+    });
+
+    return res.send({ data: foundNote });
+  }
+
+  public async deleteNote(req: Request, res: Response): Promise<Response> {
+    const { noteID } = req.params as UserNoteIDParams;
+
+    const foundNote = await UserNote.findByPk(noteID);
+    if (!foundNote) {
+      return errors.notFound(res);
+    }
+
+    await foundNote.destroy();
+
+    return res.send({ data: {} });
   }
 }
