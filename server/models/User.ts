@@ -26,6 +26,7 @@ import { UserOrganization } from './UserOrganization';
 import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
+import { UserNote } from './UserNote';
 
 @DefaultScope(() => ({
   attributes: {
@@ -148,6 +149,9 @@ export class User extends Model {
 
   @HasMany(() => Session)
   sessions?: Array<Session>;
+
+  @HasMany(() => UserNote, 'user_id')
+  notes?: Array<UserNote>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

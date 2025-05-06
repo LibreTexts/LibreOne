@@ -109,3 +109,17 @@ export type InstructorVerificationStatus =
   export type DisableUserBody = {
     disabled_reason: string;
   };
+
+
+export type UserNoteIDParams = {
+  noteID: string; 
+};
+
+export type UserNotesQuery = {
+  page?: number;  
+  limit?: number;  
+};
+
+export type UserNoteBody = {
+  content: string; 
+};

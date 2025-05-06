@@ -176,6 +176,41 @@ usersRouter.route('/:uuid/init-delete-account').post(
   catchInternal((req, res) => controller.initDeleteAccount(req, res)),
 );
 
+usersRouter.route('/:uuid/notes')
+  .get(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write']),
+    validate(UserValidator.uuidParamSchema, 'params'),
+    validate(UserValidator.getUserNotesSchema, 'query'),
+    catchInternal((req, res) => controller.getNotes(req, res)),
+  )
+  .post(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write']),
+    validate(UserValidator.uuidParamSchema, 'params'),
+    validate(UserValidator.createUserNoteSchema, 'body'),
+    catchInternal((req, res) => controller.createNote(req, res)),
+  );
+
+usersRouter.route('/:uuid/notes/:noteID')
+  .patch(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write']),
+    validate(UserValidator.userNoteParamSchema, 'params'),
+    validate(UserValidator.updateUserNoteSchema, 'body'),
+    catchInternal((req, res) => controller.updateNote(req, res)),
+  )
+  .delete(
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write']),
+    validate(UserValidator.userNoteParamSchema, 'params'),
+    catchInternal((req, res) => controller.deleteNote(req, res)),
+  );
+
 export {
   usersRouter,
 };
