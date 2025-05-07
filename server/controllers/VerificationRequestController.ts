@@ -20,9 +20,8 @@ import {
 } from '../types/verificationrequests';
 import { UserController } from './UserController';
 import { AuthController } from "@server/controllers/AuthController";
-import { SignJWT } from 'jose';
-import axios from 'axios';
 import { CreateUserVerificationRequestBody, UpdateUserVerificationRequestBody } from '@server/types/users';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
 export const verificationRequestStatuses = ['approved', 'denied', 'needs_change', 'open'];
@@ -270,6 +269,8 @@ export class VerificationRequestController {
       ];
 
       await Promise.all(webhookPromises); // Both calls return false and log if failed, so one shouldn't affect the other
+      
+      EventSubscriberEmitter.emit('user:updated', foundUser.get({ plain: true }));
 
       await this.sendUserRequestApprovedNotification(
         foundUser.get('email'),

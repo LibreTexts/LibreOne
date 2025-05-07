@@ -9,6 +9,8 @@ import { Application } from './Application';
 import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
+import { EventSubscriber } from './EventSubscriber';
+import { EventSubscriberEventConfig } from './EventSubscriberEventConfig';
 import { License } from './License';
 import { LicenseVersion } from './LicenseVersion';
 import { LoginEvent } from './LoginEvent';
@@ -55,6 +57,8 @@ sequelize.addModels([
   DeleteAccountRequest,
   Domain,
   EmailVerification,
+  EventSubscriber,
+  EventSubscriberEventConfig,
   License,
   LicenseVersion,
   Language,

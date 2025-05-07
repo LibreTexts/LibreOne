@@ -21,6 +21,7 @@ import type {
   OrganizationIDParams,
   UpdateOrganizationBody,
 } from '../types/organizations';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export class OrganizationController {
   /**
@@ -90,6 +91,8 @@ export class OrganizationController {
       if (!organization) {
         throw new Error('Could not find newly created Organization');
       }
+
+      EventSubscriberEmitter.emit('organization:created', organization.get());
 
       return res.status(201).send({
         data: {
@@ -428,6 +431,8 @@ export class OrganizationController {
         throw new Error('Could not find updated Organization');
       }
 
+      EventSubscriberEmitter.emit('organization:updated', organization.get());
+
       return res.send({
         data: {
           ...organization.get(),
@@ -459,10 +464,12 @@ export class OrganizationController {
     if (!foundOrg) {
       return errors.notFound(res);
     }
-
+    
     await OrganizationDomain.destroy({ where: { organization_id: foundOrg.id }});
     await OrganizationAlias.destroy({ where: { organization_id: foundOrg.id }});
     await foundOrg.destroy();
+
+    EventSubscriberEmitter.emit('organization:deleted', foundOrg.get());
 
     return res.send({});
   }
