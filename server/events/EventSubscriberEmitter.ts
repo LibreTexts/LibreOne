@@ -14,7 +14,7 @@ EventSubscriberEmitter.onAny(async (event, payload) => {
     await controller.signAndSend(subscribers, event, payload);
   } catch (e) {
     console.error(
-      "[EventSubscriberEmitter] Error sending event ${event} to subscribers",
+      `[EventSubscriberEmitter] Error sending event ${event} to subscribers`,
       e
     );
   }

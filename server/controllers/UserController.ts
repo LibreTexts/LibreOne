@@ -192,7 +192,7 @@ export class UserController {
       }
       
       const updated = await foundUser.update({ email });
-      EventSubscriberEmitter.emit('user:updated', updated);
+      EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}));
       
       return res.send({
         data: {

@@ -11,19 +11,19 @@
         </div>
       </div>
       <div class="flex flex-col mt-4 border-t border-slate-200 pt-8">
-        <div className="rounded-md bg-green-100 py-4 px-1 mb-2" v-if="sendSuccess">
-          <div className="flex">
-            <div className="shrink-0">
+        <div class="rounded-md bg-green-100 py-4 px-1 mb-2" v-if="sendSuccess">
+          <div class="flex">
+            <div class="shrink-0">
               <ExclamationTriangleIcon
                 aria-hidden="true"
-                className="size-5 text-yellow-400"
+                class="size-5 text-yellow-400"
               />
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-black-800">
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-black-800">
                 Test Event Sent Successfully
               </h3>
-              <div className="mt-2 text-sm text-black-700">
+              <div class="mt-2 text-sm text-black-700">
                 <p>
                   A test event has been sent to your webhook URL. Check your
                   logs for the event data.
