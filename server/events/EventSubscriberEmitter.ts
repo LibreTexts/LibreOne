@@ -1,12 +1,13 @@
 import { EventSubscriberController } from "@server/controllers/EventSubscriberController";
 import TypedEventEmitter from "./TypedEventEmitter";
-import { EventSubscriberEvents } from "@server/types/events";
+import { EventSubscriberEvents } from "@server/types/eventsubscribers";
 
 export const EventSubscriberEmitter =
   new TypedEventEmitter<EventSubscriberEvents>();
 
+const controller = new EventSubscriberController();
+
 EventSubscriberEmitter.onAny(async (event, payload) => {
-  const controller = new EventSubscriberController();
   const subscribers = await controller.getEventSubscribers(event);
 
   try {

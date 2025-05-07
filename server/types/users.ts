@@ -20,6 +20,8 @@ export type User = {
   bio_url: string;
   verify_status: string;
   last_password_change: Date;
+  lang: string;
+  is_developer: boolean;
   created_at: Date;
   updated_at: Date;
 };

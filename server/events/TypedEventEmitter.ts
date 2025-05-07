@@ -1,7 +1,4 @@
-import { EventSubscriberController } from "@server/controllers/EventSubscriberController";
-import { EventSubscriberEvents } from "@server/types/events";
 import { EventEmitter } from "events";
-import { E } from "vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf";
 
 type EventHandler<Events> = {
   [K in keyof Events]: (event: K, payload: Events[K]) => void;

@@ -1,8 +1,14 @@
 import { EventSubscriber } from "@server/models/EventSubscriber";
 import { EventSubscriberEventConfig } from "@server/models/EventSubscriberEventConfig";
-import { EventSubscriberEvents } from "@server/types/events";
+import {
+  EventSubscriberEvents,
+  SendTestEventBody,
+} from "@server/types/eventsubscribers";
 import axios from "axios";
 import { SignJWT } from "jose";
+import { Request, Response } from "express";
+import errors from "@server/errors";
+import { User } from "@server/types/users";
 
 export const EVENT_SUBSCRIBER_EVENTS = [
   "user:created",
@@ -176,6 +182,109 @@ export class EventSubscriberController {
           `Error sending event to subscriber ${subscriber.id}: ${error}`
         );
       }
+    }
+  }
+
+  async sendTestEvent(req: Request, res: Response) {
+    try {
+      const { event, url, secret_key } = req.body as SendTestEventBody;
+
+      const payload = this.generateTestEventPayload(event);
+      const signedPayload = await this.signPayload(event, payload, secret_key);
+      const success = await this.sendToWebhook(url, signedPayload);
+
+      if (!success) {
+        return errors.internalServerError(res, "Failed to send test event");
+      }
+
+      res.status(200).json({
+        message: "Test event sent successfully",
+      });
+    } catch (error) {
+      this.debug(`Error sending test event: ${error}`);
+      return errors.internalServerError(res);
+    }
+  }
+
+  private generateTestEventPayload(event: keyof EventSubscriberEvents) {
+    const user: User = {
+      uuid: "4087971b-34ed-4a35-9af9-150eee0d5291",
+      // @ts-ignore
+      external_subject_id: null,
+      first_name: "Test",
+      last_name: "User",
+      email: "testuser@example.com",
+      user_type: "instructor",
+      time_zone: "America/Los_Angeles",
+      lang: "en-US",
+      // @ts-ignore
+      student_id: null,
+      disabled: false,
+      expired: false,
+      registration_complete: true,
+      legacy: false,
+      // @ts-ignore
+      external_idp: null,
+      // @ts-ignore
+      avatar: null,
+      // @ts-ignore
+      bio_url: null,
+      verify_status: "not_attempted",
+      // @ts-ignore
+      last_password_change: null,
+      registration_type: "self",
+      is_developer: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const organization = {
+      id: 3,
+      name: "American River College",
+      logo: "logo.png",
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const organization_system = {
+      id: 1,
+      name: "University of California",
+      logo: "logo.png",
+      created_at: new Date(),
+      updated_at: new Date(),
+      organizations: [organization],
+    };
+
+    switch (event) {
+      case "user:created":
+        return user;
+      case "user:updated":
+        return {
+          ...user,
+          first_name: "Updated Test",
+          verify_status: "verified",
+        };
+      case "user:delete_requested":
+        return { id: user.uuid, requested_at: new Date() };
+      case "user:delete_completed":
+        return { id: user.uuid };
+      case "organization:created":
+        return organization;
+      case "organization:updated":
+        return { ...organization, name: "American River College Updated" };
+      case "organization:deleted":
+        return { id: 3 };
+      case "organization_system:created":
+        return organization_system;
+      case "organization_system:updated":
+        return {
+          ...organization_system,
+          name: "University of California Updated",
+        };
+      case "organization_system:deleted":
+        return { id: 1 };
+      default:
+        throw new Error(`Unknown event type ${event}`);
     }
   }
 }

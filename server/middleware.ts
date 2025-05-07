@@ -5,6 +5,7 @@ import { APIUserController } from './controllers/APIUserController';
 import errors from './errors';
 import { APIUserPermission } from './types/apiusers';
 import { UserUUIDParams } from './types/users';
+import { UserController } from './controllers/UserController';
 
 type RequestPart = 'body' | 'query' | 'params';
 type MiddlewareResult = Response | void;
@@ -177,6 +178,28 @@ export function ensureUserResourcePermission(write = false): Middleware {
     }
     return next();
   };
+}
+
+/**
+ * Asserts that the current user has the is_developer flag set to true.
+ * This should only be called after the user has been authenticated (e.g., via verifyTokenAuthentication).
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @param next - The next function to run in the middleware chain.
+ * @returns The result of the next middleware, or a fulfilled 403 Forbidden error response.
+ */
+export async function ensureIsDeveloperUser(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
+  if(!req.userUUID){
+    return errors.unauthorized(res); // Fallback to generic unauthorized error.
+  }
+
+  const userController = new UserController();
+  const user = await userController.getUserInternal(req.userUUID);
+  if(!user || !user.is_developer){
+    return errors.forbidden(res); // Fallback to generic forbidden error.
+  }
+
+  return next();
 }
 
 /**

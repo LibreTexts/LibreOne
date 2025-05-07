@@ -1136,7 +1136,7 @@ export class UserController {
 
     await Promise.allSettled(webhookPromises); // fire and forget
     EventSubscriberEmitter.emit('user:delete_requested', {
-      ...foundUser,
+      id: foundUser.uuid,
       requested_at,
     })
 

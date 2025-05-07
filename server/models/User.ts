@@ -121,6 +121,10 @@ export class User extends Model {
   @Column(DataType.ENUM('self', 'api'))
   declare registration_type: string;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare is_developer: boolean;
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 
