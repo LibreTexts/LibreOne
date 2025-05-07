@@ -607,7 +607,7 @@ export class AuthController {
 
     const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
     
-    EventSubscriberEmitter.emit('user:created', foundUser);
+    EventSubscriberEmitter.emit('user:created', foundUser.get({ plain: true }));
 
     let shouldCreateSSOSession = true;
     let redirectCASService: string | null = null;
@@ -777,7 +777,7 @@ export class AuthController {
         registration_type: 'self'
       });
 
-      EventSubscriberEmitter.emit('user:created', created);
+      EventSubscriberEmitter.emit('user:created', created.get({ plain: true }));
     } else {
       const updated = await foundUser.update({
         external_subject_id: payload.sub,
@@ -790,7 +790,7 @@ export class AuthController {
         last_access: new Date(),
       });
 
-      EventSubscriberEmitter.emit('user:updated', updated);
+      EventSubscriberEmitter.emit('user:updated', updated.get({ plain: true }));
     }
 
     return res.status(200).send({});

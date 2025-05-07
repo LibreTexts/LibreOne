@@ -743,7 +743,7 @@ export class UserController {
       }
     }
 
-    EventSubscriberEmitter.emit('user:updated', updatedUser)
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
 
     return res.send({
       data: foundUser,
@@ -812,7 +812,7 @@ export class UserController {
     const avatarURL = `https://${process.env.AWS_AVATARS_DOMAIN}/${fileKey}?v=${avatarVersion}`;
     const updated = await foundUser.update({ avatar: avatarURL });
 
-    EventSubscriberEmitter.emit('user:updated', updated)
+    EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}))
 
     return res.send({
       data: {
@@ -862,7 +862,7 @@ export class UserController {
       );
     }
 
-    EventSubscriberEmitter.emit('user:updated', updatedUser)
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
 
     return res.send({
       data: {
