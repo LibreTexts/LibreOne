@@ -7,6 +7,7 @@ declare global {
       apiUserPermissions?: APIUserPermission[];
       isAuthenticated?: boolean;
       userUUID?: string;
+      XUserID?: string;
     }
   }
 }

@@ -203,6 +203,43 @@ export async function ensureIsDeveloperUser(req: Request, res: Response, next: N
 }
 
 /**
+ * Extracts the X-User-ID header from the request and sets it on the request object. Does not verify the
+ * authentication of the request, but does check that the request is from an API User.
+ * This middleware should ONLY be used following the `ensureActorIsAPIUser` middleware.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @param next - The next function to run in the middleware chain.
+ * @returns The result of the next middleware, or a fulfilled 403 Forbidden error response.
+ * @example  router.route('/test').post(
+   verifyAPIAuthentication,
+   ensureActorIsAPIUser,
+   ensureAPIUserHasPermission(['users:write']),
+   extract_X_User_ID,
+   catchInternal((req, res) => {
+     console.log("X-User-ID: ", req.XUserID)
+     res.status(200).json({ message: 'Success', XUserID: req.XUserID });
+   }),
+ )
+*/
+export async function extract_X_User_ID(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
+  try {
+    if(!req.isAPIUser){
+      return errors.forbidden(res, 'X-User-ID is only available for API users.');
+    }
+    const XUserID = req.headers['x-user-id'] as string;
+     if (!XUserID) {
+      return errors.badRequest(res, 'Missing required X-User-ID header');
+    }
+
+    req.XUserID = XUserID;
+    return next();
+  } catch (e) {
+    return errors.internalServerError(res);
+  }
+}
+
+/**
  * Sets the 'Access-Control-Allow-Origin' header if the request origin is a LibreTexts site/application.
  *
  * @param req - Incoming API request.
