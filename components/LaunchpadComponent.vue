@@ -178,12 +178,35 @@
   // Methods
   async function loadUsersApps() {
     try {
+      // temporary fix for academy online
+      const academyOnline = {
+        id : "28",
+        name: "Academy Online",
+        app_type: "standalone",
+        main_url: "https:\\libretexts.org/academy/online",
+        cas_service_url: "https:\\libretexts.org/casservice",
+        default_access: "none",
+        icon: "https:\\cdn.libretexts.net/Logos/academy_full.png",
+        description: "Professional Development for Instructional Staff",
+        primary_color: "#127BC4",
+        hide_from_apps: false,
+        hide_from_user_apps: false,
+        is_default_library: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+        supports_cas: true,
+      }
+
       if (!pageContext.value?.user?.uuid) {
         throw new Error('nouuid');
       }
       if (pageContext.value.user?.apps) {
         apps.value = pageContext.value.user.apps.filter((a) => a.app_type === 'standalone');
         libs.value = pageContext.value.user.apps.filter((a) => a.app_type === 'library');
+        if(pageContext.value.user?.is_developer ){
+          // @ts-ignore
+          apps.value.unshift(academyOnline);
+        }
         return;
       }
 
@@ -191,6 +214,12 @@
       [apps.value, libs.value] = await getUserAppsAndLibraries(
         pageContext.value.user.uuid,
       );
+
+      if (pageContext.value.user?.is_developer ){
+        // @ts-ignore
+        apps.value.unshift(academyOnline);
+      }
+
     } catch (err) {
       console.error(err);
     } finally {
