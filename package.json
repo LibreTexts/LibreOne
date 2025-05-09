@@ -1,6 +1,6 @@
 {
   "name": "@libretexts/libreone",
-  "version": "1.41.0",
+  "version": "1.42.0",
   "main": "server/index.ts",
   "type": "module",
   "scripts": {
