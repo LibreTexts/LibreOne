@@ -8,6 +8,7 @@ import {
   useLibreTextsCORS,
   validate,
   verifyAPIAuthentication,
+  extract_X_User_ID,
 } from '../middleware';
 import { catchInternal } from '../helpers';
 
@@ -191,6 +192,7 @@ usersRouter.route('/:uuid/notes')
     ensureAPIUserHasPermission(['users:write']),
     validate(UserValidator.uuidParamSchema, 'params'),
     validate(UserValidator.createUserNoteSchema, 'body'),
+    extract_X_User_ID,
     catchInternal((req, res) => controller.createNote(req, res)),
   );
 
@@ -201,6 +203,7 @@ usersRouter.route('/:uuid/notes/:noteID')
     ensureAPIUserHasPermission(['users:write']),
     validate(UserValidator.userNoteParamSchema, 'params'),
     validate(UserValidator.updateUserNoteSchema, 'body'),
+    extract_X_User_ID,
     catchInternal((req, res) => controller.updateNote(req, res)),
   )
   .delete(
