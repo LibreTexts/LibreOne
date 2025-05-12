@@ -1251,7 +1251,7 @@ export class UserController {
   public async createNote(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
     const { content } = req.body as UserNoteBody;
-    const created_by_id = req.userUUID; 
+    const created_by_id = req.XUserID; 
 
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
@@ -1278,7 +1278,7 @@ export class UserController {
   public async updateNote(req: Request, res: Response): Promise<Response> {
     const { noteID } = req.params as UserNoteIDParams;
     const { content } = req.body as UserNoteBody;
-    const updated_by_id = req.userUUID;
+    const updated_by_id = req.XUserID;
 
     const foundNote = await UserNote.findByPk(noteID);
     if (!foundNote) {
