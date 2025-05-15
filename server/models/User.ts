@@ -132,6 +132,9 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare is_developer: boolean;
 
+  @Column(DataType.STRING)
+  declare stripe_id: string;
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 
