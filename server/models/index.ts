@@ -6,6 +6,8 @@ import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Application } from './Application';
+import { ApplicationLicense } from './ApplicationLicense';
+import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
@@ -35,8 +37,6 @@ import { DeleteAccountRequest } from './DeleteAccountRequest';
 import { UserNote } from './UserNote';
 =======
 import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
-import { ApplicationLicense } from './ApplicationLicense';
-import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { UserLicense } from './UserLicense';
 import { UserLicenseRenewal } from './UserLicenseRenewal';
 >>>>>>> 2300088 (chore: registered all new models in models/index.ts)
@@ -78,11 +78,11 @@ sequelize.addModels([
   OrganizationAlias,
   OrganizationDomain,
   OrganizationLicenseEntitlement,
+  OrganizationSystem,
   ResetPasswordToken,
   Service,
   Session,
   TimeZone,
-  OrganizationSystem,
   User,
   UserApplication,
   UserNote,
@@ -240,11 +240,11 @@ export {
   OrganizationAlias,
   OrganizationDomain,
   OrganizationLicenseEntitlement,
+  OrganizationSystem,
   ResetPasswordToken,
   Service,
   Session,
   TimeZone,
-  OrganizationSystem,
   User,
   UserApplication,
   UserOrganization,
