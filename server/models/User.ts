@@ -26,6 +26,7 @@ import { UserOrganization } from './UserOrganization';
 import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
+import { UserLicense } from './UserLicense';
 
 @DefaultScope(() => ({
   attributes: {
@@ -145,6 +146,9 @@ export class User extends Model {
 
   @HasMany(() => Session)
   sessions?: Array<Session>;
+
+  @HasMany(() => UserLicense)
+  application_licenses?: Array<UserLicense>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

@@ -41,6 +41,10 @@ export class Organization extends Model {
   @Column(DataType.BOOLEAN)
   declare is_default?: boolean;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare restrict_domains: boolean;
+
   @BelongsTo(() => OrganizationSystem)
   system?: OrganizationSystem;
 
