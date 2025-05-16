@@ -4,37 +4,45 @@ import {
     Column,
     CreatedAt,
     DataType,
-    Default,
     ForeignKey,
     Model,
     PrimaryKey,
     Table,
-    Unique,
     UpdatedAt,
   } from 'sequelize-typescript';
-
+  import { UserLicense } from './UserLicense';
+  
   @Table({
     timestamps: true,
-    tableName: 'application_licenses',
+    tableName: 'user_license_renewals',
   })
-  export class ApplicationLicense extends Model {
+  export class UserLicenseRenewal extends Model {
     @PrimaryKey
     @AllowNull(false)
     @Column(DataType.STRING)
     declare uuid: string;
-
+  
+    @ForeignKey(() => UserLicense)
     @AllowNull(false)
     @Column(DataType.STRING)
-    declare name: string;
-
-    @Unique
+    declare user_license_id: string;
+  
+    @AllowNull(false)
+    @Column(DataType.DATE)
+    declare renewed_at: Date;
+  
+    @Column(DataType.DATE)
+    declare expires_at: Date;
+  
     @Column(DataType.STRING)
-    declare stripe_id: string;
-
+    declare stripe_tx_id: string;
+  
+    @BelongsTo(() => UserLicense)
+    user_license?: UserLicense;
+  
     @CreatedAt
     declare created_at: Date;
-
+  
     @UpdatedAt
     declare updated_at: Date;
-    
   }
