@@ -1,4 +1,3 @@
-
 import { NextFunction, Request, Response } from 'express';
 import { Op, Transaction, WhereOptions } from 'sequelize';
 import multer from 'multer';
@@ -1219,7 +1218,7 @@ export class UserController {
 
   public async getNotes(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
-    const { page = 1, limit = 25 } = req.query as UserNotesQuery;
+    const { page, limit } = req.query as UserNotesQuery;
 
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
@@ -1234,7 +1233,7 @@ export class UserController {
         { model: User, as: 'created_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
         { model: User, as: 'updated_by_user', attributes: ['uuid', 'first_name', 'last_name', 'email'] },
       ],
-      order: [['created_at', 'DESC']],
+      order: [['updated_at', 'DESC']],
       offset,
       limit: Number(limit),
     });
@@ -1243,8 +1242,11 @@ export class UserController {
     const has_more = offset + notes.length < total;
 
     return res.send({
-      notes,
-      has_more,
+      data: {
+        notes,
+        total,
+        has_more
+      }
     });
   }
 
@@ -1260,7 +1262,7 @@ export class UserController {
 
     const newNote = await UserNote.create({
       user_id: uuid,
-      note: content,
+      content,
       created_by_id,
       updated_by_id: created_by_id,
     });
@@ -1286,7 +1288,7 @@ export class UserController {
     }
 
     await foundNote.update({
-      note: content,
+      content: content,
       updated_by_id,
     });
 
