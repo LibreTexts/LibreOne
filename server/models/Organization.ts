@@ -11,6 +11,7 @@ import {
   Model,
   Table,
   UpdatedAt,
+  HasMany,
 } from 'sequelize-typescript';
 import { Alias } from './Alias';
 import { Domain } from './Domain';
@@ -19,6 +20,7 @@ import { OrganizationDomain } from './OrganizationDomain';
 import { OrganizationSystem } from './OrganizationSystem';
 import { User } from './User';
 import { UserOrganization } from './UserOrganization';
+import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
 
 @Table({
   timestamps: true,
@@ -56,6 +58,9 @@ export class Organization extends Model {
 
   @BelongsToMany(() => User, () => UserOrganization)
   users?: Array<User & { UserOrganization: UserOrganization }>;
+
+  @HasMany(() => OrganizationLicenseEntitlement)
+  application_license_entitlements?: Array<OrganizationLicenseEntitlement>;
 
   @CreatedAt
   declare created_at: Date;
