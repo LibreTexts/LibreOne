@@ -11,7 +11,9 @@ import {
     Table,
     Unique,
     UpdatedAt,
+    HasMany,
   } from 'sequelize-typescript';
+  import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
 
   @Table({
     timestamps: true,
@@ -30,6 +32,9 @@ import {
     @Unique
     @Column(DataType.STRING)
     declare stripe_id: string;
+
+    @HasMany(() => OrganizationLicenseEntitlement)
+    organization_entitlements?: Array<OrganizationLicenseEntitlement>;
 
     @CreatedAt
     declare created_at: Date;
