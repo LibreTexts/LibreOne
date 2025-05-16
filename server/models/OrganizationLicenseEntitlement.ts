@@ -25,8 +25,8 @@ import {
     declare application_license_id: string;
   
     @ForeignKey(() => Organization)
-    @Column(DataType.STRING)
-    declare org_id: string;
+    @Column(DataType.INTEGER)
+    declare org_id: number;
 
     @BelongsTo(() => Organization)
     organization?: Organization;
