@@ -31,7 +31,15 @@ import { defaultLicenses } from '@server/licenses';
 import { Language } from './Language';
 import { defaultLanguages } from '@server/languages';
 import { DeleteAccountRequest } from './DeleteAccountRequest';
+<<<<<<< HEAD
 import { UserNote } from './UserNote';
+=======
+import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
+import { ApplicationLicense } from './ApplicationLicense';
+import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
+import { UserLicense } from './UserLicense';
+import { UserLicenseRenewal } from './UserLicenseRenewal';
+>>>>>>> 2300088 (chore: registered all new models in models/index.ts)
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -53,6 +61,8 @@ sequelize.addModels([
   APIUser,
   APIUserPermissionConfig,
   Application,
+  ApplicationLicense,
+  ApplicationLicenseEntitlement,
   AccessRequest,
   AccessRequestApplication,
   DeleteAccountRequest,
@@ -67,6 +77,7 @@ sequelize.addModels([
   Organization,
   OrganizationAlias,
   OrganizationDomain,
+  OrganizationLicenseEntitlement,
   ResetPasswordToken,
   Service,
   Session,
@@ -78,6 +89,8 @@ sequelize.addModels([
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
+  UserLicense,
+  UserLicenseRenewal,
 ]);
 
 /**
@@ -214,6 +227,8 @@ export {
   APIUser,
   APIUserPermissionConfig,
   Application,
+  ApplicationLicense,
+  ApplicationLicenseEntitlement,
   DeleteAccountRequest,
   Domain,
   EmailVerification,
@@ -224,6 +239,7 @@ export {
   Organization,
   OrganizationAlias,
   OrganizationDomain,
+  OrganizationLicenseEntitlement,
   ResetPasswordToken,
   Service,
   Session,
@@ -234,5 +250,10 @@ export {
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
+<<<<<<< HEAD
   UserNote,
+=======
+  UserLicense,
+  UserLicenseRenewal,
+>>>>>>> 2300088 (chore: registered all new models in models/index.ts)
 };
