@@ -709,12 +709,11 @@ export class UserController {
       'user_type',
       'time_zone',
       'student_id',
-      'disabled',
       'verify_status',
       'lang',
     ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
-    const apiUserOnlyKeys = ['disabled', 'verify_status'];
+    const apiUserOnlyKeys = ['verify_status'];
     const allowedKeys = updatableKeys.filter((k) => (
       (!isExternalUser || !unallowedExternalKeys.includes(k))
       && (isAPIUser || !apiUserOnlyKeys.includes(k))
@@ -1201,6 +1200,8 @@ export class UserController {
       disabled_reason,
       disabled_date: new Date()
     });
+
+    EventSubscriberEmitter.emit('user:updated', foundUser.get({plain: true}))
 
     return res.send({
       data: {
