@@ -36,6 +36,7 @@ import type {
   UserApplicationIDParams,
   UserOrganizationIDParams,
   UserUUIDParams,
+  DisableUserBody
 } from '../types/users';
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
@@ -708,12 +709,11 @@ export class UserController {
       'user_type',
       'time_zone',
       'student_id',
-      'disabled',
       'verify_status',
       'lang',
     ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
-    const apiUserOnlyKeys = ['disabled', 'verify_status'];
+    const apiUserOnlyKeys = ['verify_status'];
     const allowedKeys = updatableKeys.filter((k) => (
       (!isExternalUser || !unallowedExternalKeys.includes(k))
       && (isAPIUser || !apiUserOnlyKeys.includes(k))
@@ -1173,5 +1173,43 @@ export class UserController {
       pending: foundRequest.status === 'pending',
       final_date: new Date(finalDate).toISOString(),
     }
+  }
+
+  /**
+   * Disables a user account and sets the reason and date.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async disableUser(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { disabled_reason } = req.body as DisableUserBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    if (foundUser.disabled) {
+      return errors.badRequest(res, "User is already disabled.");
+    }
+
+    await foundUser.update({
+      disabled: true,
+      disabled_reason,
+      disabled_date: new Date()
+    });
+
+    EventSubscriberEmitter.emit('user:updated', foundUser.get({plain: true}))
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        disabled: true,
+        disabled_reason: foundUser.disabled_reason,
+        disabled_date: foundUser.disabled_date
+      }
+    });
   }
 }

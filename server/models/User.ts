@@ -86,6 +86,12 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare disabled: boolean;
 
+  @Column(DataType.STRING)
+  declare disabled_reason: string | null;
+
+  @Column(DataType.DATE)
+  declare disabled_date: Date | null;
+
   @Default(false)
   @Column(DataType.BOOLEAN)
   declare expired: boolean;

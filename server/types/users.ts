@@ -73,7 +73,6 @@ export type UpdateUserBody = {
   verify_status?: 'not_attempted' | 'denied' | 'verified';
   time_zone?: string;
   student_id?: string;
-  disabled?: boolean;
   lang?: string;
 };
 
@@ -106,3 +105,7 @@ export type InstructorVerificationStatus =
   'needs_review' |
   'denied' |
   'verified';
+
+  export type DisableUserBody = {
+    disabled_reason: string;
+  };
