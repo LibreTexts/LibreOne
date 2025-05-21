@@ -12,6 +12,7 @@ import { MailController } from './MailController';
 import { VerificationRequestController } from './VerificationRequestController';
 import {
   Application,
+  Language,
   Organization,
   OrganizationSystem,
   User,
@@ -40,6 +41,7 @@ import type {
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -190,8 +192,9 @@ export class UserController {
         return errors.badRequest(res, 'Email already in use.');
       }
       
-      await foundUser.update({ email });
-  
+      const updated = await foundUser.update({ email });
+      EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}));
+      
       return res.send({
         data: {
           central_identity_id: foundUser.uuid,
@@ -426,6 +429,10 @@ export class UserController {
         include: [
           { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
         ],
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     if (!foundUser) {
@@ -470,6 +477,10 @@ export class UserController {
         model: Organization,
         attributes: ['id', 'name', 'logo', 'system_id'],
         through: { attributes: [] },
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     return res.send({
@@ -646,6 +657,10 @@ export class UserController {
         }],
         attributes: ['id', 'name', 'logo'],
         through: { attributes: [] },
+      },
+      {
+        model: Language,  
+        attributes: ['tag', 'english_name'],  
       }],
     });
     if (!foundUser) {
@@ -664,6 +679,7 @@ export class UserController {
       time_zone: foundUser.time_zone || '',
       verify_status: foundUser.verify_status,
       picture: foundUser.avatar || DEFAULT_AVATAR,
+      lang: foundUser.get('language')?.tag || 'en-US',
     });
   }
 
@@ -695,6 +711,7 @@ export class UserController {
       'student_id',
       'disabled',
       'verify_status',
+      'lang',
     ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
     const apiUserOnlyKeys = ['disabled', 'verify_status'];
@@ -708,7 +725,7 @@ export class UserController {
       }
     });
 
-    await foundUser.update(updateObj);
+    const updatedUser = await foundUser.update(updateObj);
 
     // update name on libraries if necessary
     if (updateObj.first_name || updateObj.last_name) {
@@ -726,6 +743,8 @@ export class UserController {
         );
       }
     }
+
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
 
     return res.send({
       data: foundUser,
@@ -792,7 +811,9 @@ export class UserController {
     }
 
     const avatarURL = `https://${process.env.AWS_AVATARS_DOMAIN}/${fileKey}?v=${avatarVersion}`;
-    await foundUser.update({ avatar: avatarURL });
+    const updated = await foundUser.update({ avatar: avatarURL });
+
+    EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}))
 
     return res.send({
       data: {
@@ -828,7 +849,7 @@ export class UserController {
       return errors.badRequest(res);
     }
 
-    await foundUser.update({ email: verification.email });
+    const updatedUser = await foundUser.update({ email: verification.email });
 
     // update email on libraries if necessary
     const userLibRecords = await this.getUserLibraryApplications(uuid);
@@ -841,6 +862,8 @@ export class UserController {
         ),
       );
     }
+
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
 
     return res.send({
       data: {
@@ -1099,10 +1122,11 @@ export class UserController {
       return errors.badRequest(res, "A request to delete this account has already been initiated.");
     }
 
+    const requested_at: Date = new Date();
     await DeleteAccountRequest.create({
       user_id: uuid,
       status: 'pending',
-      requested_at: new Date(),
+      requested_at,
     });
 
     const authController = new AuthController();
@@ -1112,6 +1136,10 @@ export class UserController {
     ];
 
     await Promise.allSettled(webhookPromises); // fire and forget
+    EventSubscriberEmitter.emit('user:delete_requested', {
+      id: foundUser.uuid,
+      requested_at,
+    })
 
     return res.send({
       msg: "Request to delete account has been successfully initiated.",

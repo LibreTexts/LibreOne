@@ -9,13 +9,16 @@ import { servicesRouter } from './services';
 import { organizationSystemsRouter } from './organizationsystems';
 import { usersRouter } from './users';
 import { verificationRequestsRouter } from './verificationrequests';
-
+import { languagesRouter } from './languages';
+import { eventSubscribersRouter } from './event-subscribers';
 const APIRouter = express.Router();
 
 APIRouter.use('/api-users', apiUsersRouter);
 APIRouter.use('/applications', applicationsRouter);
 APIRouter.use('/auth', authRouter);
+APIRouter.use('/event-subscribers', eventSubscribersRouter);
 APIRouter.use('/licenses', licensesRouter);
+APIRouter.use('/languages', languagesRouter);
 APIRouter.use('/organizations', organizationsRouter);
 APIRouter.use('/organization-systems', organizationSystemsRouter);
 APIRouter.use('/permissions', permissionsRouter);

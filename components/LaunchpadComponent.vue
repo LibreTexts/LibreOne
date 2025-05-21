@@ -28,10 +28,10 @@
         class="apps-list px-2"
         v-if="apps.length > 0"
       >
-        <div
+        <a
           class="app-item-container"
           v-for="app in apps.filter((app) => app.app_type === 'standalone').sort((a, b) => a.name.localeCompare(b.name))"
-          @click="openAppLink(app.main_url)"
+          :href="app.main_url"
           :key="app.id ?? app.name"
         >
           <div class="app-item-icon-container">
@@ -59,7 +59,7 @@
               {{ app.description }}
             </p>
           </div>
-        </div>
+        </a>
       </div>
     </div>
     <div>
@@ -91,10 +91,10 @@
           class="apps-list px-2"
           v-if="libs.length > 0"
         >
-          <div
+          <a
             class="app-item-container"
             v-for="lib in libs"
-            @click="openAppLink(lib.main_url)"
+            :href="lib.main_url"
             :key="lib.id ?? lib.name"
           >
             <div class="app-item-icon-container">
@@ -122,7 +122,7 @@
                 {{ lib.description }}
               </p>
             </div>
-          </div>
+          </a>
         </div>
       </div>
     </div>
@@ -178,12 +178,35 @@
   // Methods
   async function loadUsersApps() {
     try {
+      // temporary fix for academy online
+      const academyOnline = {
+        id : "28",
+        name: "Academy Online",
+        app_type: "standalone",
+        main_url: "https://libretexts.org/academy/online",
+        cas_service_url: "https://libretexts.org/casservice",
+        default_access: "none",
+        icon: "https://cdn.libretexts.net/Logos/academy_full.png",
+        description: "Professional Development for Instructional Staff",
+        primary_color: "#127BC4",
+        hide_from_apps: false,
+        hide_from_user_apps: false,
+        is_default_library: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+        supports_cas: true,
+      }
+
       if (!pageContext.value?.user?.uuid) {
         throw new Error('nouuid');
       }
       if (pageContext.value.user?.apps) {
         apps.value = pageContext.value.user.apps.filter((a) => a.app_type === 'standalone');
         libs.value = pageContext.value.user.apps.filter((a) => a.app_type === 'library');
+        if(pageContext.value.user?.is_developer ){
+          // @ts-ignore
+          apps.value.unshift(academyOnline);
+        }
         return;
       }
 
@@ -191,6 +214,12 @@
       [apps.value, libs.value] = await getUserAppsAndLibraries(
         pageContext.value.user.uuid,
       );
+
+      if (pageContext.value.user?.is_developer ){
+        // @ts-ignore
+        apps.value.unshift(academyOnline);
+      }
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -225,10 +254,6 @@
     } finally {
       loading.value = false;
     }
-  }
-
-  function openAppLink(href: string) {
-    window.open(href, '_blank');
   }
 
   // User has edit access to a library if they

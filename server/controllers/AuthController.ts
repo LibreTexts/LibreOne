@@ -43,6 +43,7 @@ import type {
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 import { XMLParser } from 'fast-xml-parser';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
@@ -605,6 +606,8 @@ export class AuthController {
     ];
 
     const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
+    
+    EventSubscriberEmitter.emit('user:created', foundUser.get({ plain: true }));
 
     let shouldCreateSSOSession = true;
     let redirectCASService: string | null = null;
@@ -757,7 +760,7 @@ export class AuthController {
       where: criteria.length > 1 ? { [Op.or]: criteria } : criteria[0],
     });
     if (!foundUser) {
-      await User.create({
+      const created = await User.create({
         uuid: uuidv4(),
         external_subject_id: payload.sub,
         email,
@@ -773,8 +776,10 @@ export class AuthController {
         last_access: new Date(),
         registration_type: 'self'
       });
+
+      EventSubscriberEmitter.emit('user:created', created.get({ plain: true }));
     } else {
-      await foundUser.update({
+      const updated = await foundUser.update({
         external_subject_id: payload.sub,
         email,
         first_name: givenName?.trim() ?? DEFAULT_FIRST_NAME,
@@ -784,6 +789,8 @@ export class AuthController {
         external_idp: userData.clientname,
         last_access: new Date(),
       });
+
+      EventSubscriberEmitter.emit('user:updated', updated.get({ plain: true }));
     }
 
     return res.status(200).send({});

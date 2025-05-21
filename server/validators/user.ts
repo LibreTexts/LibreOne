@@ -88,8 +88,9 @@ export const updateUserSchema = joi.object({
   user_type: joi.string().valid("student", "instructor"),
   verify_status: joi.string().valid("not_attempted", "denied", "verified"),
   time_zone: timeZoneValidator,
-  student_id: joi.string().min(3).max(50),
-  disabled: joi.boolean(),   
+  student_id: joi.string().min(3).max(50), 
+  disabled: joi.boolean(),
+  lang: joi.string().min(2).max(10),
 });
 
 export const updateUserEmailSchema = joi.object({

@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { Organization, OrganizationSystem, sequelize } from '../models';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export class OrganizationSystemController {
   /**
    * @todo Implement
    */
   public async createOrganizationSystem(req: Request, res: Response): Promise<Response> {
+    //EventSubscriberEmitter.emit('organization_system:created', data)
     return res.status(201);
   }
 
@@ -46,6 +48,7 @@ export class OrganizationSystemController {
    * @todo Implement
    */
   public async updateOrganizationSystem(req: Request, res: Response): Promise<Response> {
+    //EventSubscriberEmitter.emit('organization_system:updated', data)
     return res.status(200);
   }
 
@@ -53,6 +56,7 @@ export class OrganizationSystemController {
    * @todo Implement
    */
   public async deleteOrganizationSystem(req: Request, res: Response): Promise<Response> {
+    //EventSubscriberEmitter.emit('organization_system:deleted', data)
     return res.status(200);
   }
 }
