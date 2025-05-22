@@ -37,7 +37,7 @@ import type {
   UserUUIDParams,
   UserNoteIDParams,
   UserNotesQuery,
-  UserNoteBody
+  UserNoteBody,
   DisableUserBody
 } from '../types/users';
 import { LibraryController } from './LibraryController';
