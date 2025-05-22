@@ -224,21 +224,15 @@ export async function ensureIsDeveloperUser(req: Request, res: Response, next: N
 */
 export async function extract_X_User_ID(req: Request, res: Response, next: NextFunction): AsyncMiddlewareResult {
   try {
-    console.log('Middleware: extract_X_User_ID started');
-    console.log('Headers:', req.headers);
     if(!req.isAPIUser){
-      console.log('Middleware: Not an API user');
       return errors.forbidden(res, 'X-User-ID is only available for API users.');
     }
     const XUserID = req.headers['x-user-id'] as string;
-    console.log('Middleware: X-User-ID from headers:', XUserID);
      if (!XUserID) {
-      console.log('Middleware: No X-User-ID found');
       return errors.badRequest(res, 'Missing required X-User-ID header');
     }
 
     req.XUserID = XUserID;
-    console.log('Middleware: XUserID set on request:', req.XUserID);
     return next();
   } catch (e) {
     return errors.internalServerError(res);
