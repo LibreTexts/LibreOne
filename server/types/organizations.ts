@@ -27,8 +27,8 @@ export type CreateOrganizationDomainBody = {
 };
 
 export type GetAllOrganizationsQuery = {
-  offset: number;
-  limit: number;
+  offset?: number;
+  limit?: number;
   query?: string;
   onlyUnassociated?: boolean;
 };

@@ -39,8 +39,8 @@ export const createOrganizationDomainSchema = joi.object({
 });
 
 export const getAllOrganizationsSchema = joi.object({
-  offset: joi.number().integer().min(0).default(0),
-  limit: joi.number().integer().min(1).default(100),
+  offset: joi.number().integer().min(0),
+  limit: joi.number().integer().min(1),
   query: joi.string().max(100),
   onlyUnassociated: joi.boolean(),
 });
