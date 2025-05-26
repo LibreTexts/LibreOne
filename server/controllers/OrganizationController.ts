@@ -313,9 +313,9 @@ export class OrganizationController {
 
     const { count, rows } = await Organization.findAndCountAll({
       ...(whereSearch && { where: whereSearch }),
-      offset,
-      limit,
-      order: sequelize.col('name'),
+      ...(offset !== undefined && { offset: Number(offset) }),
+      ...(limit !== undefined && { limit: Number(limit) }),
+      order: [['created_at', 'DESC']],
       attributes: ['id', 'name', 'logo', 'is_default'],
       include: [
         { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
@@ -333,8 +333,8 @@ export class OrganizationController {
 
     return res.send({
       meta: {
-        offset,
-        limit,
+        ...(offset !== undefined && { offset: Number(offset) }),
+        ...(limit !== undefined && { limit: Number(limit) }),
         total: count,
       },
       data: results,
