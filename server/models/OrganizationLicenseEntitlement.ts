@@ -28,6 +28,20 @@ import {
     @Column(DataType.INTEGER)
     declare org_id: number;
 
+    @AllowNull(false)
+    @Column(DataType.DATE)
+    declare original_purchase_date: Date;
+
+    @AllowNull(false)
+    @Column(DataType.DATE)
+    declare last_renewed_at: Date;
+
+    @Column(DataType.DATE)
+    declare expires_at: Date;
+
+    @Column(DataType.STRING)
+    declare stripe_subscription_id: string;
+
     @BelongsTo(() => Organization)
     organization?: Organization;
   

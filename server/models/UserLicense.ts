@@ -11,10 +11,11 @@ import {
     PrimaryKey,
     Table,
     UpdatedAt,
+    HasOne
   } from 'sequelize-typescript';
   import { User } from './User';
   import { ApplicationLicense } from './ApplicationLicense';
-  import { UserLicenseRenewal } from './UserLicenseRenewal';
+import { UUIDV4 } from 'sequelize';
   
   @Table({
     timestamps: true,
@@ -23,6 +24,7 @@ import {
   export class UserLicense extends Model {
     @PrimaryKey
     @AllowNull(false)
+    @Default(UUIDV4)
     @Column(DataType.STRING)
     declare uuid: string;
   
@@ -39,16 +41,22 @@ import {
     @AllowNull(false)
     @Column(DataType.DATE)
     declare original_purchase_date: Date;
-  
-    @Default(false)
-    @Column(DataType.BOOLEAN)
-    declare perpetual: boolean;
+
+    @AllowNull(false)
+    @Column(DataType.DATE)
+    declare last_renewed_at: Date;
+
+    @Column(DataType.DATE)
+    declare expires_at: Date;
+
+    @Column(DataType.STRING)
+    declare stripe_subscription_id: string;
   
     @BelongsTo(() => User)
     user?: User;
-  
-    @HasMany(() => UserLicenseRenewal)
-    renewals?: UserLicenseRenewal[];
+
+    @BelongsTo(() => ApplicationLicense)
+    application_license?: ApplicationLicense;
   
     @CreatedAt
     declare created_at: Date;

@@ -6,8 +6,6 @@ import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Application } from './Application';
-import { ApplicationLicense } from './ApplicationLicense';
-import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
@@ -33,13 +31,12 @@ import { defaultLicenses } from '@server/licenses';
 import { Language } from './Language';
 import { defaultLanguages } from '@server/languages';
 import { DeleteAccountRequest } from './DeleteAccountRequest';
-<<<<<<< HEAD
 import { UserNote } from './UserNote';
-=======
 import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
+import { ApplicationLicense } from './ApplicationLicense';
+import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { UserLicense } from './UserLicense';
-import { UserLicenseRenewal } from './UserLicenseRenewal';
->>>>>>> 2300088 (chore: registered all new models in models/index.ts)
+import { AccessCode } from './AccessCode';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -78,11 +75,11 @@ sequelize.addModels([
   OrganizationAlias,
   OrganizationDomain,
   OrganizationLicenseEntitlement,
-  OrganizationSystem,
   ResetPasswordToken,
   Service,
   Session,
   TimeZone,
+  OrganizationSystem,
   User,
   UserApplication,
   UserNote,
@@ -90,7 +87,6 @@ sequelize.addModels([
   VerificationRequest,
   VerificationRequestHistory,
   UserLicense,
-  UserLicenseRenewal,
 ]);
 
 /**
@@ -240,20 +236,17 @@ export {
   OrganizationAlias,
   OrganizationDomain,
   OrganizationLicenseEntitlement,
-  OrganizationSystem,
   ResetPasswordToken,
   Service,
   Session,
   TimeZone,
+  OrganizationSystem,
   User,
   UserApplication,
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
-<<<<<<< HEAD
   UserNote,
-=======
   UserLicense,
-  UserLicenseRenewal,
->>>>>>> 2300088 (chore: registered all new models in models/index.ts)
+  AccessCode,
 };

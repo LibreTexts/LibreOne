@@ -11,6 +11,8 @@ import { usersRouter } from './users';
 import { verificationRequestsRouter } from './verificationrequests';
 import { languagesRouter } from './languages';
 import { eventSubscribersRouter } from './event-subscribers';
+import { bookstoreRouter } from './bookstore';
+import { appLicensesRouter } from './app-licenses';
 const APIRouter = express.Router();
 
 APIRouter.use('/api-users', apiUsersRouter);
@@ -25,6 +27,8 @@ APIRouter.use('/permissions', permissionsRouter);
 APIRouter.use('/services', servicesRouter);
 APIRouter.use('/users', usersRouter);
 APIRouter.use('/verification-requests', verificationRequestsRouter);
+APIRouter.use('/bookstore', bookstoreRouter);
+APIRouter.use('/app-licenses', appLicensesRouter);
 
 export {
   APIRouter,

@@ -14,6 +14,7 @@ import {
     HasMany,
   } from 'sequelize-typescript';
   import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
+  import { AccessCode } from './AccessCode';
 
   @Table({
     timestamps: true,
@@ -33,8 +34,19 @@ import {
     @Column(DataType.STRING)
     declare stripe_id: string;
 
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    declare perpetual: boolean;
+
+    @Default(0)
+    @Column(DataType.INTEGER)
+    declare duration_days: number;
+
     @HasMany(() => OrganizationLicenseEntitlement)
     organization_entitlements?: Array<OrganizationLicenseEntitlement>;
+
+    @HasMany(() => AccessCode)
+    access_codes?: Array<AccessCode>;
 
     @CreatedAt
     declare created_at: Date;
