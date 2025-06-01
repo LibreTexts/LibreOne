@@ -35,7 +35,7 @@ import { defaultLanguages } from '@server/languages';
 import { DeleteAccountRequest } from './DeleteAccountRequest';
 import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
 import { UserLicense } from './UserLicense';
-import { UserLicenseRenewal } from './UserLicenseRenewal';
+import { AccessCode } from './AccessCode';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -85,7 +85,7 @@ sequelize.addModels([
   VerificationRequest,
   VerificationRequestHistory,
   UserLicense,
-  UserLicenseRenewal,
+  AccessCode,
 ]);
 
 /**
@@ -246,5 +246,5 @@ export {
   VerificationRequest,
   VerificationRequestHistory,
   UserLicense,
-  UserLicenseRenewal,
+  AccessCode,
 };
