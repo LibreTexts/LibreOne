@@ -1,5 +1,5 @@
 import errors from '../errors';
-import { AccessCode, Application, ApplicationLicense, License, LicenseVersion, User, sequelize } from '../models';
+import { AccessCode, Application, ApplicationLicense, License, LicenseVersion, User, UserLicense, sequelize } from '../models';
 import { GetAllLicensesQuery, LicenseIDParams } from '@server/types/licenses';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
@@ -8,20 +8,16 @@ import { MailController } from './MailController';
 export class BookstoreController {
 
     /**
-     * Generates a new access code
+     * Generates a new access code for a given application license
      * 
      * @param req - Incoming API request.
      * @param res - Outgoing API response.
      * @returns The fulfilled API response.
      */
     public async generateAccessCode(req: Request, res: Response): Promise<Response> {
-        console.log("IN generateAccessCode");
-
         try {
-            console.log("req.body:", req.body);
-            const { application_license_id, user_id } = req.body;
-
-            console.log("app_id:", application_license_id);
+            const { application_license_id } = req.body;
+            const { uuid: user_id } = req.params;
 
             const license = await ApplicationLicense.findOne({ where: { uuid: application_license_id } });
 
@@ -32,6 +28,39 @@ export class BookstoreController {
             const reqUser = await User.findByPk(user_id);
             if (!reqUser) {
                 return errors.notFound(res);
+            }
+
+            const existingLicense = await UserLicense.findOne({
+                where: {
+                    user_id,
+                    application_license_id
+                }
+            });
+    
+            if (existingLicense) {
+                const now = new Date();
+                let status: 'active' | 'expired' | 'revoked';
+                let errorMessage: string;
+    
+                if (existingLicense.revoked) {
+                    status = 'revoked';
+                    errorMessage = 'User has a revoked license for this application';
+                } else if (existingLicense.expires_at && existingLicense.expires_at < now) {
+                    status = 'expired';
+                    errorMessage = 'User has an expired license for this application';
+                } else {
+                    status = 'active';
+                    errorMessage = 'User already has active access to this application';
+                }
+    
+                return res.status(400).json({
+                    success: false,
+                    error: errorMessage,
+                    meta: {
+                        status,
+                        license_id: existingLicense.uuid
+                    }
+                });
             }
 
             const results = await AccessCode.create({
@@ -59,14 +88,14 @@ export class BookstoreController {
             const mailSender = new MailController();
             if (mailSender.isReady()) {
                 const emailRes = await mailSender.send({
-                destination: { to: [reqUser.get('email')] },
-                subject: `LibreTexts License Access Code`,
-                htmlContent: accessCodeGenerationMessage(results.id),
-            });
+                    destination: { to: [reqUser.get('email')] },
+                    subject: `LibreTexts License Access Code`,
+                    htmlContent: accessCodeGenerationMessage(results.id),
+                });
                 mailSender.destroy();
-            if (!emailRes) {
-                console.error(`Error sending access code generation email to "${reqUser.get('email')}"`);
-            }
+                if (!emailRes) {
+                    console.error(`Error sending access code generation email to "${reqUser.get('email')}"`);
+                }
             }
 
             return res.json({
@@ -83,26 +112,73 @@ export class BookstoreController {
 
     }
 
+    /**
+    * Generates a set number of access codes for a given application license
+    *
+    * @param req - Incoming API request.
+    * @param res - Outgoing API response.
+    * @returns The fulfilled API response.
+    */
     public async bulkGenerateAccessCodes(req: Request, res: Response): Promise<Response> {
-
-        const { application_license_id, noAccessCodes } = req.body;
-        return res.json({
-            data: "hi"
-        });
+        try {
+            const { application_license_id, noAccessCodes } = req.body;
+    
+            if (!noAccessCodes || noAccessCodes <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Number of access codes must be greater than 0'
+                });
+            }
+    
+            const license = await ApplicationLicense.findOne({ 
+                where: { uuid: application_license_id } 
+            });
+    
+            if (!license) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Application license not found'
+                });
+            }
+    
+            const accessCodesToCreate = Array(noAccessCodes).fill({
+                application_license_id,
+                redeemed: false,
+                void: false
+            });
+    
+            const createdCodes = await AccessCode.bulkCreate(accessCodesToCreate);
+    
+            return res.status(201).json({
+                success: true,
+                message: `Successfully generated ${noAccessCodes} access codes`,
+                meta: {
+                    total_generated: createdCodes.length
+                },
+                data: createdCodes.map(code => ({
+                    code: code.code,
+                    created_at: code.created_at
+                }))
+            });
+    
+        } catch (error) {
+            console.error('Error generating access codes:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Error generating access codes'
+            });
+        }
     }
 
 
-  /**
-   * Retrieves a list of all known Application Licenses using optional searching and pagination.
-   *
-   * @param req - Incoming API request.
-   * @param res - Outgoing API response.
-   * @returns The fulfilled API response.
-   */
+   /**
+    * Retrieves a list of all known Application Licenses using optional searching.
+    *
+    * @param req - Incoming API request.
+    * @param res - Outgoing API response.
+    * @returns The fulfilled API response.
+    */
     public async getAllAppLicenses(req: Request, res: Response): Promise<Response> {
-    
-        console.log("IN getAllAppLicenses");
-
         try {
             const { query } = req.query;
 
@@ -136,4 +212,5 @@ export class BookstoreController {
             });
         }
     }
+
 }

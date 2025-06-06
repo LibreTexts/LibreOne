@@ -34,6 +34,9 @@ import {
     @Column(DataType.STRING)
     declare stripe_id: string;
 
+    @Column(DataType.STRING)
+    declare picture_url: string;
+
     @Default(false)
     @Column(DataType.BOOLEAN)
     declare perpetual: boolean;

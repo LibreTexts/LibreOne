@@ -20,6 +20,13 @@ import { UUIDV4 } from 'sequelize';
   @Table({
     timestamps: true,
     tableName: 'user_licenses',
+    indexes: [
+      {
+          unique: true,
+          fields: ['user_id', 'application_license_id'],
+          name: 'unique_user_license'
+      }
+    ]
   })
   export class UserLicense extends Model {
     @PrimaryKey
@@ -48,6 +55,13 @@ import { UUIDV4 } from 'sequelize';
 
     @Column(DataType.DATE)
     declare expires_at: Date;
+
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    declare revoked: boolean;
+
+    @Column(DataType.DATE)
+    declare revoked_at: Date;
 
     @Column(DataType.STRING)
     declare stripe_subscription_id: string;

@@ -18,6 +18,13 @@ import {
   @Table({
     timestamps: true,
     tableName: 'organization_license_entitlements',
+    indexes: [
+        {
+            unique: true,
+            fields: ['org_id', 'application_license_id'],
+            name: 'unique_org_license'
+        }
+    ]
   })
   export class OrganizationLicenseEntitlement extends Model {
     @ForeignKey(() => ApplicationLicense)
@@ -38,6 +45,13 @@ import {
 
     @Column(DataType.DATE)
     declare expires_at: Date;
+
+    @Default(false)
+    @Column(DataType.BOOLEAN)
+    declare revoked: boolean;
+
+    @Column(DataType.DATE)
+    declare revoked_at: Date;
 
     @Column(DataType.STRING)
     declare stripe_subscription_id: string;
