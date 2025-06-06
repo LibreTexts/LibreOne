@@ -49,6 +49,9 @@ import { UUIDV4 } from 'sequelize';
     @Column(DataType.BOOLEAN)
     declare void: boolean;
 
+    @BelongsTo(() => ApplicationLicense)
+    declare application_license: ApplicationLicense;
+
     @CreatedAt
     declare created_at: Date;
 

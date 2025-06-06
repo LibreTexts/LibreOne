@@ -25,6 +25,7 @@
             :key="idx"
             class="text-md font-semibold leading-6 text-gray-900"
             :class="idx > 0 ? 'ml-6' : ''"
+            :title="item.title"
           >
             {{ item.title }}
           </a>
@@ -182,6 +183,10 @@
     {
       title: 'Security',
       link: '/security',
+    },
+    {
+      title: 'Subscriptions',
+      link: '/subscriptions',
     }
   ];
   const instructorItems = [
