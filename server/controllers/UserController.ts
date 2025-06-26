@@ -486,6 +486,7 @@ export class UserController {
         attributes: ['tag', 'english_name'],  
       }],
     });
+
     return res.send({
       meta: {
         offset,
@@ -1212,6 +1213,41 @@ export class UserController {
         disabled: true,
         disabled_reason: foundUser.disabled_reason,
         disabled_date: foundUser.disabled_date
+      }
+    });
+  }
+
+  /**
+   * Re-Enables a user account.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async reEnableUser(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    if (!foundUser.disabled) {
+      return errors.badRequest(res, "User is already enabled.");
+    }
+
+    await foundUser.update({
+      disabled: false,
+      disabled_reason: null,
+      disabled_date: null
+    });
+
+    EventSubscriberEmitter.emit('user:updated', foundUser.get({plain: true}))
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        disabled: false
       }
     });
   }
