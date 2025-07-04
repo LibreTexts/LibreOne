@@ -60,6 +60,7 @@ sequelize.addModels([
   Application,
   ApplicationLicense,
   ApplicationLicenseEntitlement,
+  AccessCode,
   AccessRequest,
   AccessRequestApplication,
   DeleteAccountRequest,
