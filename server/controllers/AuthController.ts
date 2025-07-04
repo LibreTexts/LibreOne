@@ -44,6 +44,7 @@ import type {
 import { LoginEventController } from '@server/controllers/LoginEventController';
 import { XMLParser } from 'fast-xml-parser';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
+import { AppLicenseController } from './AppLicenseController';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const SESSION_DOMAIN = getProductionURL();
@@ -128,23 +129,23 @@ export class AuthController {
       });
 
       const session_id = payload.session_id;
-      if(!session_id) {
+      if (!session_id) {
         throw new Error('INVALID_SESSION');
       }
 
       const session = await Session.findByPk(session_id.toString());
-      if(!session || !session.valid) {
+      if (!session || !session.valid) {
         throw new Error('INVALID_SESSION');
       }
 
-      if(session.expires_at.getTime() < Date.now()) {
+      if (session.expires_at.getTime() < Date.now()) {
         throw new Error('EXPIRED_SESSION');
       }
 
       userUUID = payload.sub ?? null;
       isAuthenticated = true;
     } catch (e: any) {
-      if(e.message === 'INVALID_SESSION') {
+      if (e.message === 'INVALID_SESSION') {
         sessionInvalid = true;
       } else {
         expired = true;
@@ -235,7 +236,7 @@ export class AuthController {
       valid: true,
       created_at: new Date(),
       expires_at: sessionExpiry,
-      ...(ticket && { session_ticket: ticket})
+      ...(ticket && { session_ticket: ticket })
     });
 
     const sessionJWT = await AuthController.createSessionJWT(finalUserUUID, sessionID);
@@ -365,7 +366,7 @@ export class AuthController {
     let resolvedUUID = principal.attributes.uuid;
 
     // If there was no UUID or it was invalid, check if we have a user attribute (i.e. an external subject ID)
-    if((!resolvedUUID || !validateUUID(resolvedUUID)) && principal.user && typeof principal.user === 'string') {
+    if ((!resolvedUUID || !validateUUID(resolvedUUID)) && principal.user && typeof principal.user === 'string') {
       const fromExternal = await User.findOne({ where: { external_subject_id: principal.user } });
       if (fromExternal?.uuid) {
         resolvedUUID = fromExternal.uuid;
@@ -432,7 +433,7 @@ export class AuthController {
       .setAudience('libretexts.org')
       .setExpirationTime('7d')
       .sign(privKey);
-      console.log(`Token: ${token}`);
+    console.log(`Token: ${token}`);
     const cookieConfig: CookieOptions = {
       path: '/',
       secure: true,
@@ -606,7 +607,7 @@ export class AuthController {
     ];
 
     const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
-    
+
     EventSubscriberEmitter.emit('user:created', foundUser.get({ plain: true }));
 
     let shouldCreateSSOSession = true;
@@ -626,7 +627,7 @@ export class AuthController {
         console.warn('Error parsing cookie value as JSON.');
       }
     }
-    if(req.cookies.post_register_service_url){
+    if (req.cookies.post_register_service_url) {
       shouldCreateSSOSession = true;
       afterRegisterRedirect = encodeURI(req.cookies.post_register_service_url);
     }
@@ -635,7 +636,7 @@ export class AuthController {
     const adaptToken = webhookResults[1];
     const getRedirectURI = (source?: string, tkn?: string | boolean) => {
       // If source was ADAPT and we have a token, use it to redirect to ADAPT, otherwise fallback to registration-complete
-      if(source === 'adapt-registration' && tkn && typeof tkn === 'string') {
+      if (source === 'adapt-registration' && tkn && typeof tkn === 'string') {
         const ADAPT_BASE = this._getADAPTWebhookBase();
         return `${ADAPT_BASE}/login-by-jwt/${tkn}`;
       }
@@ -796,15 +797,15 @@ export class AuthController {
     return res.status(200).send({});
   }
 
-    /**
-   * Creates a new user via a request from an authorized LibreOne application. Used to generate user
-   * accounts on-demand for scenarios like Canvas LTI. In these cases, LibreOne is still the identity provider,
-   * so this would not be handled in the same manner as external identity providers.
-   *
-   * @param req - Incoming API request.
-   * @param res - Outgoing API response.
-   * @returns The fulfilled API response.
-   */
+  /**
+ * Creates a new user via a request from an authorized LibreOne application. Used to generate user
+ * accounts on-demand for scenarios like Canvas LTI. In these cases, LibreOne is still the identity provider,
+ * so this would not be handled in the same manner as external identity providers.
+ *
+ * @param req - Incoming API request.
+ * @param res - Outgoing API response.
+ * @returns The fulfilled API response.
+ */
   public async autoProvisionUser(req: Request, res: Response): Promise<Response> {
     const { email, first_name, last_name, user_type, time_zone } = req.body as AutoProvisionUserBody;
 
@@ -838,7 +839,7 @@ export class AuthController {
       });
     }
 
-    if(!resultingUUID) {
+    if (!resultingUUID) {
       return errors.internalServerError(res);
     }
 
@@ -913,27 +914,53 @@ export class AuthController {
       });
     }
 
-    if (registeredService && registeredService !== CAS_CALLBACK) {
-      const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
-      if (!foundApp) {
-        return res.send({
-          interrupt: true,
-          block: true,
-          ssoEnabled: false,
-          message: 'Sorry, we don\'t recognize the application you\'re trying to access. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
-          links: {},
-        });
-      }
+    if (!registeredService) {
+      return res.send({
+        interrupt: true,
+        block: false,
+        ssoEnabled: true,
+        message: 'Just a moment while we redirect you to Launchpad...',
+        autoRedirect: true,
+        links: {
+          'Go': `${SELF_BASE}/api/v1/auth/login`,
+        },
+      });
+    }
 
-      // If the app is set to default access, we can skip the user app check
-      if(foundApp.default_access === 'all') {
-        return res.send({
-          interrupt: false,
-          block: false,
-          ssoEnabled: true,
-        });
-      }
+    const allowAccess = () => {
+      return res.send({
+        interrupt: false,
+        block: false,
+        ssoEnabled: true,
+      });
+    }
 
+    if (registeredService === CAS_CALLBACK) {
+      return allowAccess();
+    }
+
+    const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
+    if (!foundApp) {
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: false,
+        message: 'Sorry, we don\'t recognize the application you\'re trying to access. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
+        links: {},
+      });
+    }
+
+    // If the app is set to default access, we can skip the user app check
+    // if (foundApp.default_access === 'all') {
+    //   return res.send({
+    //     interrupt: false,
+    //     block: false,
+    //     ssoEnabled: true,
+    //   });
+    // }
+
+    // If app's default access is not 'all', we need to check if the user has access to it
+    if (foundApp.default_access !== 'all') {
       const foundUserApp = await UserApplication.findOne({
         where: {
           user_id: foundUser.get('uuid'),
@@ -951,12 +978,32 @@ export class AuthController {
       }
     }
 
-    if (!registeredService) {
+
+    // If we got here, the app exists and the user has security access to it.
+    // Now, we need to check if the app requires an app license (or we are not currently enforcing app licenses)
+    if (process.env.ENFORCE_APP_LICENSES !== 'true' || !foundApp.requires_license) {
+      return allowAccess();
+    }
+
+    // If we got here, the app requires a license and we are enforcing app licenses.
+    if (foundUser.user_type === 'instructor') {
+      if (foundUser.verify_status === 'verified') {
+        return allowAccess();
+      }
+    }
+
+    const appLicenseController = new AppLicenseController();
+    const accessResult = await appLicenseController.checkLicenseAccessRaw({
+      user_id: foundUser.get('uuid'),
+      app_id: foundApp.get('id'),
+    });
+
+    if (!accessResult.meta.has_access) {
       return res.send({
         interrupt: true,
         block: false,
         ssoEnabled: true,
-        message: 'Just a moment while we redirect you to Launchpad...',
+        message: 'Just a moment while we redirect you...',
         autoRedirect: true,
         links: {
           'Go': `${SELF_BASE}/api/v1/auth/login`,
@@ -964,11 +1011,7 @@ export class AuthController {
       });
     }
 
-    return res.send({
-      interrupt: false,
-      block: false,
-      ssoEnabled: true,
-    });
+    return allowAccess();
   }
 
   /**
@@ -1473,7 +1516,7 @@ export class AuthController {
         throw new Error(res.data.message ?? 'Unknown error');
       }
 
-      if(source === 'adapt-registration' && !res.data.token) {
+      if (source === 'adapt-registration' && !res.data.token) {
         throw new Error('No token returned from ADAPT');
       }
 
@@ -1537,7 +1580,7 @@ export class AuthController {
       if (!res.data || res.data.type === 'error') {
         throw new Error(res.data.message ?? 'Unknown error');
       }
-      
+
       return true;
     } catch (err) {
       console.error({

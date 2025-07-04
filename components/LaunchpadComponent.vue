@@ -52,10 +52,10 @@
             </div>
           </div>
           <div class="app-item-text-container">
-            <p class="app-item-header">
+            <p class="text-sm font-medium">
               {{ app.name }}
             </p>
-            <p class="app-item-descrip">
+            <p class="text-xs text-slate-600">
               {{ app.description }}
             </p>
           </div>
@@ -115,10 +115,10 @@
               </div>
             </div>
             <div class="app-item-text-container">
-              <p class="app-item-header">
+              <p class="text-sm font-medium">
                 {{ lib.name }}
               </p>
-              <p class="app-item-descrip">
+              <p class="text-xs text-slate-600">
                 {{ lib.description }}
               </p>
             </div>
@@ -327,14 +327,6 @@
   flex-direction: column;
   text-align: center;
   margin-top: 0.25rem;
-}
-.app-item-header {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.app-item-descrip {
-  font-size: 0.7rem;
-  color: #6b7280;
 }
 
 @media only screen and (max-width: 480px) {

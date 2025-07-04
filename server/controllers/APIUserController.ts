@@ -19,6 +19,8 @@ export const API_USERS_PERMISSIONS = [
   'api_users:write',
   'applications:read',
   'applications:write',
+  'app_licenses:read',
+  'app_licenses:write',
   'domains:read',
   'domains:write',
   'organizations:read',
