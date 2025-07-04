@@ -30,6 +30,9 @@ import {
     @Column(DataType.INTEGER)
     declare application_id: string;
 
+    @BelongsTo(() => Application)
+    application?: Application;
+
     @CreatedAt
     declare created_at: Date;
 

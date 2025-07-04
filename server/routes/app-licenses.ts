@@ -14,23 +14,23 @@ const appLicensesRouter = express.Router();
 const controller = new AppLicenseController();
 
 
-appLicensesRouter.route('/user/:uuid').get(
+appLicensesRouter.route('/user/:user_id').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
   validate(AppLicenseValidator.userIdParamSchema, 'params'),
   catchInternal((req, res) => controller.getAllUserLicenses(req, res)),
 );
 
-appLicensesRouter.route('/check-access/:uuid/:application_license_id').get(
+appLicensesRouter.route('/check-access/:user_id/:app_id').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
-  validate(AppLicenseValidator.directLicenseOperationSchema, 'params'),
+  validate(AppLicenseValidator.checkAccessSchema, 'params'),
   catchInternal((req, res) => controller.checkLicenseAccess(req, res)),
 );
 
-appLicensesRouter.route('/apply-code').post(
+appLicensesRouter.route('/redeem').post(
   verifyAPIAuthentication,
-  validate(AppLicenseValidator.accessCodeSchema, 'body'),
+  validate(AppLicenseValidator.redeemAccessCodeSchema, 'body'),
   catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
 )
 
@@ -78,7 +78,7 @@ appLicensesRouter.route('/check-expire').post(
   catchInternal((req, res) => controller.LicenseExpiringCheck(req, res)),
 )
 
-appLicensesRouter.route('/user/:uuid/expired').get(
+appLicensesRouter.route('/user/:user_id/expired').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
   validate(AppLicenseValidator.userIdParamSchema, 'params'),

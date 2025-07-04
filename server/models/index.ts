@@ -204,7 +204,7 @@ export async function initDatabase() {
  */
 export async function connectDatabase(): Promise<boolean> {
   try {
-    await sequelize.sync({ alter:true});//process.env.NODE_ENV === 'test'
+    await sequelize.sync({ alter:process.env.NODE_ENV === 'test'});//process.env.NODE_ENV === 'test'
     console.log('[DB] Established database connection.');
     initDatabase();
   } catch (e) {
