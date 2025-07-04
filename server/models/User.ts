@@ -133,6 +133,10 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare is_developer: boolean;
 
+  @Default(0)
+  @Column(DataType.INTEGER)
+  declare academy_online: number;
+
   @Column(DataType.STRING)
   declare stripe_id: string;
 

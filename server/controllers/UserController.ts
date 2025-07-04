@@ -683,6 +683,7 @@ export class UserController {
       verify_status: foundUser.verify_status,
       picture: foundUser.avatar || DEFAULT_AVATAR,
       lang: foundUser.get('language')?.tag || 'en-US',
+      academy_online: foundUser.academy_online || 0,
     });
   }
 
