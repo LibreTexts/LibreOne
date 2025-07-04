@@ -1,6 +1,6 @@
 <template>
-    <div class="bg-white rounded-lg shadow p-6 flex flex-col">
-      <div class="flex justify-center mb-4 h-40 bg-gray-50 overflow-hidden">
+    <div class="bg-white rounded-md shadow-md p-2 flex flex-col w-48 h-48 border border-slate-200">
+      <div class="flex justify-center mb-4 h-40 bg-gray-200/70 overflow-hidden rounded-md">
         <img 
           :src="props.license.application_license.picture_url" 
           :alt="props.license.application_license.name"
@@ -8,21 +8,21 @@
         />
       </div>
   
-      <h3 class="text-center font-medium text-lg mb-2">
+      <h3 class="text-center font-medium text-sm mb-2">
         {{ props.license.application_license.name }}
       </h3>
   
-      <p class="text-center text-sm text-gray-600 mb-4">
+      <p class="text-center text-xs text-slate-600 mb-4">
         {{ $t('license-card.expiry-date') }} {{ formatDate(props.license.expires_at) }}
       </p>
   
-      <ThemedButton
+      <!-- <ThemedButton
         @click="$emit('manage', props.license.application_license_id)"
         variant="outlined"
         class="w-full mt-auto"
       >
         <span class="text-primary truncate block px-2">{{ $t('license-card.manage-cancel') }}</span>
-      </ThemedButton>
+      </ThemedButton> -->
     </div>
   </template>
   
