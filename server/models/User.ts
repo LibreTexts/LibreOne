@@ -27,6 +27,7 @@ import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
 import { UserNote } from './UserNote';
+import { UserLicense } from './UserLicense';
 
 @DefaultScope(() => ({
   attributes: {
@@ -136,6 +137,9 @@ export class User extends Model {
   @Column(DataType.INTEGER)
   declare academy_online: number;
 
+  @Column(DataType.STRING)
+  declare stripe_id: string;
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 
@@ -156,6 +160,9 @@ export class User extends Model {
 
   @HasMany(() => UserNote, 'user_id')
   notes?: Array<UserNote>;
+
+  @HasMany(() => UserLicense)
+  application_licenses?: Array<UserLicense>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

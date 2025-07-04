@@ -44,6 +44,12 @@ export class APIUserPermissionConfig extends Model {
   declare applications_write: boolean;
 
   @Column(DataType.BOOLEAN)
+  declare app_licenses_read: boolean;
+
+  @Column(DataType.BOOLEAN)
+  declare app_licenses_write: boolean;
+
+  @Column(DataType.BOOLEAN)
   declare domains_read: boolean;
 
   @Column(DataType.BOOLEAN)

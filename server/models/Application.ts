@@ -4,6 +4,7 @@ import {
   Column,
   CreatedAt,
   DataType,
+  Default,
   Index,
   Model,
   Table,
@@ -77,6 +78,10 @@ export class Application extends Model {
   /** Service identifier for library authentication **/
   @Column(DataType.INTEGER)
   declare auth_service_id: number;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare requires_license: boolean;
 
   @BelongsToMany(() => AccessRequest, () => AccessRequestApplication)
   access_requests?: Array<AccessRequest & { AccessRequestApplication: AccessRequestApplication }>;
