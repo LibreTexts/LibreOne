@@ -24,19 +24,22 @@ appLicensesRouter.route('/user/:user_id').get(
 appLicensesRouter.route('/check-access/:user_id/:app_id').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
-  validate(AppLicenseValidator.checkAccessSchema, 'params'),
+  validate(AppLicenseValidator.userIdWithAppIdSchema, 'params'),
   catchInternal((req, res) => controller.checkLicenseAccess(req, res)),
 );
 
-appLicensesRouter.route('/redeem').post(
+appLicensesRouter.route('/redeem/:user_id').post(
   verifyAPIAuthentication,
+  ensureUserResourcePermission(true),
+  validate(AppLicenseValidator.userIdParamSchema, 'params'),
   validate(AppLicenseValidator.redeemAccessCodeSchema, 'body'),
   catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
 )
 
-appLicensesRouter.route('/trial/create').post(
+appLicensesRouter.route('/trial/create/:user_id/:app_id').post(
   verifyAPIAuthentication,
-  validate(AppLicenseValidator.directLicenseOperationSchema, 'body'),
+  ensureUserResourcePermission(true),
+  validate(AppLicenseValidator.userIdWithAppIdSchema, 'params'),
   catchInternal((req, res) => controller.createTrial(req, res)),
 )
 

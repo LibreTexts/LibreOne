@@ -2,6 +2,9 @@
 export type GenerateAccessCodeRequestBody = {
     application_license_id: string;
     email: string;
+} | {
+    stripe_product_id: string;
+    email: string;
 };
 
 export type BulkGenerateAccessCodesRequestBody = {

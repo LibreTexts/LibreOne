@@ -51,6 +51,15 @@ usersRouter.route('/:uuid')
     catchInternal((req, res) => controller.updateUser(req, res)),
   );
 
+usersRouter.route('/:uuid/academy-online').patch(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write']),
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.updateUserAcademyOnlineSchema, 'body'),
+  catchInternal((req, res) => controller.updateUserAcademyOnline(req, res)),
+)
+
 usersRouter.route('/:uuid/applications')
   .all(
     verifyAPIAuthentication,

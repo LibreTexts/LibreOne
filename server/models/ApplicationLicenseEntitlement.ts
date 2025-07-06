@@ -28,7 +28,7 @@ import {
     @ForeignKey(() => Application)
     @AllowNull(false)
     @Column(DataType.INTEGER)
-    declare application_id: string;
+    declare application_id: number;
 
     @BelongsTo(() => Application)
     application?: Application;

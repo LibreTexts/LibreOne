@@ -1,12 +1,13 @@
 import {
-  CheckLicenseAccessRequestParams,
   CheckLicenseAccessResponse,
   LicenseOperationRequestBody,
   AppLicenseType,
   AppLicenseStatus,
   AccessCodeStatus,
   UserLicenseResult,
-  RedeemAccessCodeRequestBody
+  RedeemAccessCodeRequestBody,
+  UserIDAndAppID,
+  RedeemAccessCodeRequestParams
 } from '@server/types/applicenses';
 import {
   User,
@@ -38,7 +39,7 @@ export class AppLicenseController {
       if (!license.application_license) return false;
       if (!license.application_license.entitlements) return false;
       const foundApp = license.application_license.entitlements.some(entitlement => {
-        return entitlement.application_id === appId.toString();
+        return entitlement.application_id === appId;
       });
       return !!foundApp;
     });
@@ -377,7 +378,7 @@ export class AppLicenseController {
   }
 
   public async checkLicenseAccess(req: Request, res: Response): Promise<Response<CheckLicenseAccessResponse>> {
-    const { user_id, app_id } = (req.params as unknown) as CheckLicenseAccessRequestParams;
+    const { user_id, app_id } = (req.params as unknown) as UserIDAndAppID;
 
     const accessData = await this.checkLicenseAccessRaw({
       user_id,
@@ -394,7 +395,9 @@ export class AppLicenseController {
   }
 
   public async applyAccessCodeToLicense(req: Request, res: Response): Promise<Response> {
-    const { access_code, user_id } = req.body as RedeemAccessCodeRequestBody;
+    const { access_code } = req.body as RedeemAccessCodeRequestBody;
+    const { user_id } = req.params as RedeemAccessCodeRequestParams;
+    
     const accessCodeRecord = await AccessCode.findOne({
       where: { code: access_code },
       include: [{
@@ -501,63 +504,128 @@ export class AppLicenseController {
   }
 
   public async createTrial(req: Request, res: Response): Promise<Response> {
-    const { uuid: user_id, application_license_id } = req.body;
+    const { user_id, app_id } = (req.params as unknown) as UserIDAndAppID;
 
-    const existingLicense = await UserLicense.findOne({
+    const existingLicenses = await UserLicense.findAll({
       where: {
-        user_id: user_id,
-        application_license_id: application_license_id
-      }
+        user_id,
+      },
+      include: [{
+        model: ApplicationLicense,
+        as: 'application_license',
+        include: [{
+          model: ApplicationLicenseEntitlement,
+          as: 'entitlements',
+        }]
+      }]
     });
 
-    if (existingLicense) {
-      const now = new Date();
+    if (existingLicenses) {
+      console.log(existingLicenses)
 
-      if (existingLicense.expires_at && existingLicense.expires_at < now) {
-        return res.status(400).json({
-          success: false,
-          error: 'Your license plan expired, please renew',
-          meta: {
-            status: 'expired' as AppLicenseStatus
-          }
+      // Check existingLicenses to see if there is any application_license that grants access to app_id
+      // and if it is active, expired, or revoked
+      const existingLicense = existingLicenses.find((license) => {
+        const entitlements = license.get('application_license')?.get('entitlements')?.map((e) => e.get({ plain: true })) || [] as ApplicationLicenseEntitlement[];
+        console.log("ENTITLEMENTS FOR LICENSE")
+        console.log(entitlements)
+        if (!entitlements) return false;
+        const foundApp = entitlements.find(entitlement => {
+          console.log(`Checking entitlement for app_id ${app_id}:`, entitlement);
+          return entitlement.application_id === app_id;
         });
-      }
-      else if (existingLicense.revoked) {
-        return res.status(400).json({
-          success: false,
-          error: 'Your license has been revoked, please contact support',
-          meta: {
-            status: 'revoked' as AppLicenseStatus
-          }
-        });
-      }
-      else {
-        return res.status(200).json({
-          success: true,
-          message: 'You already have this license',
-          meta: {
-            status: 'active' as AppLicenseStatus
-          }
-        });
+        if (!foundApp) return false;
+        console.log("FOUND APP ENTITLEMNENT")
+        console.log(foundApp);
+
+        const status = this._evaluateLicenseStatus(license.get({ plain: true }), true);
+        return status === 'active' || status === 'expired' || status === 'revoked';
+      });
+
+      if (existingLicense) {
+        if (existingLicense.expires_at && existingLicense.expires_at < new Date()) {
+          return res.status(400).json({
+            success: false,
+            error: 'Your license plan expired, please renew',
+            meta: {
+              status: 'expired' as AppLicenseStatus
+            }
+          });
+        }
+        else if (existingLicense.revoked) {
+          return res.status(400).json({
+            success: false,
+            error: 'Your license has been revoked, please contact support',
+            meta: {
+              status: 'revoked' as AppLicenseStatus
+            }
+          });
+        }
+        else {
+          return res.status(200).json({
+            success: true,
+            message: 'You already have this license',
+            meta: {
+              status: 'active' as AppLicenseStatus
+            }
+          });
+        }
       }
     }
 
+    // If an existing license was not found, create a new trial license
+    // Find the first ApplicationLicense that grants access to the app_id (and only the app_id, no bundles)
+    // and trial=true
+    const applicationLicense = await ApplicationLicense.findOne({
+      where: {
+        trial: true
+      },
+      include: [{
+        model: ApplicationLicenseEntitlement,
+        as: 'entitlements',
+        where: {
+          application_id: app_id
+        },
+      }],
+    });
+
+    console.log(`APPLICATION LICENSE`);
+    console.log(applicationLicense);
+    if (!applicationLicense) {
+      return errors.notFound(res, 'No trial license found for this application');
+    }
+
+    const entitlements = applicationLicense.get('entitlements', { plain: true });
+    if (!entitlements || entitlements.length === 0) {
+      return errors.notFound(res, 'No trial license found for this application');
+    }
+
+    if (entitlements.length > 1) {
+      return errors.internalServerError(res, 'Multiple trial licenses found for this application. This is an internal error. Please contact support.');
+    }
+
+    entitlements.forEach(entitlement => {
+      console.log(`Entitlement for app_id ${app_id}:`, entitlement.application_id);
+    });
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 14);
+    expiresAt.setDate(expiresAt.getDate() + applicationLicense.get('duration_days', { plain: true }) || 14); // Default to 14 days if duration_days can't be determined
+
+    console.log(`Creating trial license for user ${user_id} and app license ${applicationLicense.get('uuid')} with expires_at: ${expiresAt}`);
 
     const userLicense = await UserLicense.create({
-      user_id: user_id,
-      application_license_id: application_license_id,
+      user_id,
+      application_license_id: applicationLicense.get('uuid'),
       original_purchase_date: new Date(),
       last_renewed_at: new Date(),
       expires_at: expiresAt,
     });
 
     return res.json({
+      success: true,
       message: 'Trial access granted successfully',
       data: {
-        expiresAt: expiresAt,
+        expires_at: expiresAt,
         license: userLicense,
       }
     })

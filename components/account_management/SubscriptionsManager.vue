@@ -13,14 +13,15 @@
           </i18n-t>
         </p>
       </div>
-      <ThemedButton
-        variant="default"
-        @click="redeemCode"
-        class="px-4 py-2 h-fit w-auto whitespace-nowrap mt-4 md:mt-0 md:ml-8"
-        icon="fa-solid fa-key"
-      >
-        {{ $t("subscriptions.redeem-code") }}
-      </ThemedButton>
+      <a href="/redeem">
+        <ThemedButton
+          variant="default"
+          class="px-4 py-2 h-fit w-auto whitespace-nowrap mt-4 md:mt-0 md:ml-8"
+          icon="IconKeyFilled"
+        >
+          {{ $t("subscriptions.redeem-code") }}
+        </ThemedButton>
+      </a>
     </div>
 
     <div
@@ -46,9 +47,9 @@
       @click="browseLicenses"
       variant="default"
       class="w-full py-3 text-center"
-      icon="fa-solid fa-cart-shopping"
+      icon="IconShoppingCartFilled"
     >
-      {{ $t("subscriptions.browse-bookstore") }}
+      {{ $t("subscriptions.browse-store") }}
     </ThemedButton>
   </div>
 </template>
@@ -104,10 +105,6 @@ function manageLicense(licenseId: string) {
 
 function browseLicenses() {
   window.location.href = "https://commons.libretexts.org/store";
-}
-
-function redeemCode() {
-  console.log("Redeem code");
 }
 
 onMounted(() => {

@@ -7,7 +7,7 @@ export type AppLicenseType = 'user' | 'organization';
 
 export type AccessCodeStatus = 'active' | 'redeemed' | 'expired' | 'cancelled' | 'none';
 
-export type CheckLicenseAccessRequestParams = {
+export type UserIDAndAppID = {
     user_id: string;
     app_id: number;
 };
@@ -78,5 +78,7 @@ export type UserLicenseResult = {
 
 export type RedeemAccessCodeRequestBody = {
     access_code: string;
+}
+export type RedeemAccessCodeRequestParams = {
     user_id: string;
 }

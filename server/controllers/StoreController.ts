@@ -16,9 +16,27 @@ export class StoreController {
    * @returns The fulfilled API response.
    */
   public async generateAccessCode(req: Request, res: Response): Promise<Response> {
-    const { application_license_id, email } = req.body as GenerateAccessCodeRequestBody;
+    const data = req.body as GenerateAccessCodeRequestBody;
 
-    const license = await ApplicationLicense.findOne({ where: { uuid: application_license_id } });
+    if (!('stripe_product_id' in data) && !('application_license_id' in data)) {
+      return errors.badRequest(res, 'Either application_license_id or stripe_product_id must be provided');
+    }
+
+    if ('stripe_product_id' in data) {
+      if (!data.stripe_product_id) {
+        return errors.badRequest(res, 'Stripe ID cannot be empty');
+      }
+    }
+
+    if ('application_license_id' in data) {
+      if (!data.application_license_id) {
+        return errors.badRequest(res, 'Application license ID cannot be empty');
+      }
+    }
+
+    const whereClause = 'stripe_product_id' in data ? { stripe_id: data.stripe_product_id } : { uuid: data.application_license_id };
+
+    const license = await ApplicationLicense.findOne({ where: whereClause });
     if (!license) {
       return errors.notFound(res, 'Application license not found');
     }
@@ -64,7 +82,7 @@ export class StoreController {
     // }
 
     const results = await AccessCode.create({
-      application_license_id: application_license_id
+      application_license_id: license.get('uuid'),
     });
 
     const supportLine = 'If you have any questions, please contact our <a href="https://commons.libretexts.org/support" target="_blank" rel="noopener noreferrer">Support Center</a>.';
@@ -90,13 +108,13 @@ export class StoreController {
     const mailSender = new MailController();
     if (mailSender.isReady()) {
       const emailRes = await mailSender.send({
-        destination: { to: [email] },
+        destination: { to: [data.email] },
         subject: `Your Access Code - ${license.name}`,
         htmlContent: accessCodeGenerationMessage(results.id, license.name),
       });
       mailSender.destroy();
       if (!emailRes) {
-        console.error(`Error sending access code generation email to "${email}"`);
+        console.error(`Error sending access code generation email to "${data.email}"`);
       }
     }
 

@@ -76,6 +76,11 @@ export type UpdateUserBody = {
   lang?: string;
 };
 
+export type UpdateUserAcademyOnlineBody = {
+  academy_online: number;
+  academy_online_expires_in_days?: number;
+}
+
 export type UpdateUserEmailBody = {
   code: number;
   email: string;

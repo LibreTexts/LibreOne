@@ -24,13 +24,12 @@ export const licenseOperationSchema = joi.object({
 
 export const redeemAccessCodeSchema = joi.object({
     access_code: uuidValidator.required(),
-    user_id: uuidValidator.required(),
 });
 
-export const checkAccessSchema = joi.object({
+export const userIdWithAppIdSchema = joi.object({
     user_id: uuidValidator.required(),
     app_id: joi.number().integer().required(),
-})
+});
 
 export const directLicenseOperationSchema = joi.object({
     user_id: uuidValidator.required(),

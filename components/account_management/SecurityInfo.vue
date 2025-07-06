@@ -88,10 +88,7 @@
         <p class="text-sm font-semibold text-red-500">
           {{ $t("security.dangerzone") }}
         </p>
-        <FontAwesomeIcon
-          :icon="['fa-solid', showDangerZone ? 'chevron-down' : 'chevron-right']"
-          class="text-red-500 ml-2 mt-[5px] h-3"
-        />
+        <component :is="showDangerZone ? IconChevronDown : IconChevronRight" class="text-red-500 ml-1 mt-[4px] h-4 w-4" />
       </div>
       <ThemedButton
         variant="danger"
@@ -133,10 +130,9 @@
   import NewEmailForm from './NewEmailForm.vue';
   import NewPasswordForm from './NewPasswordForm.vue';
   import { useI18n } from 'vue-i18n';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { useAxios } from '@renderer/useAxios';
   import ThemedModal from '../ThemedModal.vue';
-  
+  import { IconChevronDown, IconChevronRight } from '@tabler/icons-vue';
 
   const emit = defineEmits<{
     (e: 'set-unknown-error', error: boolean): void;

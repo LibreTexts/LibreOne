@@ -135,7 +135,22 @@ export class User extends Model {
 
   @Default(0)
   @Column(DataType.INTEGER)
-  declare academy_online: number;
+  get academy_online(): number {
+    // If academy_online_expires is null, return the current value
+    const expires = this.getDataValue('academy_online_expires');
+
+    // If academy_online_expires is present and not expired, return the current value.
+    // If expired, return 0
+    if (!expires) return this.getDataValue('academy_online');
+    if (expires && expires > new Date()) {
+      return this.getDataValue('academy_online');
+    }
+    
+    return 0;
+  }
+
+  @Column(DataType.DATE)
+  declare academy_online_expires: Date | null;
 
   @Column(DataType.STRING)
   declare stripe_id: string;

@@ -3,7 +3,9 @@ import { createI18n } from "vue-i18n";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
+  faArrowRight,
   faCartShopping,
+  faCheckCircle,
   faCircleArrowLeft,
   faCircleArrowRight,
   faCircleCheck,
@@ -12,6 +14,7 @@ import {
   faEyeSlash,
   faBars,
   faBolt,
+  faPlay,
   faRocket,
   faKey,
   faScrewdriverWrench,
@@ -71,7 +74,9 @@ export function createApp(pageContext: PageContext) {
 
   // Font Awesome
   library.add(
+    faArrowRight,
     faCartShopping,
+    faCheckCircle,
     faEye,
     faEyeSlash,
     faCircleArrowRight,
@@ -85,6 +90,7 @@ export function createApp(pageContext: PageContext) {
     faScrewdriverWrench,
     faRightFromBracket,
     faChevronUp,
+    faPlay,
     faChevronDown,
     faChevronRight
   );

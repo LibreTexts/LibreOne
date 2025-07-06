@@ -1,16 +1,12 @@
 <template>
-  <button
-    v-bind="$attrs"
-    :class="variantClasses"
-    :aria-busy="$props.loading"
-    :disabled="$props.disabled || $props.loading"
-  >
-    <FontAwesomeIcon
-      class="mr-3"
-      :icon="$props.icon"
-      v-if="$props.icon"
-    />
-    <slot v-if="!$props.loading" />
+  <button v-bind="$attrs" :class="variantClasses" :aria-busy="$props.loading"
+    :disabled="$props.disabled || $props.loading">
+    <template v-if="!$props.loading">
+      <div class="flex items-center justify-center">
+        <component :is="TablerIconsVue[$props.icon]" class="w-5 h-5 mr-3" v-if="$props.icon" />
+        <slot />
+      </div>
+    </template>
     <template v-else>
       <LoadingIndicator />
       <span class="ml-2">{{ $t("common.loading") }}...</span>
@@ -21,7 +17,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import LoadingIndicator from "@components/LoadingIndicator.vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import * as TablerIconsVue from "@tabler/icons-vue";
 
 const props = withDefaults(
   defineProps<{
@@ -29,14 +25,13 @@ const props = withDefaults(
     small?: boolean;
     disabled?: boolean;
     loading?: boolean;
-    icon?: string;
+    icon?: keyof typeof TablerIconsVue;
   }>(),
   {
     variant: "default",
     small: false,
     disabled: false,
     loading: false,
-    icon: "",
   }
 );
 
