@@ -148,6 +148,10 @@ export class User extends Model {
     
     return 0;
   }
+  set academy_online(value: number) {
+    // Set the value directly, no need to check expiration here
+    this.setDataValue('academy_online', value);
+  }
 
   @Column(DataType.DATE)
   declare academy_online_expires: Date | null;

@@ -430,6 +430,34 @@ export class AppLicenseController {
       });
     }
 
+    if (accessCodeRecord.application_license.is_academy_license){
+      // Handle academy license specific logic
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + accessCodeRecord.application_license.duration_days || 186); // Fallback to 186 days if duration_days can't be determined
+      const user = await User.findOne({ where: { uuid: user_id } });
+      if (!user) {
+        return errors.notFound(res, 'User not found');
+      }
+
+      user.academy_online = accessCodeRecord.application_license.academy_level || 3; // Fallback to level 3 if not specified
+      user.academy_online_expires = expiresAt; // Set the expiration date
+      await user.save();
+
+      // Mark the access code as redeemed
+      accessCodeRecord.redeemed = true;
+      accessCodeRecord.redeemed_at = new Date();
+      await accessCodeRecord.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Access code applied successfully',
+        data: {
+          license: accessCodeRecord.application_license,
+        }
+      });
+    }
+
+
     const transaction = await sequelize.transaction();
 
     try {

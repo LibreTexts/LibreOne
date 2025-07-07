@@ -3,7 +3,7 @@ export type GenerateAccessCodeRequestBody = {
     application_license_id: string;
     email: string;
 } | {
-    stripe_product_id: string;
+    stripe_price_id: string;
     email: string;
 };
 

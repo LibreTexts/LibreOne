@@ -12,10 +12,10 @@ export const applicationLicenseIdSchema = joi.object({
 });
 
 export const generateAccessCodeSchema = joi.object({
-    stripe_product_id: joi.string().optional().not().empty(),
+    stripe_price_id: joi.string().optional().not().empty(),
     application_license_id: uuidValidator.optional(),
     email: joi.string().email().required(),
-}).xor('stripe_product_id', 'application_license_id');
+}).xor('stripe_price_id', 'application_license_id');
 
 export const bulkGenerateAccessCodesSchema = joi.object({
     application_license_id: uuidValidator.required(),

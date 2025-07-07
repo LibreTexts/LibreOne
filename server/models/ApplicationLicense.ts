@@ -47,6 +47,13 @@ export class ApplicationLicense extends Model {
   @Column(DataType.BOOLEAN)
   declare trial: boolean;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare is_academy_license: boolean;
+
+  @Column(DataType.INTEGER)
+  declare academy_level: number | null;
+
   @Default(0)
   @Column(DataType.INTEGER)
   declare duration_days: number;

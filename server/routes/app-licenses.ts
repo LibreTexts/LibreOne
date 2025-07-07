@@ -36,8 +36,7 @@ appLicensesRouter.route('/redeem/:user_id').post(
   ensureUserResourcePermission(true),
   validate(AppLicenseValidator.userIdParamSchema, 'params'),
   validate(AppLicenseValidator.redeemAccessCodeSchema, 'body'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
+  catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
 )
 
 appLicensesRouter.route('/trial/create/:user_id/:app_id').post(

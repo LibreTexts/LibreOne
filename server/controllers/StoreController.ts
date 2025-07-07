@@ -18,23 +18,23 @@ export class StoreController {
   public async generateAccessCode(req: Request, res: Response): Promise<Response> {
     const data = req.body as GenerateAccessCodeRequestBody;
 
-    if (!('stripe_product_id' in data) && !('application_license_id' in data)) {
-      return errors.badRequest(res, 'Either application_license_id or stripe_product_id must be provided');
+    if (!('stripe_price_id' in data) && !('application_license_id' in data)) {
+      return errors.badRequest(res, 'Either application_license_id or stripe_price_id must be provided');
     }
 
-    if ('stripe_product_id' in data) {
-      if (!data.stripe_product_id) {
-        return errors.badRequest(res, 'Stripe ID cannot be empty');
+    if ('stripe_price_id' in data) {
+      if (!data.stripe_price_id) {
+        return errors.badRequest(res, 'stripe_price_id cannot be empty');
       }
     }
 
     if ('application_license_id' in data) {
       if (!data.application_license_id) {
-        return errors.badRequest(res, 'Application license ID cannot be empty');
+        return errors.badRequest(res, 'application_license_id cannot be empty');
       }
     }
 
-    const whereClause = 'stripe_product_id' in data ? { stripe_id: data.stripe_product_id } : { uuid: data.application_license_id };
+    const whereClause = 'stripe_price_id' in data ? { stripe_id: data.stripe_price_id } : { uuid: data.application_license_id };
 
     const license = await ApplicationLicense.findOne({ where: whereClause });
     if (!license) {

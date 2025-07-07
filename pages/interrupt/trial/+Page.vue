@@ -62,10 +62,11 @@ import ThemedButton from '../../../components/ThemedButton.vue';
 import { useI18n } from 'vue-i18n';
 import { usePageContext } from '@renderer/usePageContext';
 import { ref } from 'vue';
-import axios from 'axios';
+import { useAxios } from '@renderer/useAxios';
 import LoadingIndicator from '../../../components/LoadingIndicator.vue';
 import { IconCircleCheck } from '@tabler/icons-vue';
 
+const axios = useAxios();
 const props = usePageProps<{ trial_expired?: boolean; application?: Application | null, service_url?: string | null }>();
 const { t } = useI18n();
 const pageContext = usePageContext();
@@ -86,7 +87,7 @@ async function startTrial() {
       return;
     }
 
-    const response = await axios.post(`/api/v1/app-licenses/trial/create/${user_id}/${app_id}`).catch((error) => {
+    const response = await axios.post(`/app-licenses/trial/create/${user_id}/${app_id}`).catch((error) => {
       return error.response || { data: { success: false, message: error.message } };
     });
 
