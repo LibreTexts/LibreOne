@@ -4,6 +4,7 @@ import {
   Column,
   CreatedAt,
   DataType,
+  Default,
   Index,
   Model,
   Table,
@@ -46,6 +47,9 @@ export class Application extends Model {
   @Column(DataType.STRING)
   declare icon: string;
 
+  @Column(DataType.STRING)
+  declare preview_image: string;
+
   @AllowNull(false)
   @Column(DataType.STRING)
   declare description: string;
@@ -77,6 +81,16 @@ export class Application extends Model {
   /** Service identifier for library authentication **/
   @Column(DataType.INTEGER)
   declare auth_service_id: number;
+
+  /** The (primary) Stripe product ID of the app license that grants access to offer to users
+   *  This is for UI/convenience only, it doesn't have any effect on app license enforcement itself.
+   */
+  @Column(DataType.STRING)
+  declare stripe_id: string;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare requires_license: boolean;
 
   @BelongsToMany(() => AccessRequest, () => AccessRequestApplication)
   access_requests?: Array<AccessRequest & { AccessRequestApplication: AccessRequestApplication }>;

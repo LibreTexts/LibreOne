@@ -152,15 +152,16 @@ export function ensureAPIUserHasPermission(requestedPermissions: APIUserPermissi
 /**
  * Asserts that either the current API User has permissions to read or modify a user, or that the
  * current user is only attempting to read or modify themselves.
+ * The UUID of the user to read or modify is expected to be in the request parameters as either `uuid` or `user_id`.
  *
  * @param write - If write permissions should be asserted.
  * @returns The permission assertion middleware.
  */
 export function ensureUserResourcePermission(write = false): Middleware {
   return function(req: Request, res: Response, next: NextFunction): MiddlewareResult {
-    const { uuid } = req.params as UserUUIDParams;
-    if (!uuid) {
-      throw (new Error('UUID not provided in route parameters!'));
+    let userUUID = 'uuid' in req.params ? req.params.uuid : req.params.user_id;
+    if (!userUUID) {
+      throw (new Error('uuid or user_id not provided in route parameters!'));
     }
 
     let authorized = false;
@@ -171,7 +172,7 @@ export function ensureUserResourcePermission(write = false): Middleware {
       }
       authorized = requestedPermissions.every((perm) => req.apiUserPermissions?.includes(perm));
     } else {
-      authorized = (!!req.isAuthenticated && req.userUUID === uuid);
+      authorized = (!!req.isAuthenticated && req.userUUID === userUUID);
     }
     if (!authorized) {
       return errors.forbidden(res);

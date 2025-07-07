@@ -10,6 +10,8 @@ export type Application = {
   supports_cas: boolean;
   default_access: 'all' | 'instructors' | 'none';
   icon: string;
+  preview_image?: string | null;
+  stripe_id?: string | null;
   description: string;
   primary_color: string;
   created_at: Date;

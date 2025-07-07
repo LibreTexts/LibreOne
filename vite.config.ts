@@ -23,6 +23,13 @@ const config: UserConfig = {
   ssr: {
     noExternal: ["vue-i18n"],
   },
+  optimizeDeps: {
+    include: [
+      "@fontawesome/fontawesome-svg-core",
+      "@fortawesome/free-solid-svg-icons",
+      "@fortawesome/vue-fontawesome",
+    ]
+  }
 };
 
 export default config;

@@ -140,6 +140,23 @@ function internalServerError(res: Response, detail?: string): Response {
   });
 }
 
+/**
+ * Completes an API request with a standard 501 Not Implemented response.
+ * 
+ * @param res - The response to hydrate.
+ * @param detail - A custom detailed error message.
+ * @return The fulfilled API response.
+ */
+function notImplemented(res: Response, detail?: string): Response {
+  return sendErrorResponse(res, {
+    status: '501',
+    code: 'not_implemented',
+    title: 'Not Implemented',
+    detail: detail || 'Sorry, this feature is not yet implemented.',
+  });
+}
+
+
 export default {
   badRequest,
   unauthorized,
@@ -148,4 +165,5 @@ export default {
   conflict,
   contentTooLarge,
   internalServerError,
+  notImplemented,
 };

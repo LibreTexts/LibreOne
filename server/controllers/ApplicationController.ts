@@ -34,6 +34,15 @@ export class ApplicationController {
     }
   }
 
+  public async getApplicationInternal(applicationID: number): Promise<Application | null> {
+    return Application.findOne({
+      where: {
+        id: applicationID,
+        hide_from_apps: false,
+      },
+    });
+  }
+
   /**
    * Retrieves a single Application.
    *
@@ -43,14 +52,7 @@ export class ApplicationController {
    */
   public async getApplication(req: Request, res: Response): Promise<Response> {
     const { applicationID } = (req.params as unknown) as ApplicationIDParams;
-    const foundApp = await Application.findOne({
-      where: {
-        [Op.and]: [
-          { id: applicationID },
-          { hide_from_apps: false },
-        ],
-      },
-    });
+    const foundApp = await this.getApplicationInternal(applicationID);
     if (!foundApp) {
       return errors.notFound(res);
     }

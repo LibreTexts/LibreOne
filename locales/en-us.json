@@ -256,5 +256,35 @@
     "header": "Hi, {name}",
     "tagline": "What is your preferred language?",
     "tagline_note": "This will help us to better tailor your LibreTexts experience as we enhance support for various languages"
+  },
+  "subscriptions": {
+    "title": "Your Subscriptions",
+    "description": "Manage your subscriptions to LibreTexts applications. Reading and creating textbooks on LibreTexts will {always} be free, but we offer some of our applications as subscriptions to offset the costs of maintaining and developing them.",
+    "always": "always",
+    "redeem-code": "Redeem Access Code",
+    "browse-store": "Browse Subscriptions in the LibreTexts Store",
+    "no-active-subscriptions": "No active subscriptions found. You can browse our store to find a subscription that fits your needs.",
+    "start-trial-header": "Start your {application} trial today.",
+    "start-trial-desc": "Get an all-access pass to  {application} and explore its features with a 14-day free trial. No credit card required.",
+    "start-trial-action": "Start Trial",
+    "start-trial-success": "Success! Your {application} trial has started. You can now access all features of the application for 14 days. Don't worry, we'll remind you before your trial ends.",
+    "start-trial-continue": "Continue to {application}",
+    "skip-trial-action": "Skip trial and purchase",
+    "start-trial-error": "Oops, something went wrong while starting your trial. Please try again later or contact our Support Center."
+  },
+  "redeem": {
+    "title": "Redeem Access Code",
+    "description": "Purchased an access code? Redeem it here to activate your subscription.",
+    "access-code-placeholder": "Enter your access code (e.g. ABCD-1234-EFGH-5678)",
+    "redeem-action": "Redeem Code",
+    "redeem-success": "Success! Your access code has been redeemed. You can now access your subscription.",
+    "go-to-launchpad": "Go to Launchpad",
+    "redeem-another": "Redeem Another Code",
+    "redeem-error": "Oops, something went wrong while redeeming your access code. Please check your code and try again."
+  },
+  "license-card": {
+    "expiry-date": "Expiry Date:",
+    "perpetual": "Never Expires",
+    "manage-cancel": "Manage/Cancel Subscription"
   }
 }

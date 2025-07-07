@@ -27,6 +27,7 @@ import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
 import { UserNote } from './UserNote';
+import { UserLicense } from './UserLicense';
 
 @DefaultScope(() => ({
   attributes: {
@@ -132,6 +133,32 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare is_developer: boolean;
 
+  @Default(0)
+  @Column(DataType.INTEGER)
+  get academy_online(): number {
+    // If academy_online_expires is null, return the current value
+    const expires = this.getDataValue('academy_online_expires');
+
+    // If academy_online_expires is present and not expired, return the current value.
+    // If expired, return 0
+    if (!expires) return this.getDataValue('academy_online');
+    if (expires && expires > new Date()) {
+      return this.getDataValue('academy_online');
+    }
+    
+    return 0;
+  }
+  set academy_online(value: number) {
+    // Set the value directly, no need to check expiration here
+    this.setDataValue('academy_online', value);
+  }
+
+  @Column(DataType.DATE)
+  declare academy_online_expires: Date | null;
+
+  @Column(DataType.STRING)
+  declare stripe_id: string;
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 
@@ -152,6 +179,9 @@ export class User extends Model {
 
   @HasMany(() => UserNote, 'user_id')
   notes?: Array<UserNote>;
+
+  @HasMany(() => UserLicense)
+  application_licenses?: Array<UserLicense>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

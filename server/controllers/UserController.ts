@@ -38,7 +38,8 @@ import type {
   UserNoteIDParams,
   UserNotesQuery,
   UserNoteBody,
-  DisableUserBody
+  DisableUserBody,
+  UpdateUserAcademyOnlineBody
 } from '../types/users';
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
@@ -683,6 +684,7 @@ export class UserController {
       verify_status: foundUser.verify_status,
       picture: foundUser.avatar || DEFAULT_AVATAR,
       lang: foundUser.get('language')?.tag || 'en-US',
+      academy_online: foundUser.get('academy_online') || 0,
     });
   }
 
@@ -750,6 +752,40 @@ export class UserController {
 
     return res.send({
       data: foundUser,
+    });
+  }
+
+  public async updateUserAcademyOnline(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { academy_online, academy_online_expires_in_days } = req.body as UpdateUserAcademyOnlineBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    let academy_online_expires: Date | null = null;
+    if (typeof academy_online_expires_in_days === 'number' && academy_online_expires_in_days > 0) {
+      academy_online_expires = new Date();
+      academy_online_expires.setDate(academy_online_expires.getDate() + academy_online_expires_in_days);
+    } else if (typeof academy_online_expires_in_days === 'number' && academy_online_expires_in_days === 0) {
+      // if 0 is explicitly passed, set to null (no expiration)
+      academy_online_expires = null;
+    } else {
+      // if not specified, default to 186 days (6 months)
+      academy_online_expires = new Date();
+      academy_online_expires.setDate(academy_online_expires.getDate() + 186);
+    }
+
+    const updatedUser = await foundUser.update({
+      academy_online,
+      academy_online_expires,
+    });
+
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
+
+    return res.send({
+      data: updatedUser,
     });
   }
 
