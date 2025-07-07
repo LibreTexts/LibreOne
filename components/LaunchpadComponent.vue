@@ -186,7 +186,7 @@
         main_url: "https://libretexts.org/academy/online",
         cas_service_url: "https://libretexts.org/casservice",
         default_access: "none",
-        icon: "https://cdn.libretexts.net/Logos/academy_full.png",
+        icon: "https://cdn.libretexts.net/Logos/academy_full.png?v=1",
         description: "Professional Development for Instructional Staff",
         primary_color: "#127BC4",
         hide_from_apps: false,
@@ -203,7 +203,7 @@
       if (pageContext.value.user?.apps) {
         apps.value = pageContext.value.user.apps.filter((a) => a.app_type === 'standalone');
         libs.value = pageContext.value.user.apps.filter((a) => a.app_type === 'library');
-        if(pageContext.value.user?.is_developer ){
+        if(pageContext.value.user?.user_type === 'instructor'){
           // @ts-ignore
           apps.value.unshift(academyOnline);
         }
@@ -215,7 +215,7 @@
         pageContext.value.user.uuid,
       );
 
-      if (pageContext.value.user?.is_developer ){
+      if (pageContext.value.user?.user_type === 'instructor'){
         // @ts-ignore
         apps.value.unshift(academyOnline);
       }
