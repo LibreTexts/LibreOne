@@ -272,6 +272,16 @@
     "skip-trial-action": "Skip trial and purchase",
     "start-trial-error": "Oops, something went wrong while starting your trial. Please try again later or contact our Support Center."
   },
+  "redeem": {
+    "title": "Redeem Access Code",
+    "description": "Purchased an access code? Redeem it here to activate your subscription.",
+    "access-code-placeholder": "Enter your access code (e.g. ABCD-1234-EFGH-5678)",
+    "redeem-action": "Redeem Code",
+    "redeem-success": "Success! Your access code has been redeemed. You can now access your subscription.",
+    "go-to-launchpad": "Go to Launchpad",
+    "redeem-another": "Redeem Another Code",
+    "redeem-error": "Oops, something went wrong while redeeming your access code. Please check your code and try again."
+  },
   "license-card": {
     "expiry-date": "Expiry Date:",
     "perpetual": "Never Expires",

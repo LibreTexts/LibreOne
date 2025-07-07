@@ -17,8 +17,7 @@ storeRouter.route('/access-code/generate').post(
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['app_licenses:write']),
   validate(StoreValidator.generateAccessCodeSchema, 'body'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.generateAccessCode(req, res)),
+  catchInternal((req, res) => controller.generateAccessCode(req, res)),
 );
 
 storeRouter.route('/access-code/bulk').post(
