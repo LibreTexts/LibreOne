@@ -849,7 +849,6 @@ export class AuthController {
   }
 
   public async checkCASInterrupt(req: Request, res: Response): Promise<Response> {
-    console.log("HIT CAS INTERRUPT")
     const { registeredService, username } = req.query as CheckCASInterruptQuery;
 
     // Decide which attribute to match a record with
@@ -915,9 +914,6 @@ export class AuthController {
       });
     }
 
-    console.log("GOT REGISTERED SERVICE")
-    console.log(registeredService)
-
     if (!registeredService) {
       return res.send({
         interrupt: true,
@@ -940,13 +936,10 @@ export class AuthController {
     }
 
     if (registeredService === CAS_CALLBACK) {
-      console.log("REGISTERED SERVICE IS CAS_CALLBACK")
       return allowAccess();
     }
 
     const foundApp = await Application.findOne({ where: { cas_service_url: registeredService } });
-    console.log("FOUND APP")
-    console.log(foundApp)
     if (!foundApp) {
       return res.send({
         interrupt: true,
@@ -989,14 +982,12 @@ export class AuthController {
     // If we got here, the app exists and the user has security access to it.
     // Now, we need to check if the app requires an app license (or we are not currently enforcing app licenses)
     if (process.env.ENFORCE_APP_LICENSES !== 'true' || !foundApp.requires_license) {
-      console.log("APP DOES NOT REQUIRE LICENSE OR LICENSES ARE NOT ENFORCED")
       return allowAccess();
     }
 
     // If we got here, the app requires a license and we are enforcing app licenses.
     if (foundUser.user_type === 'instructor') {
       if (foundUser.verify_status === 'verified') {
-        console.log("USER IS VERIFIED INSTRUCTOR, DOES NOT NEED LICENSE")
         return allowAccess();
       }
     }
@@ -1006,9 +997,6 @@ export class AuthController {
       user_id: foundUser.get('uuid'),
       app_id: foundApp.get('id'),
     });
-
-    console.log("GOT ACCESS RESULT")
-    console.log(accessResult)
 
     if (!accessResult.meta.has_access) {
       const redirectParams = new URLSearchParams({
