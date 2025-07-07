@@ -92,7 +92,7 @@ usersRouter.route('/:uuid/disable').patch(
   catchInternal((req, res) => controller.disableUser(req, res))
 );
 
-usersRouter.route('/:uuid/reEnable').patch(
+usersRouter.route('/:uuid/re-enable').patch(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:write']),
