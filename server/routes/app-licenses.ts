@@ -7,7 +7,7 @@ import {
   validate,
   verifyAPIAuthentication,
 } from '../middleware';
-import express, { application } from 'express';
+import express from 'express';
 import * as AppLicenseValidator from '../validators/app-licenses';
 import errors from '@server/errors';
 
