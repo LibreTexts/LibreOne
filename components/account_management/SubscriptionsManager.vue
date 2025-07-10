@@ -19,7 +19,7 @@
           class="px-4 py-2 h-fit w-auto whitespace-nowrap mt-4 md:mt-0 md:ml-8"
           icon="IconKeyFilled"
         >
-          {{ $t("subscriptions.redeem-code") }}
+          {{ $t("redeem.title") }}
         </ThemedButton>
       </a>
     </div>
