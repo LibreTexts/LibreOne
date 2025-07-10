@@ -83,3 +83,8 @@ export type RedeemAccessCodeRequestBody = {
 export type RedeemAccessCodeRequestParams = {
     user_id: string;
 }
+
+export type AutoApplyAccessRequestBody = {
+    stripe_price_id: string;
+    user_id: string;
+}

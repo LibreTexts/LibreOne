@@ -7,7 +7,7 @@ import {
   validate,
   verifyAPIAuthentication,
 } from '../middleware';
-import express from 'express';
+import express, { application } from 'express';
 import * as AppLicenseValidator from '../validators/app-licenses';
 import errors from '@server/errors';
 
@@ -38,6 +38,14 @@ appLicensesRouter.route('/redeem/:user_id').post(
   catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
 )
 
+appLicensesRouter.route('/auto-apply').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['app_licenses:write']),
+  validate(AppLicenseValidator.autoApplyAccessCodeSchema, 'body'),
+  catchInternal((req, res) => controller.autoApplyAccess(req, res)),
+);
+
 appLicensesRouter.route('/trial/create/:user_id/:app_id').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
@@ -66,10 +74,6 @@ appLicensesRouter.route('/manual-revoke').post(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['app_licenses:write']),
-  (req, res, next) => {
-    console.log(req.body);
-    next();
-  },
   validate(AppLicenseValidator.licenseOperationSchema, 'body'),
   catchInternal((req, res) => controller.revokeLicense(req, res)),
 )

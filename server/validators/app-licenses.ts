@@ -26,6 +26,11 @@ export const redeemAccessCodeSchema = joi.object({
     access_code: uuidValidator.required(),
 });
 
+export const autoApplyAccessCodeSchema = joi.object({
+    stripe_price_id: joi.string().optional().not().empty(),
+    user_id: uuidValidator.required(),
+});
+
 export const userIdWithAppIdSchema = joi.object({
     user_id: uuidValidator.required(),
     app_id: joi.number().integer().required(),

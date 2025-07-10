@@ -7,7 +7,8 @@ import {
   UserLicenseResult,
   RedeemAccessCodeRequestBody,
   UserIDAndAppID,
-  RedeemAccessCodeRequestParams
+  RedeemAccessCodeRequestParams,
+  AutoApplyAccessRequestBody
 } from '@server/types/applicenses';
 import {
   User,
@@ -20,7 +21,7 @@ import {
   ApplicationLicenseEntitlement,
 } from '../models';
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import errors from '../errors';
 
 export class AppLicenseController {
@@ -213,7 +214,7 @@ export class AppLicenseController {
 
   public async getAllUserLicenses(req: Request, res: Response): Promise<Response> {
     const { user_id } = req.params;
-    const { includeRevoked, includeExpired} = req.query as {
+    const { includeRevoked, includeExpired } = req.query as {
       includeRevoked?: boolean;
       includeExpired?: boolean;
     }
@@ -411,7 +412,7 @@ export class AppLicenseController {
   public async applyAccessCodeToLicense(req: Request, res: Response): Promise<Response> {
     const { access_code } = req.body as RedeemAccessCodeRequestBody;
     const { user_id } = req.params as RedeemAccessCodeRequestParams;
-    
+
     const accessCodeRecord = await AccessCode.findOne({
       where: { code: access_code },
       include: [{
@@ -444,18 +445,11 @@ export class AppLicenseController {
       });
     }
 
-    if (accessCodeRecord.application_license.is_academy_license){
-      // Handle academy license specific logic
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + accessCodeRecord.application_license.duration_days || 186); // Fallback to 186 days if duration_days can't be determined
-      const user = await User.findOne({ where: { uuid: user_id } });
-      if (!user) {
+    if (accessCodeRecord.application_license.is_academy_license) {
+      const didApply = await this._handleGrantAcademyAccess(user_id, accessCodeRecord.application_license);
+      if (didApply === 'not_found') {
         return errors.notFound(res, 'User not found');
       }
-
-      user.academy_online = accessCodeRecord.application_license.academy_level || 3; // Fallback to level 3 if not specified
-      user.academy_online_expires = expiresAt; // Set the expiration date
-      await user.save();
 
       // Mark the access code as redeemed
       accessCodeRecord.redeemed = true;
@@ -476,58 +470,27 @@ export class AppLicenseController {
 
     try {
       const currentDate = new Date();
-      const existingLicense = await UserLicense.findOne({
-        where: {
-          user_id,
-          application_license_id: accessCodeRecord.application_license_id
-        },
-        transaction
-      });
-
-      if (existingLicense && !existingLicense.expires_at) {
+      const applyResult = await this._handleApplyAppLicenseToUser(
+        user_id,
+        accessCodeRecord.application_license,
+        transaction,
+        currentDate
+      )
+      if (applyResult.status === 'not_found') {
         await transaction.rollback();
-        return res.status(400).json({
-          success: false,
-          error: 'Cannot apply access code to a perpetual license',
-        });
-      }
-
-      let userLicense;
-      if (existingLicense && accessCodeRecord.application_license.duration_days) {
-        const newExpiryDate = this._calculateNewExpiryDate(
-          existingLicense.expires_at,
-          accessCodeRecord.application_license.duration_days
-        );
-
-        await existingLicense.update({
-          revoked: false,
-          revoked_at: null,
-          last_renewed_at: currentDate,
-          expires_at: newExpiryDate
-        }, { transaction });
-        userLicense = existingLicense;
-      } else if (!existingLicense) {
-        userLicense = await UserLicense.create({
-          user_id: user_id,
-          application_license_id: accessCodeRecord.application_license_id,
-          original_purchase_date: currentDate,
-          last_renewed_at: currentDate,
-          expires_at: accessCodeRecord.application_license.duration_days
-            ? new Date(Date.now() + accessCodeRecord.application_license.duration_days * 24 * 60 * 60 * 1000)
-            : null,
-        }, { transaction });
+        return errors.notFound(res, 'User not found');
       }
 
       await accessCodeRecord.update({
         redeemed: true,
-        redeemed_at: currentDate
+        redeemed_at: currentDate,
       }, { transaction });
 
       await transaction.commit();
 
       return res.status(200).json({
         success: true,
-        message: existingLicense ? 'License renewed successfully' : 'New license created successfully',
+        message: applyResult.status === 'renewed' ? 'License renewed successfully' : 'New license created successfully',
         meta: {
           access_code: {
             code: accessCodeRecord.code,
@@ -535,7 +498,67 @@ export class AppLicenseController {
           },
         },
         data: {
-          license: userLicense,
+          license: applyResult.license || null,
+        }
+      });
+
+    } catch (transactionError) {
+      await transaction.rollback();
+      throw transactionError;
+    }
+  }
+
+  /**
+   * Apply app license a user when purchase through an automated flow (e.g. auto apply option in Store)
+   */
+  public async autoApplyAccess(req: Request, res: Response): Promise<Response> {
+    const { user_id, stripe_price_id } = req.body as AutoApplyAccessRequestBody
+
+    const applicationLicense = await ApplicationLicense.findOne({
+      where: {
+        stripe_id: stripe_price_id
+      }
+    });
+    if (!applicationLicense) {
+      return errors.notFound(res, 'Application license not found for the provided stripe_price_id');
+    }
+
+    if (applicationLicense.is_academy_license){
+      const didApply = await this._handleGrantAcademyAccess(user_id, applicationLicense);
+      if (didApply === 'not_found') {
+        return errors.notFound(res, 'User not found');
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Academy access granted successfully',
+        data: {
+          license: applicationLicense,
+        }
+      });
+    }
+
+    const transaction = await sequelize.transaction();
+    try {
+      const currentDate = new Date();
+      const applyResult = await this._handleApplyAppLicenseToUser(
+        user_id,
+        applicationLicense,
+        transaction,
+        currentDate
+      );
+
+      if (applyResult.status === 'not_found') {
+        await transaction.rollback();
+        return errors.notFound(res, 'User not found');
+      }
+
+      await transaction.commit();
+
+      return res.status(200).json({
+        success: true,
+        message: applyResult.status === 'renewed' ? 'License renewed successfully' : 'New license created successfully',
+        data: {
+          license: applyResult.license || null,
         }
       });
 
@@ -1061,5 +1084,82 @@ export class AppLicenseController {
       },
       data: licenseEntitlements
     });
+  }
+
+  private async _handleGrantAcademyAccess(user_id: string, application_license: ApplicationLicense): Promise<'success' | 'not_found'> {
+    // Handle academy license specific logic
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + application_license.duration_days || 186); // Fallback to 186 days if duration_days can't be determined
+    const user = await User.findOne({ where: { uuid: user_id } });
+    if (!user) {
+      return 'not_found';
+    }
+
+    user.academy_online = application_license.academy_level || 3; // Fallback to level 3 if not specified
+    user.academy_online_expires = expiresAt; // Set the expiration date
+    await user.save();
+    return 'success';
+  }
+
+  private async _handleApplyAppLicenseToUser(user_id: string, application_license: ApplicationLicense, transaction: Transaction, currentDate: Date): Promise<{
+    status: 'created' | 'renewed' | 'not_found';
+    license?: UserLicense;
+    error?: string;
+  }> {
+    console.log(`Applying license ${application_license.uuid} to user ${user_id}`);
+    const existingLicense = await UserLicense.findOne({
+      where: {
+        user_id,
+        application_license_id: application_license.uuid
+      },
+      transaction
+    });
+
+    if (existingLicense && !existingLicense.expires_at) {
+      await transaction.rollback();
+      return {
+        status: 'not_found',
+        error: 'This license is perpetual and cannot be renewed'
+      }
+    }
+
+    let userLicense;
+    if (existingLicense && application_license.duration_days) {
+      const newExpiryDate = this._calculateNewExpiryDate(
+        existingLicense.expires_at,
+        application_license.duration_days
+      );
+
+      await existingLicense.update({
+        revoked: false,
+        revoked_at: null,
+        last_renewed_at: currentDate,
+        expires_at: newExpiryDate
+      }, { transaction });
+      userLicense = existingLicense;
+      return {
+        status: 'renewed',
+        license: userLicense
+      }
+    } else if (!existingLicense) {
+      userLicense = await UserLicense.create({
+        user_id: user_id,
+        application_license_id: application_license.uuid,
+        original_purchase_date: currentDate,
+        last_renewed_at: currentDate,
+        expires_at: application_license.duration_days
+          ? new Date(Date.now() + application_license.duration_days * 24 * 60 * 60 * 1000)
+          : null,
+      }, { transaction });
+      return {
+        status: 'created',
+        license: userLicense
+      };
+    }
+
+    return {
+      status: 'not_found',
+      error: 'No valid license found for this user and application'
+    }
   }
 }
