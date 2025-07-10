@@ -182,11 +182,11 @@ export class StoreController {
 
     // Build fuzzy search query (only search by name)
     const fuzzyQuery = query ? `%${query}%` : null;
-    const queryCriteria = { name: { [Op.like]: fuzzyQuery } };
-    const whereSearch = query ? queryCriteria : null;
+    const queryCriteria = { name: { [Op.like]: fuzzyQuery }, is_academy_license: false };
+    const whereSearch = query ? queryCriteria : { is_academy_license: false };
 
     const { count, rows } = await ApplicationLicense.findAndCountAll({
-      ...(whereSearch && { where: whereSearch }),
+      where: whereSearch,
       order: [['name', 'ASC']],
       attributes: ['uuid', 'name', 'stripe_id', 'perpetual'],
     });

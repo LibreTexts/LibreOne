@@ -19,8 +19,7 @@ appLicensesRouter.route('/user/:user_id').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
   validate(AppLicenseValidator.userIdParamSchema, 'params'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.getAllUserLicenses(req, res)),
+  catchInternal((req, res) => controller.getAllUserLicenses(req, res)),
 );
 
 appLicensesRouter.route('/check-access/:user_id/:app_id').get(
@@ -39,12 +38,19 @@ appLicensesRouter.route('/redeem/:user_id').post(
   catchInternal((req, res) => controller.applyAccessCodeToLicense(req, res)),
 )
 
+appLicensesRouter.route('/auto-apply').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['app_licenses:write']),
+  validate(AppLicenseValidator.autoApplyAccessCodeSchema, 'body'),
+  catchInternal((req, res) => controller.autoApplyAccess(req, res)),
+);
+
 appLicensesRouter.route('/trial/create/:user_id/:app_id').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),
   validate(AppLicenseValidator.userIdWithAppIdSchema, 'params'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.createTrial(req, res)),
+  catchInternal((req, res) => controller.createTrial(req, res)),
 )
 
 appLicensesRouter.route('/renew/:uuid').patch(
@@ -61,17 +67,15 @@ appLicensesRouter.route('/manual-grant').post(
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['app_licenses:write']),
   validate(AppLicenseValidator.licenseOperationSchema, 'body'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.manualGrantLicense(req, res)),
+  catchInternal((req, res) => controller.manualGrantLicense(req, res)),
 )
 
 appLicensesRouter.route('/manual-revoke').post(
   verifyAPIAuthentication,
-  ensureActorIsAPIUser, 
+  ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['app_licenses:write']),
   validate(AppLicenseValidator.licenseOperationSchema, 'body'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.revokeLicense(req, res)),
+  catchInternal((req, res) => controller.revokeLicense(req, res)),
 )
 
 appLicensesRouter.route('/organization/:org_id').get(
