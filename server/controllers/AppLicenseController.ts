@@ -214,10 +214,8 @@ export class AppLicenseController {
 
   public async getAllUserLicenses(req: Request, res: Response): Promise<Response> {
     const { user_id } = req.params;
-    const { includeRevoked, includeExpired } = req.query as {
-      includeRevoked?: boolean;
-      includeExpired?: boolean;
-    }
+    const includeRevoked = req.query.includeRevoked === 'true';
+    const includeExpired = req.query.includeExpired === 'true';
 
     const result = await this._getAllUserLicenses(user_id, undefined, {
       includeRevoked,
