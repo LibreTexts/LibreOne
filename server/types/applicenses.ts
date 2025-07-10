@@ -33,6 +33,7 @@ export type CheckLicenseAccessResponse = ({
         has_access: false;
         status: 'expired';
         granted_by: AppLicenseGrantedBy;
+        was_trial?: boolean;
     },
     data: {
         license: (UserLicense & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });

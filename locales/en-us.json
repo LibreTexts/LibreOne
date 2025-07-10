@@ -261,7 +261,6 @@
     "title": "Your Subscriptions",
     "description": "Manage your subscriptions to LibreTexts applications. Reading and creating textbooks on LibreTexts will {always} be free, but we offer some of our applications as subscriptions to offset the costs of maintaining and developing them.",
     "always": "always",
-    "redeem-code": "Redeem Access Code",
     "browse-store": "Browse Subscriptions in the LibreTexts Store",
     "no-active-subscriptions": "No active subscriptions found. You can browse our store to find a subscription that fits your needs.",
     "start-trial-header": "Start your {application} trial today.",
@@ -270,7 +269,14 @@
     "start-trial-success": "Success! Your {application} trial has started. You can now access all features of the application for 14 days. Don't worry, we'll remind you before your trial ends.",
     "start-trial-continue": "Continue to {application}",
     "skip-trial-action": "Skip trial and purchase",
-    "start-trial-error": "Oops, something went wrong while starting your trial. Please try again later or contact our Support Center."
+    "start-trial-error": "Oops, something went wrong while starting your trial. Please try again later or contact our Support Center.",
+    "have-code": "Have an access code?",
+    "trial-expired-header": "Your {application} trial has expired.",
+    "trial-expired-desc": "Your 14-day free trial of {application} has ended. You can continue using the application by purchasing a subscription or redeeming an access code.",
+    "trial-expired-action": "Purchase Access in Store",
+    "access-expired-header": "Your {application} access has expired.",
+    "access-expired-desc": "Your access to {application} has expired. You can continue using the application by purchasing another subscription or redeeming an access code.",
+    "access-expired-action": "Purchase Access in Store"
   },
   "redeem": {
     "title": "Redeem Access Code",

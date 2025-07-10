@@ -1004,6 +1004,13 @@ export class AuthController {
         ...(req.query.service && { service_url: req.query.service as string }),
       });
 
+      const expiredType = accessResult.meta.status === "expired" ? accessResult.meta.was_trial ? 'trial' : 'license' : undefined;
+      if (expiredType) {
+        redirectParams.set('expired_type', expiredType);
+      }
+
+      const goLink = `${SELF_BASE}/interrupt/trial?${redirectParams.toString()}`;
+
       return res.send({
         interrupt: true,
         block: false,
@@ -1011,7 +1018,7 @@ export class AuthController {
         message: 'Just a moment while we redirect you...',
         autoRedirect: true,
         links: {
-          'Go': `${SELF_BASE}/interrupt/trial?${redirectParams.toString()}`,
+          'Go': goLink,
         },
       });
     }

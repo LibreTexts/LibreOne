@@ -32,8 +32,7 @@ storeRouter.route('/access-code/bulk').post(
 storeRouter.route('/products').get(
   verifyAPIAuthentication,
   validate(StoreValidator.getAllAppLicensesSchema, 'query'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.getAllAppLicenses(req, res)),
+  catchInternal((req, res) => controller.getAllAppLicenses(req, res)),
 );
 
 

@@ -213,9 +213,14 @@ export class AppLicenseController {
 
   public async getAllUserLicenses(req: Request, res: Response): Promise<Response> {
     const { user_id } = req.params;
+    const { includeRevoked, includeExpired} = req.query as {
+      includeRevoked?: boolean;
+      includeExpired?: boolean;
+    }
+
     const result = await this._getAllUserLicenses(user_id, undefined, {
-      includeRevoked: false,
-      onlyActive: true
+      includeRevoked,
+      onlyActive: !includeExpired,
     });
 
     if (!result) {
@@ -229,10 +234,19 @@ export class AppLicenseController {
 
     const activeLicenses = [...directLicenses, ...orgLicenses];
 
+    // Sort by last_renewed_at descending
+    const sortedLicenses = activeLicenses.sort((a, b) => {
+      if (!a.last_renewed_at && !b.last_renewed_at) return 0;
+      // treat null as newer
+      if (!a.last_renewed_at) return -1;
+      if (!b.last_renewed_at) return 1;
+      return new Date(b.last_renewed_at).getTime() - new Date(a.last_renewed_at).getTime();
+    });
+
     return res.status(200).json({
       success: true,
       message: "User licenses fetched successfully",
-      data: activeLicenses
+      data: sortedLicenses
     });
   }
 
@@ -714,6 +728,7 @@ export class AppLicenseController {
 
   public async manualGrantLicense(req: Request, res: Response): Promise<Response> {
     const data = req.body as LicenseOperationRequestBody;
+    console.log(data)
     if (!data || (!('user_id' in data) && !('org_id' in data)) || !data.application_license_id) {
       return res.status(400).json({
         success: false,
@@ -832,6 +847,7 @@ export class AppLicenseController {
 
   public async revokeLicense(req: Request, res: Response): Promise<Response> {
     const data = req.body as LicenseOperationRequestBody;
+    console.log(data)
 
     const application_license_id = data.application_license_id;
     const user_id = 'user_id' in data ? data.user_id : null;
