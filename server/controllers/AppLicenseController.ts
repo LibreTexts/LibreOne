@@ -25,27 +25,46 @@ import { Op, Transaction } from 'sequelize';
 import errors from '../errors';
 
 export class AppLicenseController {
-  private _evaluateLicenseStatus(license: UserLicense | OrganizationLicenseEntitlement, includeRevoked: boolean = true, appId?: number): AppLicenseStatus {
+  private _evaluateLicenseStatus(licenses: (UserLicense | OrganizationLicenseEntitlement)[], includeRevoked: boolean = true, appId?: number): AppLicenseStatus {
     const now = new Date();
+    let status: AppLicenseStatus = 'none';
 
-    if (includeRevoked && license.revoked) return 'revoked';
-    if (!license.expires_at) return 'active';
-    if (license.expires_at && new Date(license.expires_at) < now) return 'expired';
-    if (!license.expires_at || new Date(license.expires_at) > now) return 'active';
+    // We need to iterate through all licenses and determine the status
+    // We can't immediately return the license status, because a user can have multiple licenses that may apply to the same application
+    if (!licenses || licenses.length === 0) {
+      return 'none';
+    }
+
+    for (const license of licenses) {
+      if (!license) continue;
+      if (!license.application_license) continue;
+
+      if (appId) {
+        if (!license.application_license.entitlements) continue;
+        const foundApp = license.application_license.entitlements.some(entitlement => {
+          return entitlement.application_id === appId;
+        });
+        if (!foundApp) continue;
+      }
+
+
+      if (includeRevoked && license.revoked) {
+        // If we find a revoked license, don't continue evaluating it further
+        status = 'revoked';
+        continue;
+      }
+
+      if (!license.expires_at) {
+        return 'active';
+      }
+
+      if (license.expires_at && new Date(license.expires_at) < now) status = 'expired';
+      if (license.expires_at && new Date(license.expires_at) > now) {
+        return 'active'; // As soon as we find an active license, we can return 'active'
+      }
+    }
+
     return 'none';
-  }
-
-  private _getLicenseForAppStatus(licenses: UserLicenseResult['directLicenses'] | UserLicenseResult['orgLicenses'], appId: number): AppLicenseStatus | null {
-    const validLicense = licenses.find((license) => {
-      if (!license.application_license) return false;
-      if (!license.application_license.entitlements) return false;
-      const foundApp = license.application_license.entitlements.some(entitlement => {
-        return entitlement.application_id === appId;
-      });
-      return !!foundApp;
-    });
-    if (!validLicense) return null;
-    return this._evaluateLicenseStatus(validLicense);
   }
 
   private _calculateNewExpiryDate(currentExpiryDate: Date | null, duration_days: number): Date {
@@ -270,8 +289,8 @@ export class AppLicenseController {
 
       const { directLicenses, orgLicenses } = user;
 
-      const directAccess = this._getLicenseForAppStatus(directLicenses, app_id);
-      const orgAccess = this._getLicenseForAppStatus(orgLicenses, app_id);
+      const directAccess = this._evaluateLicenseStatus(directLicenses, true, app_id);
+      const orgAccess = this._evaluateLicenseStatus(orgLicenses, true, app_id);
 
       // Priority order: active > expired > revoked > none
       let responseData: CheckLicenseAccessResponse;
@@ -512,17 +531,22 @@ export class AppLicenseController {
   public async autoApplyAccess(req: Request, res: Response): Promise<Response> {
     const { user_id, stripe_price_id } = req.body as AutoApplyAccessRequestBody
 
+    console.log(`Auto applying access for user ${user_id} with stripe_price_id ${stripe_price_id}`);
+
     const applicationLicense = await ApplicationLicense.findOne({
       where: {
         stripe_id: stripe_price_id
       }
     });
     if (!applicationLicense) {
+      console.log(`No application license found for stripe_price_id: ${stripe_price_id}`);
       return errors.notFound(res, 'Application license not found for the provided stripe_price_id');
     }
 
-    if (applicationLicense.is_academy_license){
+    if (applicationLicense.is_academy_license) {
+      console.log(`Application license is an academy license, granting access for user ${user_id}`);
       const didApply = await this._handleGrantAcademyAccess(user_id, applicationLicense);
+      console.log(`Did apply academy access: ${didApply}`);
       if (didApply === 'not_found') {
         return errors.notFound(res, 'User not found');
       }
@@ -537,6 +561,7 @@ export class AppLicenseController {
 
     const transaction = await sequelize.transaction();
     try {
+      console.log(`Applying application license ${applicationLicense.uuid} to user ${user_id}`);
       const currentDate = new Date();
       const applyResult = await this._handleApplyAppLicenseToUser(
         user_id,
@@ -545,6 +570,7 @@ export class AppLicenseController {
         currentDate
       );
 
+      console.log(`Apply result: ${JSON.stringify(applyResult)}`);
       if (applyResult.status === 'not_found') {
         await transaction.rollback();
         return errors.notFound(res, 'User not found');
