@@ -550,13 +550,6 @@ export class AppLicenseController {
       if (didApply === 'not_found') {
         return errors.notFound(res, 'User not found');
       }
-      return res.status(200).json({
-        success: true,
-        message: 'Academy access granted successfully',
-        data: {
-          license: applicationLicense,
-        }
-      });
     }
 
     const transaction = await sequelize.transaction();
