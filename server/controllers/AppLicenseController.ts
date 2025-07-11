@@ -64,7 +64,7 @@ export class AppLicenseController {
       }
     }
 
-    return 'none';
+    return status;
   }
 
   private _calculateNewExpiryDate(currentExpiryDate: Date | null, duration_days: number): Date {
