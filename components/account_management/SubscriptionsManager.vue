@@ -2,28 +2,30 @@
   <div v-bind="$attrs">
     <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
       <div>
-        <h1 class="text-3xl font-medium">{{ $t("subscriptions.title") }}</h1>
-        <p class="mt-2 text-left text-slate-500">
-          <i18n-t keypath="subscriptions.description">
-            <template #always>
-              <span class="italic font-bold">{{
-                $t("subscriptions.always")
-              }}</span>
-            </template>
-          </i18n-t>
-        </p>
+        <h1 class="text-xl font-medium">{{ $t("subscriptions.title") }}</h1>
+        <div class="flex-grow border-t border-gray-400" />
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+          <p class="mt-2 text-left text-slate-500 flex-1">
+            <i18n-t keypath="subscriptions.description">
+              <template #always>
+                <span class="italic font-bold">{{
+                  $t("subscriptions.always")
+                }}</span>
+              </template>
+            </i18n-t>
+          </p>
+          <a href="/redeem" class="mt-4 md:mt-0 md:ml-4">
+            <ThemedButton
+              variant="default"
+              class="px-4 py-2 h-fit w-auto whitespace-nowrap"
+              icon="IconKeyFilled"
+            >
+              {{ $t("redeem.title") }}
+            </ThemedButton>
+          </a>
+        </div>
       </div>
-      <a href="/redeem">
-        <ThemedButton
-          variant="default"
-          class="px-4 py-2 h-fit w-auto whitespace-nowrap mt-4 md:mt-0 md:ml-8"
-          icon="IconKeyFilled"
-        >
-          {{ $t("redeem.title") }}
-        </ThemedButton>
-      </a>
     </div>
-
     <div
       v-if="userLicenses.length === 0"
       class="text-center py-8 text-gray-500"
