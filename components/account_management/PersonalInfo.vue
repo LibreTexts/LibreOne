@@ -105,15 +105,6 @@
           {{ pageContext.user?.last_name }}
         </p>
       </div>
-
-      <div class="my-4">
-        <p class="text-sm font-light mt-4">
-          {{ $t("common.email") }}
-        </p>
-        <p class="font-medium">
-          {{ pageContext.user?.email }}
-        </p>
-      </div>
     </div>
     <ThemedButton
       @click="(e) => (editMode ? submitForm(e) : (editMode = true))"

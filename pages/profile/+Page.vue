@@ -24,6 +24,9 @@
         >
           {{ $t("delete-account.request") }}
         </a>
+        <div class="my-4">
+          <SubscriptionsManager />
+        </div>
       </div>
     </div>
   </StandardPageLayout>
@@ -34,6 +37,7 @@ import { ref } from "vue";
 import PersonalInfo from "../../components/account_management/PersonalInfo.vue";
 import { usePageContext } from "@renderer/usePageContext";
 import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
+import SubscriptionsManager from '../../components/account_management/SubscriptionsManager.vue';
 import { usePlainLayout } from "@renderer/usePlainLayout";
 
 const pageContext = usePageContext().value;
