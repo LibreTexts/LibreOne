@@ -183,10 +183,6 @@
     {
       title: 'Security',
       link: '/security',
-    },
-    {
-      title: 'Subscriptions',
-      link: '/subscriptions',
     }
   ];
   const instructorItems = [
