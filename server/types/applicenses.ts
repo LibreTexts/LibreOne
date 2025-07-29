@@ -94,6 +94,7 @@ export type UserLicenseResultSummary = {
     user: User | null;
     application_access: Array<{
         application_id: number;
+        application_slug: string;
         status: AppLicenseStatus;
         expires_at: Date | null;
         has_access: boolean;

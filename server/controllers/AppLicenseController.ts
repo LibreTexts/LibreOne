@@ -452,6 +452,7 @@ export class AppLicenseController {
         const status = this._evaluateLicenseStatus([license], true, entitlement.application_id);
         appResults.push({
           application_id: entitlement.application_id,
+          application_slug: entitlement.application?.slug || '',
           expires_at: license.expires_at,
           status: status,
           granted_by: license.granted_by,
