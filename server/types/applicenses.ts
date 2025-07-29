@@ -1,4 +1,4 @@
-import { ApplicationLicense, ApplicationLicenseEntitlement, OrganizationLicenseEntitlement, UserLicense } from "@server/models";
+import { ApplicationLicense, ApplicationLicenseEntitlement, OrganizationLicenseEntitlement, UserLicenseEntitlement } from "@server/models";
 import { User } from "./users";
 
 export type AppLicenseStatus = 'active' | 'expired' | 'revoked' | 'none' | 'error';
@@ -25,7 +25,7 @@ export type CheckLicenseAccessResponse = ({
         granted_by: AppLicenseGrantedBy;
     },
     data: {
-        license: (UserLicense & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
+        license: (UserLicenseEntitlement & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
     },
     message: string;
 } | {
@@ -36,7 +36,7 @@ export type CheckLicenseAccessResponse = ({
         was_trial?: boolean;
     },
     data: {
-        license: (UserLicense & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
+        license: (UserLicenseEntitlement & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
     },
     message: string;
 } | {
@@ -46,7 +46,7 @@ export type CheckLicenseAccessResponse = ({
         granted_by: AppLicenseGrantedBy;
     },
     data: {
-        license: (UserLicense & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
+        license: (UserLicenseEntitlement & { granted_by: 'self' }) | (OrganizationLicenseEntitlement & { granted_by: 'org' });
     },
     message: string;
 } | {
@@ -73,7 +73,7 @@ export type LicenseOperationRequestBody = {
 
 export type UserLicenseResult = {
     userData: User | null;
-    directLicenses: Array<UserLicense & { granted_by: 'self'; application_license: ApplicationLicenseWithEntitlements }>;
+    directLicenses: Array<UserLicenseEntitlement & { granted_by: 'self'; application_license: ApplicationLicenseWithEntitlements }>;
     orgLicenses: Array<OrganizationLicenseEntitlement & { granted_by: 'org'; application_license: ApplicationLicenseWithEntitlements }>;
 }
 
@@ -87,4 +87,16 @@ export type RedeemAccessCodeRequestParams = {
 export type AutoApplyAccessRequestBody = {
     stripe_price_id: string;
     user_id: string;
+}
+
+
+export type UserLicenseResultSummary = {
+    user: User | null;
+    application_access: Array<{
+        application_id: number;
+        status: AppLicenseStatus;
+        expires_at: Date | null;
+        has_access: boolean;
+        granted_by: AppLicenseGrantedBy;
+    }>;
 }

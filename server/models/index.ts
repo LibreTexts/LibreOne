@@ -35,7 +35,7 @@ import { UserNote } from './UserNote';
 import { OrganizationLicenseEntitlement } from './OrganizationLicenseEntitlement';
 import { ApplicationLicense } from './ApplicationLicense';
 import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
-import { UserLicense } from './UserLicense';
+import { UserLicenseEntitlement } from './UserLicenseEntitlement';
 import { AccessCode } from './AccessCode';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
@@ -83,11 +83,11 @@ sequelize.addModels([
   OrganizationSystem,
   User,
   UserApplication,
+  UserLicenseEntitlement,
   UserNote,
   UserOrganization,
   VerificationRequest,
   VerificationRequestHistory,
-  UserLicense,
 ]);
 
 /**
@@ -205,7 +205,7 @@ export async function initDatabase() {
  */
 export async function connectDatabase(): Promise<boolean> {
   try {
-    await sequelize.sync({ alter:process.env.NODE_ENV === 'test'});//process.env.NODE_ENV === 'test'
+    await sequelize.sync({ alter:process.env.NODE_ENV==='test'});//process.env.NODE_ENV === 'test'
     console.log('[DB] Established database connection.');
     initDatabase();
   } catch (e) {
@@ -248,6 +248,6 @@ export {
   VerificationRequest,
   VerificationRequestHistory,
   UserNote,
-  UserLicense,
+  UserLicenseEntitlement,
   AccessCode,
 };

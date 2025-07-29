@@ -14,6 +14,7 @@ import {
   } from 'sequelize-typescript';
   import { ApplicationLicense } from './ApplicationLicense';
   import { Organization } from './Organization';
+  import { UUIDV4 } from 'sequelize';
 
   @Table({
     timestamps: true,
@@ -27,14 +28,20 @@ import {
     ]
   })
   export class OrganizationLicenseEntitlement extends Model {
-    @ForeignKey(() => ApplicationLicense)
+    @PrimaryKey
+    @AllowNull(false)
+    @Default(UUIDV4)
     @Column(DataType.STRING)
-    declare application_license_id: string;
-  
+    declare uuid: string;
+
     @ForeignKey(() => Organization)
     @Column(DataType.INTEGER)
     declare org_id: number;
 
+    @ForeignKey(() => ApplicationLicense)
+    @Column(DataType.STRING)
+    declare application_license_id: string;
+  
     @AllowNull(false)
     @Column(DataType.DATE)
     declare original_purchase_date: Date;

@@ -8,13 +8,14 @@ import {
   RedeemAccessCodeRequestBody,
   UserIDAndAppID,
   RedeemAccessCodeRequestParams,
-  AutoApplyAccessRequestBody
+  AutoApplyAccessRequestBody,
+  UserLicenseResultSummary
 } from '@server/types/applicenses';
 import {
   User,
   ApplicationLicense,
   AccessCode,
-  UserLicense,
+  UserLicenseEntitlement,
   Organization,
   OrganizationLicenseEntitlement,
   sequelize,
@@ -25,7 +26,7 @@ import { Op, Transaction } from 'sequelize';
 import errors from '../errors';
 
 export class AppLicenseController {
-  private _evaluateLicenseStatus(licenses: (UserLicense | OrganizationLicenseEntitlement)[], includeRevoked: boolean = true, appId?: number): AppLicenseStatus {
+  private _evaluateLicenseStatus(licenses: (UserLicenseEntitlement | OrganizationLicenseEntitlement)[], includeRevoked: boolean = true, appId?: number): AppLicenseStatus {
     const now = new Date();
     let status: AppLicenseStatus = 'none';
 
@@ -83,13 +84,13 @@ export class AppLicenseController {
     }
   }
 
-  private async _getUserLicense(userId: string, applicationLicenseId?: string, plain: boolean = false): Promise<UserLicense | null> {
+  private async _getUserLicenseEntitlement(userId: string, applicationLicenseId?: string, plain: boolean = false): Promise<UserLicenseEntitlement | null> {
     const whereClause: any = { user_id: userId };
     if (applicationLicenseId) {
       whereClause.application_license_id = applicationLicenseId;
     }
 
-    const license = await UserLicense.findOne({
+    const license = await UserLicenseEntitlement.findOne({
       where: whereClause,
       include: [{
         model: ApplicationLicense,
@@ -113,7 +114,7 @@ export class AppLicenseController {
    * 
    * Note: onlyExpired and onlyActive should not both be true simultaneously.
    */
-  private async _getAllUserLicenses(
+  private async _getAllUserLicenseEntitlements(
     userId: string,
     applicationLicenseId?: string,
     options?: {
@@ -161,7 +162,7 @@ export class AppLicenseController {
     const user = await User.findByPk(userId, {
       include: [
         {
-          model: UserLicense,
+          model: UserLicenseEntitlement,
           as: 'application_licenses',
           where: Object.keys(licenseWhere).length ? licenseWhere : undefined,
           required: false,
@@ -231,12 +232,12 @@ export class AppLicenseController {
     return { userData, directLicenses, orgLicenses };
   }
 
-  public async getAllUserLicenses(req: Request, res: Response): Promise<Response> {
+  public async getAllUserLicenseEntitlements(req: Request, res: Response): Promise<Response> {
     const { user_id } = req.params;
     const includeRevoked = req.query.includeRevoked === 'true';
     const includeExpired = req.query.includeExpired === 'true';
 
-    const result = await this._getAllUserLicenses(user_id, undefined, {
+    const result = await this._getAllUserLicenseEntitlements(user_id, undefined, {
       includeRevoked,
       onlyActive: !includeExpired,
     });
@@ -273,7 +274,7 @@ export class AppLicenseController {
     app_id: number;
   }): Promise<CheckLicenseAccessResponse> {
     try {
-      const user = await this._getAllUserLicenses(user_id, undefined, {
+      const user = await this._getAllUserLicenseEntitlements(user_id, undefined, {
         includeRevoked: true
       });
 
@@ -424,6 +425,67 @@ export class AppLicenseController {
     }
 
     return res.status(200).json(accessData);
+  }
+
+  public async getUserActiveLicenseSummary(user_id: string): Promise<UserLicenseResultSummary | null> {
+    const userLicenses = await this._getAllUserLicenseEntitlements(user_id, undefined, { onlyActive: true });
+
+    if (!userLicenses) {
+      return null;
+    }
+
+    const allLicenses = [...userLicenses.directLicenses, ...userLicenses.orgLicenses];
+
+    // Break down licenses into a record for each application that the user has access to
+    if (allLicenses.length === 0) {
+      return {
+        user: userLicenses.userData,
+        application_access: []
+      };
+    }
+
+    // Map licenses to a summary format
+    const appResults: UserLicenseResultSummary['application_access'] = []
+    allLicenses.forEach(license => {
+      const licenseEntitlements = license.application_license?.entitlements || [];
+      for (const entitlement of licenseEntitlements) {
+        const status = this._evaluateLicenseStatus([license], true, entitlement.application_id);
+        appResults.push({
+          application_id: entitlement.application_id,
+          expires_at: license.expires_at,
+          status: status,
+          granted_by: license.granted_by,
+          has_access: status === 'active'
+        });
+      }
+    });
+
+    // Remove duplicates by application_id
+    const uniqueAppResults: UserLicenseResultSummary['application_access'] = [];
+    for (const appResult of appResults) {
+      const existingIndex = uniqueAppResults.findIndex(r => r.application_id === appResult.application_id);
+      if (existingIndex === -1) {
+        uniqueAppResults.push(appResult);
+      } else {
+        // Prefer perpetual licenses (if any), otherwise keep the one with the latest expiry date
+        const existing = uniqueAppResults[existingIndex];
+        if (!existing.expires_at && appResult.expires_at){
+          // Existing is perpetual, keep it
+          continue;
+        } else if (existing.expires_at && !appResult.expires_at) {
+          // App result is perpetual, replace existing
+          uniqueAppResults[existingIndex] = appResult;
+        } else if (appResult.expires_at && existing.expires_at && new Date(appResult.expires_at) > new Date(existing.expires_at)) {
+          // Both have expiry dates, keep the one with the latest expiry date
+          uniqueAppResults[existingIndex] = appResult;
+        }
+      }
+    }
+
+    return {
+      user: userLicenses.userData,
+      application_access: uniqueAppResults
+    };
   }
 
   public async applyAccessCodeToLicense(req: Request, res: Response): Promise<Response> {
@@ -588,7 +650,7 @@ export class AppLicenseController {
   public async createTrial(req: Request, res: Response): Promise<Response> {
     const { user_id, app_id } = (req.params as unknown) as UserIDAndAppID;
 
-    const existingLicenses = await UserLicense.findAll({
+    const existingLicenses = await UserLicenseEntitlement.findAll({
       where: {
         user_id,
       },
@@ -695,7 +757,7 @@ export class AppLicenseController {
 
     console.log(`Creating trial license for user ${user_id} and app license ${applicationLicense.get('uuid')} with expires_at: ${expiresAt}`);
 
-    const userLicense = await UserLicense.create({
+    const userLicense = await UserLicenseEntitlement.create({
       user_id,
       application_license_id: applicationLicense.get('uuid'),
       original_purchase_date: new Date(),
@@ -717,7 +779,7 @@ export class AppLicenseController {
     const { uuid: user_id } = req.params;
     const { application_license_id } = req.body;
 
-    const userLicense = await this._getUserLicense(user_id, application_license_id, false);
+    const userLicense = await this._getUserLicenseEntitlement(user_id, application_license_id, false);
 
     if (!userLicense) {
       return res.status(404).json({
@@ -816,9 +878,9 @@ export class AppLicenseController {
         ? new Date(currentDate.getTime() + applicationLicense.duration_days * 24 * 60 * 60 * 1000)
         : null;
 
-      let license: UserLicense | OrganizationLicenseEntitlement | null = null;
+      let license: UserLicenseEntitlement | OrganizationLicenseEntitlement | null = null;
       if (user_id) {
-        const userLicense = await this._getUserLicense(user_id, application_license_id, false);
+        const userLicense = await this._getUserLicenseEntitlement(user_id, application_license_id, false);
 
         if (userLicense) {
           await userLicense.update({
@@ -829,7 +891,7 @@ export class AppLicenseController {
           }, { transaction });
           license = userLicense;
         } else {
-          license = await UserLicense.create({
+          license = await UserLicenseEntitlement.create({
             user_id,
             application_license_id,
             original_purchase_date: currentDate,
@@ -894,11 +956,11 @@ export class AppLicenseController {
     const org_id = 'org_id' in data ? data.org_id : null;
     const currentDate = new Date();
 
-    let license: UserLicense | OrganizationLicenseEntitlement | null = null;
+    let license: UserLicenseEntitlement | OrganizationLicenseEntitlement | null = null;
     let licenseType: AppLicenseType;
 
     if (user_id) {
-      license = await this._getUserLicense(user_id, application_license_id, false);
+      license = await this._getUserLicenseEntitlement(user_id, application_license_id, false);
       licenseType = 'user';
     } else if (org_id) {
       license = await OrganizationLicenseEntitlement.findOne({
@@ -930,7 +992,7 @@ export class AppLicenseController {
     }
 
     if (user_id) {
-      await UserLicense.update(
+      await UserLicenseEntitlement.update(
         {
           revoked: true,
           revoked_at: currentDate
@@ -979,7 +1041,7 @@ export class AppLicenseController {
     let licenseType: AppLicenseType;
 
     if (user_id) {
-      license = await this._getUserLicense(user_id, application_license_id, true);
+      license = await this._getUserLicenseEntitlement(user_id, application_license_id, true);
       licenseType = 'user';
     } else {
       license = await OrganizationLicenseEntitlement.findOne({
@@ -1032,7 +1094,7 @@ export class AppLicenseController {
 
   public async getUserExpiredLicenses(req: Request, res: Response): Promise<Response> {
     const { uuid: user_id } = req.params;
-    const result = await this._getAllUserLicenses(user_id, undefined, {
+    const result = await this._getAllUserLicenseEntitlements(user_id, undefined, {
       includeRevoked: false,
       onlyExpired: true
     });
@@ -1066,7 +1128,7 @@ export class AppLicenseController {
         {
           model: OrganizationLicenseEntitlement,
           as: 'application_license_entitlements',
-          attributes: ['id', 'original_purchase_date', 'expires_at'],
+          attributes: ['uuid', 'original_purchase_date', 'expires_at'],
           where: {
             revoked: false,
             [Op.or]: [
@@ -1120,11 +1182,11 @@ export class AppLicenseController {
 
   private async _handleApplyAppLicenseToUser(user_id: string, application_license: ApplicationLicense, transaction: Transaction, currentDate: Date): Promise<{
     status: 'created' | 'renewed' | 'not_found';
-    license?: UserLicense;
+    license?: UserLicenseEntitlement;
     error?: string;
   }> {
     console.log(`Applying license ${application_license.uuid} to user ${user_id}`);
-    const existingLicense = await UserLicense.findOne({
+    const existingLicense = await UserLicenseEntitlement.findOne({
       where: {
         user_id,
         application_license_id: application_license.uuid
@@ -1159,7 +1221,7 @@ export class AppLicenseController {
         license: userLicense
       }
     } else if (!existingLicense) {
-      userLicense = await UserLicense.create({
+      userLicense = await UserLicenseEntitlement.create({
         user_id: user_id,
         application_license_id: application_license.uuid,
         original_purchase_date: currentDate,
