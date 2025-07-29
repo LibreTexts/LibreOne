@@ -21,6 +21,7 @@ export const EVENT_SUBSCRIBER_EVENTS = [
   "organization_system:created",
   "organization_system:updated",
   "organization_system:deleted",
+  "user_app_license:updated"
 ];
 
 export class EventSubscriberController {
@@ -255,6 +256,33 @@ export class EventSubscriberController {
       organizations: [organization],
     };
 
+    const application_access = [
+      {
+        application_id: 1,
+        application_slug: "adapt-stage",
+        status: "active",
+        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days from now
+        has_access: true,
+        granted_by: "self",
+      },
+      {
+        application_id: 2,
+        application_slug: "jupyterhub",
+        status: "expired",
+        expires_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), // 10 days ago
+        has_access: false,
+        granted_by: "self",
+      },
+      {
+        application_id: 1,
+        application_slug: "adapt-stage",
+        status: "active",
+        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45), // 45 days from now
+        has_access: true,
+        granted_by: "org",
+      }
+    ]
+
     switch (event) {
       case "user:created":
         return user;
@@ -283,6 +311,11 @@ export class EventSubscriberController {
         };
       case "organization_system:deleted":
         return { id: 1 };
+      case "user_app_license:updated":
+        return {
+          user,
+          application_access
+        }
       default:
         throw new Error(`Unknown event type ${event}`);
     }

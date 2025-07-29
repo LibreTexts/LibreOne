@@ -24,6 +24,7 @@ import {
 import { Request, Response } from 'express';
 import { Op, Transaction } from 'sequelize';
 import errors from '../errors';
+import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export class AppLicenseController {
   private _evaluateLicenseStatus(licenses: (UserLicenseEntitlement | OrganizationLicenseEntitlement)[], includeRevoked: boolean = true, appId?: number): AppLicenseStatus {
@@ -452,7 +453,7 @@ export class AppLicenseController {
         const status = this._evaluateLicenseStatus([license], true, entitlement.application_id);
         appResults.push({
           application_id: entitlement.application_id,
-          application_slug: entitlement.application?.slug || '',
+          application_slug: entitlement.application?.slug || 'unknown',
           expires_at: license.expires_at,
           status: status,
           granted_by: license.granted_by,
@@ -568,6 +569,11 @@ export class AppLicenseController {
 
       await transaction.commit();
 
+      const userSummary = await this.getUserActiveLicenseSummary(user_id);
+      if (userSummary) {
+        EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+      }
+
       return res.status(200).json({
         success: true,
         message: applyResult.status === 'renewed' ? 'License renewed successfully' : 'New license created successfully',
@@ -633,6 +639,11 @@ export class AppLicenseController {
       }
 
       await transaction.commit();
+
+      const userSummary = await this.getUserActiveLicenseSummary(user_id);
+      if (userSummary) {
+        EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+      }
 
       return res.status(200).json({
         success: true,
@@ -766,6 +777,11 @@ export class AppLicenseController {
       expires_at: expiresAt,
     });
 
+    const userSummary = await this.getUserActiveLicenseSummary(user_id);
+    if (userSummary) {
+      EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+    }
+
     return res.json({
       success: true,
       message: 'Trial access granted successfully',
@@ -816,6 +832,11 @@ export class AppLicenseController {
       last_renewed_at: currentDate,
       expires_at: newExpiryDate
     });
+
+    const userSummary = await this.getUserActiveLicenseSummary(user_id);
+    if (userSummary) {
+      EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+    }
 
     return res.status(200).json({
       success: true,
@@ -930,6 +951,13 @@ export class AppLicenseController {
 
       await transaction.commit();
 
+      if (user_id) {
+        const userSummary = await this.getUserActiveLicenseSummary(user_id);
+        if (userSummary) {
+          EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+        }
+      }
+
       return res.status(200).json({
         success: true,
         message: 'License granted successfully',
@@ -1021,6 +1049,13 @@ export class AppLicenseController {
     } else {
       // This should never happen due to the earlier checks, but fail-safe just in case
       throw new Error('Invalid request data: user_id or org_id must be provided');
+    }
+
+    if (user_id) {
+      const userSummary = await this.getUserActiveLicenseSummary(user_id);
+      if (userSummary) {
+        EventSubscriberEmitter.emit('user_app_license:updated', userSummary);
+      }
     }
 
     return res.status(200).json({

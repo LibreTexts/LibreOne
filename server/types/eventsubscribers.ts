@@ -1,5 +1,6 @@
 import { Organization, OrganizationSystem } from "@server/models";
 import { User } from "./users";
+import { UserLicenseResultSummary } from "./applicenses";
 
 export type EventSubscriberEvents = {
   "user:created": User;
@@ -21,6 +22,7 @@ export type EventSubscriberEvents = {
   "organization_system:deleted": {
     id: string;
   };
+  "user_app_license:updated": UserLicenseResultSummary;
 };
 
 export type SendTestEventBody = {
