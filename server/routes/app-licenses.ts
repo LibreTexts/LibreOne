@@ -19,7 +19,7 @@ appLicensesRouter.route('/user/:user_id').get(
   verifyAPIAuthentication,
   ensureUserResourcePermission(false),
   validate(AppLicenseValidator.userIdParamSchema, 'params'),
-  catchInternal((req, res) => controller.getAllUserLicenses(req, res)),
+  catchInternal((req, res) => controller.getAllUserLicenseEntitlements(req, res)),
 );
 
 appLicensesRouter.route('/check-access/:user_id/:app_id').get(

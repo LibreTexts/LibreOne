@@ -1,6 +1,5 @@
 import errors from '../errors';
-import { AccessCode, Application, ApplicationLicense, License, LicenseVersion, User, UserLicense, sequelize } from '../models';
-import { GetAllLicensesQuery, LicenseIDParams } from '@server/types/licenses';
+import { AccessCode, ApplicationLicense } from '../models';
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { MailController } from './MailController';

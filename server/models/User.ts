@@ -27,7 +27,7 @@ import { UserApplication } from './UserApplication';
 import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
 import { UserNote } from './UserNote';
-import { UserLicense } from './UserLicense';
+import { UserLicenseEntitlement } from './UserLicenseEntitlement';
 
 @DefaultScope(() => ({
   attributes: {
@@ -180,8 +180,8 @@ export class User extends Model {
   @HasMany(() => UserNote, 'user_id')
   notes?: Array<UserNote>;
 
-  @HasMany(() => UserLicense)
-  application_licenses?: Array<UserLicense>;
+  @HasMany(() => UserLicenseEntitlement)
+  application_licenses?: Array<UserLicenseEntitlement>;
 
   @BelongsToMany(() => Organization, () => UserOrganization)
   organizations?: Array<Organization & { UserOrganization: UserOrganization }>;

@@ -17,7 +17,7 @@ import { UUIDV4 } from 'sequelize';
 
 @Table({
   timestamps: true,
-  tableName: 'user_licenses',
+  tableName: 'user_license_entitlements',
   indexes: [
     {
       unique: true,
@@ -26,7 +26,7 @@ import { UUIDV4 } from 'sequelize';
     }
   ]
 })
-export class UserLicense extends Model {
+export class UserLicenseEntitlement extends Model {
   @PrimaryKey
   @AllowNull(false)
   @Default(UUIDV4)
