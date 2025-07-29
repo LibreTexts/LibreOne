@@ -26,6 +26,12 @@ export class Application extends Model {
   @Column(DataType.STRING)
   declare name: string;
 
+  // A unique, URL-friendly identifier for the application.
+  @Index({ name: 'slug', unique: true })
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare slug: string;
+
   @AllowNull(false)
   @Column(DataType.ENUM('standalone', 'library'))
   declare app_type: ApplicationType;
