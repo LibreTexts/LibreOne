@@ -211,6 +211,10 @@
     "request": "Request Account Deletion"
   },
   "instructor": {
+    "firstname": "First Name",
+    "lastname": "Last Name",
+    "firstname_invalid": "Invalid first name, please check your input.",
+    "lastname_invalid": "Invalid last name, please check your input.",
     "yourprofile": "Your Instructor Profile",
     "yourprofiletagline": "Verified instructors can edit and contribute to the LibreTexts libraries.",
     "yourprofilerequirements": "Either a Bio URL or Additional Information is required to submit your verification request.",
