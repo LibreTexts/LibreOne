@@ -18,13 +18,7 @@
           @data-updated="handleDataUpdated"
           @set-unknown-error="(val) => (unknownerror = val)"
         />
-        <a
-          :href="`/delete-account${plainLayout ? '?plain_layout=true' : ''}`"
-          class="text-center text-slate-500 mt-4 text-sm hover:underline"
-        >
-          {{ $t("delete-account.request") }}
-        </a>
-        <div class="my-4">
+        <div class="my-8">
           <SubscriptionsManager />
         </div>
       </div>
