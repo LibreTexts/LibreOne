@@ -40,6 +40,20 @@
     >
       <form @submit.prevent="submitVerificationRequest">
         <ThemedInput
+          id="first_name_input"
+          :label="$t('instructor.firstname')"
+          v-model="firstName"
+          placeholder="First Name"
+          class="my-4"
+        />
+        <ThemedInput
+          id="last_name_input"
+          :label="$t('instructor.lastname')"
+          v-model="lastName"
+          placeholder="Last Name"
+          class="my-4"
+        />
+        <ThemedInput
           id="bio_url_input"
           :label="$t('instructor.biourl')"
           :instructions="$t('instructor.biourl_desc')"
@@ -130,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue';
+  import { ref, computed, watch, onMounted } from 'vue';
   import ThemedButton from '../ThemedButton.vue';
   import ThemedInput from '../ThemedInput.vue';
   import ThemedSelectInput from '../ThemedSelectInput.vue';
@@ -141,8 +155,15 @@
   import { useAxios } from '@renderer/useAxios';
   import joi from 'joi';
   import { usePageContext } from '@renderer/usePageContext';
+  import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME } from '@server/helpers';
 
   // Props & Hooks
+  onMounted(() => {
+    if (pageContext.user) {
+      firstName.value = pageContext.user.first_name || '';
+      lastName.value = pageContext.user.last_name || '';
+    }
+  });
   const { t } = useI18n();
   const axios = useAxios();
   const pageContext = usePageContext().value;
@@ -163,6 +184,8 @@
   const formValid = ref(false);
   const bioURL = ref('');
   const addtlInfo = ref('');
+  const firstName = ref('');
+  const lastName = ref('');
   //const registrationCode = ref('');
   const selectedApps = ref<string[]>([]);
   const selectedSpecialLibs = ref<string[]>([]);
@@ -225,7 +248,7 @@
 
   // Watchers
   watch(
-    () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value, addtlInfo.value],
+    () => [selectedApps.value, selectedSpecialLibs.value, bioURL.value, addtlInfo.value, firstName.value, lastName.value],
     () => {
       formValid.value = validateForm(false);
     },
@@ -275,6 +298,19 @@
       }
       isValid = false;
     }
+    // First Name and Last Name are required and should not be default values
+    if (!firstName.value.trim() || firstName.value.trim() === DEFAULT_FIRST_NAME) {
+      if (setErrors) {
+        validationErrors.value.push(t('instructor.firstname_invalid'));
+      }
+      isValid = false;
+    }
+    if (!lastName.value.trim() || lastName.value.trim() === DEFAULT_LAST_NAME) {
+      if (setErrors) {
+        validationErrors.value.push(t('instructor.lastname_invalid'));
+      }
+      isValid = false;
+    }
     return isValid;
   }
 
@@ -284,6 +320,16 @@
       requestError.value = '';
       if(!pageContext.user?.uuid) throw new Error('badcontext');
       if (!validateForm(true)) return;
+
+      if (
+        firstName.value.trim() !== (pageContext.user.first_name || '') ||
+        lastName.value.trim() !== (pageContext.user.last_name || '')
+      ) {
+        await axios.patch(`/users/${pageContext.user.uuid}`, {
+          first_name: firstName.value.trim(),
+          last_name: lastName.value.trim(),
+        });
+      }
 
       const res = await axios.post(`/users/${pageContext.user.uuid}/verification-request`, {
         bio_url: bioURL.value.trim(),
