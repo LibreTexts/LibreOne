@@ -39,13 +39,15 @@ import type {
   UserNotesQuery,
   UserNoteBody,
   DisableUserBody,
-  UpdateUserAcademyOnlineBody
+  UpdateUserAcademyOnlineBody,
+  EmailChangeDirectRequestBody
 } from '../types/users';
 import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import { UserNote } from '../models/UserNote'; 
+import { generateSecureRandomString } from '@server/helpers';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -184,19 +186,38 @@ export class UserController {
    */
     public async updateUserEmailDirect(req: Request, res: Response): Promise<Response> {
       const { uuid } = req.params as UserUUIDParams;
-      const { email } = req.body as CreateUserEmailChangeRequestBody;
+      const { email, remove_external_auth } = req.body as EmailChangeDirectRequestBody;
+
+      // Ensure the new email is unique
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        return errors.badRequest(res, 'Email already in use.');
+      }
   
       const foundUser = await User.findOne({ where: { uuid } });
       if (!foundUser) {
         return errors.notFound(res);
       }
-  
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser) {
-        return errors.badRequest(res, 'Email already in use.');
+
+      // Check for external identity provider
+      if (foundUser.external_idp || foundUser.external_subject_id) {
+        if (!remove_external_auth) {
+          return errors.badRequest(res, 'User is linked to an external identity provider and remove_external_auth was not passed.');
+        }
+
+        // If removing external authentication, generate a random pass (user will need to reset their password to login)
+        const randomPassHash = await this.generateHashedRandomPassword();
+        if (!randomPassHash) {
+          return errors.internalServerError(res);
+        }
+
+        foundUser.external_idp = null;
+        foundUser.external_subject_id = null;
+        foundUser.password = randomPassHash;
       }
-      
-      const updated = await foundUser.update({ email });
+
+      foundUser.email = email;
+      const updated = await foundUser.save();
       EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}));
       
       return res.send({
@@ -204,6 +225,7 @@ export class UserController {
           central_identity_id: foundUser.uuid,
           email,
         },
+        ...(remove_external_auth && { meta: { message: "External authentication removed. Password reset required." } })
       });
     }
 
@@ -1385,5 +1407,10 @@ export class UserController {
     await foundNote.destroy();
 
     return res.send({ data: {} });
+  }
+
+  private async generateHashedRandomPassword(): Promise<string> {
+    const randomPassword = generateSecureRandomString(32);
+    return bcrypt.hash(randomPassword, 12);
   }
 }

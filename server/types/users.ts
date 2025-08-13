@@ -40,6 +40,11 @@ export type CreateUserApplicationBody = {
   application_id: number;
 };
 
+export type EmailChangeDirectRequestBody = {
+  email: string;
+  remove_external_auth: boolean;
+};
+
 export type CreateUserEmailChangeRequestBody = {
   email: string;
 };

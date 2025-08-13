@@ -86,6 +86,38 @@ export function safeJSONParse(input: string): object | boolean {
   return false;
 }
 
+export function generateSecureRandomString(length: number): string {
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const specialChars = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
+  const combinedCharset = charset + specialChars;
+  const charsetLength = combinedCharset.length;
+  const cutoff = 256 - (256 % charsetLength);
+  
+  const result = new Array(length);
+  const randomBytes = new Uint8Array(length * 2); // Pre-allocate extra bytes
+  let bytesUsed = 0;
+  
+  for (let i = 0; i < length; i++) {
+    if (bytesUsed >= randomBytes.length) {
+      crypto.getRandomValues(randomBytes);
+      bytesUsed = 0;
+    }
+    
+    let randomByte = randomBytes[bytesUsed++];
+    while (randomByte >= cutoff) {
+      if (bytesUsed >= randomBytes.length) {
+        crypto.getRandomValues(randomBytes);
+        bytesUsed = 0;
+      }
+      randomByte = randomBytes[bytesUsed++];
+    }
+    
+    result[i] = combinedCharset[randomByte % charsetLength];
+  }
+  
+  return result.join('');
+}
+
 export const DEFAULT_FIRST_NAME = 'LibreTexts';
 export const DEFAULT_LAST_NAME = 'User';
 export const DEFAULT_LANGUAGE = 'en-US';

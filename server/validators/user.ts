@@ -100,6 +100,7 @@ export const updateUserEmailSchema = joi.object({
 
 export const updateUserEmailDirectSchema = joi.object({
   email: joi.string().email().required(),
+  remove_external_auth: joi.boolean().default(false),
 });
 
 export const updateUserOrganizationAdminRoleSchema = joi.object({
