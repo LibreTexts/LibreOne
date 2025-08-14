@@ -208,7 +208,7 @@ export class UserController {
         // If removing external authentication, generate a random pass (user will need to reset their password to login)
         const randomPassHash = await this.generateHashedRandomPassword();
         if (!randomPassHash) {
-          return errors.internalServerError(res);
+          return errors.internalServerError(res, 'Failed to generate a random password for user during external authentication removal.');
         }
 
         foundUser.external_idp = null;
