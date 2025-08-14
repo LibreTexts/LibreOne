@@ -94,7 +94,7 @@ export function generateSecureRandomString(length: number): string {
   const cutoff = 256 - (256 % charsetLength);
   
   const result = new Array(length);
-  const randomBytes = new Uint8Array(length * 2); // Pre-allocate extra bytes
+  const randomBytes = new Uint8Array(Math.ceil(length * 1.5)); // Pre-allocate extra bytes conservatively
   let bytesUsed = 0;
   
   for (let i = 0; i < length; i++) {
