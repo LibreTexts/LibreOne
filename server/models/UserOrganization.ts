@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BelongsTo,
   Column,
   CreatedAt,
   DataType,
@@ -30,6 +31,12 @@ export class UserOrganization extends Model {
   @ForeignKey(() => AdminRole)
   @Column(DataType.STRING)
   declare admin_role: string;
+
+  @BelongsTo(() => User)
+  declare user: User;
+
+  @BelongsTo(() => Organization)
+  declare organization: Organization;
 
   @CreatedAt
   declare created_at: Date;

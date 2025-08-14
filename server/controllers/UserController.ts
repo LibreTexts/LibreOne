@@ -429,7 +429,7 @@ export class UserController {
       include: [{
         model: Organization,
         attributes: ['id', 'name', 'logo'],
-        through: { attributes: [] },
+        through: { attributes: ['admin_role'], as: "user_organization" },
         include: [
           { model: OrganizationSystem, attributes: ['id', 'name', 'logo'] },
         ],
@@ -437,7 +437,8 @@ export class UserController {
       {
         model: Language,  
         attributes: ['tag', 'english_name'],  
-      }],
+      },
+    ],
     });
     if (!foundUser) {
       return errors.notFound(res);

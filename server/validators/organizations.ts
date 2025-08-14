@@ -12,6 +12,10 @@ export const orgIDParamSchema = joi.object({
   orgID: orgIDValidator,
 });
 
+export const getOrgQuerySchema = joi.object({
+  include_admins: joi.boolean().default(false),
+});
+
 export const orgAliasIDParamsSchema = joi.object({
   orgID: orgIDValidator,
   aliasID: joi.number().integer().required(),
