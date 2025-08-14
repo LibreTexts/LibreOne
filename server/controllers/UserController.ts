@@ -1411,6 +1411,13 @@ export class UserController {
 
   private async generateHashedRandomPassword(): Promise<string> {
     const randomPassword = generateSecureRandomString(32);
-    return bcrypt.hash(randomPassword, 12);
+  private async generateHashedRandomPassword(): Promise<string | null> {
+    const randomPassword = generateSecureRandomString(32);
+    try {
+      return await bcrypt.hash(randomPassword, 12);
+    } catch (err) {
+      // Optionally log the error here
+      return null;
+    }
   }
 }
