@@ -9,6 +9,8 @@ import {
   OrganizationDomain,
   sequelize,
   OrganizationSystem,
+  UserOrganization,
+  User,
 } from '../models';
 import errors from '../errors';
 import type {
@@ -219,6 +221,32 @@ export class OrganizationController {
     };
 
     return res.send({ data: result });
+  }
+
+  public async getOrganizationAdmins(req: Request, res: Response): Promise<Response> {
+    const { orgID } = (req.params as unknown) as OrganizationIDParams;
+    const foundOrg = await Organization.findByPk(orgID);
+    if (!foundOrg) {
+      return errors.notFound(res);
+    }
+
+    const admins = await UserOrganization.findAll({
+      where: {
+        organization_id: orgID,
+        admin_role: {
+          [Op.ne]: null
+        }
+      },
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['uuid', 'first_name', 'last_name', 'email']
+        }
+      ]
+    });
+
+    return res.send({ data: admins });
   }
 
   /**

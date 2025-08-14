@@ -22,6 +22,7 @@ organizationsRouter.route('/')
 organizationsRouter.route('/:orgID')
   .get(
     validate(OrganizationValidator.orgIDParamSchema, 'params'),
+    validate(OrganizationValidator.getOrgQuerySchema, 'query'),
     catchInternal((req, res) => controller.getOrganization(req, res)),
   ).patch(
     validate(OrganizationValidator.updateOrganizationSchema, 'body'),
@@ -36,6 +37,15 @@ organizationsRouter.route('/:orgID')
     ensureAPIUserHasPermission(['organizations:write']),
     catchInternal((req, res) => controller.deleteOrganization(req, res)),
   );
+
+organizationsRouter.route('/:orgID/admins')
+  .all(
+    validate(OrganizationValidator.orgIDParamSchema, 'params'),
+    verifyAPIAuthentication,
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['organizations:read']),
+  )
+  .get(catchInternal((req, res) => controller.getOrganizationAdmins(req, res)))
 
 organizationsRouter.route('/:orgID/aliases')
   .all(validate(OrganizationValidator.orgIDParamSchema, 'params'))

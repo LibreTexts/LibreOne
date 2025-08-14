@@ -2,6 +2,10 @@ export type OrganizationIDParams = {
   orgID: number;
 };
 
+export type GetOrgQuery = {
+  include_admins?: boolean;
+}
+
 export type OrganizationAliasIDParams = OrganizationIDParams & {
   aliasID: number;
 };
