@@ -1409,14 +1409,11 @@ export class UserController {
     return res.send({ data: {} });
   }
 
-  private async generateHashedRandomPassword(): Promise<string> {
-    const randomPassword = generateSecureRandomString(32);
   private async generateHashedRandomPassword(): Promise<string | null> {
-    const randomPassword = generateSecureRandomString(32);
     try {
+      const randomPassword = generateSecureRandomString(32);
       return await bcrypt.hash(randomPassword, 12);
     } catch (err) {
-      // Optionally log the error here
       return null;
     }
   }
