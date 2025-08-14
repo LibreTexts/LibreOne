@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { Op, Transaction, WhereOptions } from 'sequelize';
+import { Op, Sequelize, Transaction, WhereOptions } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -46,7 +46,7 @@ import { LibraryController } from './LibraryController';
 import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
-import { UserNote } from '../models/UserNote'; 
+import { UserNote } from '../models/UserNote';
 import { generateSecureRandomString } from '@server/helpers';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
@@ -367,12 +367,12 @@ export class UserController {
     try {
       verificationRequest = await new VerificationRequestController().createVerificationRequest(uuid, props)
     } catch (e) {
-      if(e instanceof Error && e.message === 'bad_request'){
+      if (e instanceof Error && e.message === 'bad_request') {
         return errors.badRequest(res);
       }
       verificationRequest = null;
     }
-    
+
     if (!verificationRequest) {
       return errors.internalServerError(res);
     }
@@ -480,44 +480,87 @@ export class UserController {
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
     const { offset, limit, query } = (req.query as unknown) as GetAllUsersQuery;
 
-    // handle space in query (e.g. for full name search)
-    const splitQueryParts = query?.split(' ');
-    const fuzzyQueryParts = splitQueryParts?.map((p) => `%${p}%`);
+    const include = [{
+      model: Organization,
+      attributes: ['id', 'name', 'logo', 'system_id'],
+      through: { attributes: [] },
+    },
+    {
+      model: Language,
+      attributes: ['tag', 'english_name'],
+    }];
 
-    const queryCriteria = fuzzyQueryParts && fuzzyQueryParts?.length > 0 ? {
+    if (!query) {
+      const { count, rows } = await User.findAndCountAll({
+        offset,
+        limit,
+        include,
+        order: [['email', 'desc']]
+      });
+      return res.send({ meta: { offset, limit, total: count }, data: rows });
+    }
+
+    const splitQueryParts = query.split(' ').filter(part => part.length > 0);
+    const exactMatch = query.trim();
+    const fuzzyQueryParts = splitQueryParts.map(p => `%${p}%`);
+
+    const exactConditions = {
       [Op.or]: [
-        { uuid: { [Op.like]: fuzzyQueryParts[0]} },
-        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
-        { last_name: { [Op.like]: fuzzyQueryParts.length === 2 ? fuzzyQueryParts[1] : fuzzyQueryParts[0]} }, // if full name search, use second part for last name
-        { email: { [Op.like]: fuzzyQueryParts[0] } },
-        { student_id: { [Op.like]: fuzzyQueryParts[0] } },
-      ],
-    } : null;
+        { email: { [Op.eq]: exactMatch } },
+        { student_id: { [Op.eq]: exactMatch } },
+        { uuid: { [Op.eq]: exactMatch } },
+      ]
+    };
 
-    const { count, rows } = await User.findAndCountAll({
-      ...(queryCriteria && {
-        where: queryCriteria,
-      }),
-      offset,
-      limit,
-      include: [{
-        model: Organization,
-        attributes: ['id', 'name', 'logo', 'system_id'],
-        through: { attributes: [] },
-      },
-      {
-        model: Language,  
-        attributes: ['tag', 'english_name'],  
-      }],
-    });
+    const startsWithConditions = {
+      [Op.or]: [
+        { first_name: { [Op.like]: `${splitQueryParts[0]}%` } },
+        { last_name: { [Op.like]: `${splitQueryParts[splitQueryParts.length - 1]}%` } },
+        { email: { [Op.like]: `${exactMatch}%` } },
+      ]
+    };
+
+    const fuzzyConditions = {
+      [Op.or]: [
+        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
+        { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
+        { email: { [Op.like]: fuzzyQueryParts[0] } },
+        ...(splitQueryParts.length === 2 ? [
+          // Full name search
+          Sequelize.where(
+            Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
+            { [Op.like]: `%${exactMatch}%` }
+          )
+        ] : [])
+      ]
+    };
+
+    const [exactResults, startsWithResults, fuzzyResults] = await Promise.all([
+      User.findAll({ where: exactConditions, include }),
+      User.findAll({ where: startsWithConditions, include }),
+      User.findAll({ where: fuzzyConditions, include })
+    ]);
+
+    // Combine and deduplicate results while maintaining priority order
+    const seenIds = new Set();
+    const combinedResults: User[] = [];
+    
+    for (const result of [...exactResults, ...startsWithResults, ...fuzzyResults]) {
+      if (!seenIds.has(result.id)) {
+        seenIds.add(result.id);
+        combinedResults.push(result);
+      }
+    }
+
+    const paginatedResults = combinedResults.slice(offset, offset + limit);
 
     return res.send({
       meta: {
         offset,
         limit,
-        total: count,
+        total: combinedResults.length,
       },
-      data: rows,
+      data: paginatedResults,
     });
   }
 
@@ -687,8 +730,8 @@ export class UserController {
         through: { attributes: [] },
       },
       {
-        model: Language,  
-        attributes: ['tag', 'english_name'],  
+        model: Language,
+        attributes: ['tag', 'english_name'],
       }],
     });
     if (!foundUser) {
@@ -772,7 +815,7 @@ export class UserController {
       }
     }
 
-    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({ plain: true }))
 
     return res.send({
       data: foundUser,
@@ -806,7 +849,7 @@ export class UserController {
       academy_online_expires,
     });
 
-    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({ plain: true }))
 
     return res.send({
       data: updatedUser,
@@ -875,7 +918,7 @@ export class UserController {
     const avatarURL = `https://${process.env.AWS_AVATARS_DOMAIN}/${fileKey}?v=${avatarVersion}`;
     const updated = await foundUser.update({ avatar: avatarURL });
 
-    EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', updated.get({ plain: true }))
 
     return res.send({
       data: {
@@ -925,7 +968,7 @@ export class UserController {
       );
     }
 
-    EventSubscriberEmitter.emit('user:updated', updatedUser.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', updatedUser.get({ plain: true }))
 
     return res.send({
       data: {
@@ -1162,7 +1205,7 @@ export class UserController {
     const { uuid } = req.params as UserUUIDParams;
 
     const foundUser = await User.findOne({ where: { uuid } });
-    if(!foundUser) {
+    if (!foundUser) {
       return errors.notFound(res);
     }
 
@@ -1180,7 +1223,7 @@ export class UserController {
       where: { user_id: uuid },
       order: [['requested_at', 'DESC']],
     });
-    if(foundRequest){
+    if (foundRequest) {
       return errors.badRequest(res, "A request to delete this account has already been initiated.");
     }
 
@@ -1217,7 +1260,7 @@ export class UserController {
   }> {
 
     const foundUser = await User.findOne({ where: { uuid } });
-    if(!foundUser) {
+    if (!foundUser) {
       return { pending: false };
     }
 
@@ -1226,7 +1269,7 @@ export class UserController {
       order: [['requested_at', 'DESC']],
     });
 
-    if(!foundRequest) {
+    if (!foundRequest) {
       return { pending: false };
     }
 
@@ -1264,7 +1307,7 @@ export class UserController {
       disabled_date: new Date()
     });
 
-    EventSubscriberEmitter.emit('user:updated', foundUser.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', foundUser.get({ plain: true }))
 
     return res.send({
       data: {
@@ -1301,7 +1344,7 @@ export class UserController {
       disabled_date: null
     });
 
-    EventSubscriberEmitter.emit('user:updated', foundUser.get({plain: true}))
+    EventSubscriberEmitter.emit('user:updated', foundUser.get({ plain: true }))
 
     return res.send({
       data: {
@@ -1348,7 +1391,7 @@ export class UserController {
   public async createNote(req: Request, res: Response): Promise<Response> {
     const { uuid } = req.params as UserUUIDParams;
     const { content } = req.body as UserNoteBody;
-    const created_by_id = req.XUserID; 
+    const created_by_id = req.XUserID;
 
     const foundUser = await User.findOne({ where: { uuid } });
     if (!foundUser) {
