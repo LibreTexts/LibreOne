@@ -45,7 +45,7 @@ export class User extends Model {
   declare uuid: string;
 
   @Column(DataType.STRING)
-  declare external_subject_id: string;
+  declare external_subject_id?: string | null;
 
   @Column(DataType.STRING)
   declare first_name: string;
@@ -105,7 +105,7 @@ export class User extends Model {
   declare legacy: boolean;
 
   @Column(DataType.STRING)
-  declare external_idp: string;
+  declare external_idp?: string | null;
 
   @Column(DataType.DATE)
   declare last_access: Date;
