@@ -163,6 +163,7 @@ export class StoreController {
       success: true,
       message: `Successfully generated ${quantity} access codes`,
       meta: {
+        application_license: license,
         total_generated: createdCodes.length
       },
       data: createdCodes.map(code => code.code)
@@ -188,7 +189,7 @@ export class StoreController {
     const { count, rows } = await ApplicationLicense.findAndCountAll({
       where: whereSearch,
       order: [['name', 'ASC']],
-      attributes: ['uuid', 'name', 'stripe_id', 'perpetual'],
+      attributes: ['uuid', 'name', 'stripe_id', 'perpetual', 'trial', 'is_academy_license', 'academy_level', 'duration_days', 'picture_url'],
     });
 
     const results = rows.map((row) => ({
