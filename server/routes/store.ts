@@ -3,7 +3,6 @@ import { ensureActorIsAPIUser, ensureAPIUserHasPermission, validate, verifyAPIAu
 import { catchInternal } from '@server/helpers';
 import express from 'express';
 import * as StoreValidator from '../validators/store';
-import errors from '@server/errors';
 
 const app = express();
 
@@ -25,8 +24,7 @@ storeRouter.route('/access-code/bulk').post(
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['app_licenses:write']),
   validate(StoreValidator.bulkGenerateAccessCodesSchema, 'body'),
-  (req, res) => errors.notImplemented(res),
-  //catchInternal((req, res) => controller.bulkGenerateAccessCodes(req, res)),
+  catchInternal((req, res) => controller.bulkGenerateAccessCodes(req, res)),
 );
 
 storeRouter.route('/products').get(
