@@ -507,7 +507,6 @@ export class UserController {
     const exactConditions = {
       [Op.or]: [
         { email: { [Op.eq]: exactMatch } },
-        { student_id: { [Op.eq]: exactMatch } },
         { uuid: { [Op.eq]: exactMatch } },
       ]
     };
@@ -542,12 +541,12 @@ export class UserController {
     ]);
 
     // Combine and deduplicate results while maintaining priority order
-    const seenIds = new Set();
+    const seenIds = new Set<string>();
     const combinedResults: User[] = [];
     
     for (const result of [...exactResults, ...startsWithResults, ...fuzzyResults]) {
-      if (!seenIds.has(result.id)) {
-        seenIds.add(result.id);
+      if (!seenIds.has(result.uuid)) {
+        seenIds.add(result.uuid);
         combinedResults.push(result);
       }
     }

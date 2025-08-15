@@ -60,7 +60,7 @@ export const disableUserSchema = joi.object({
 export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
-  query: joi.string().max(100),
+  query: joi.string().trim().max(100).allow(""),
 });
 
 export const getAllUserApplicationsSchema = joi.object({
