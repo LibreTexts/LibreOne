@@ -455,21 +455,25 @@ export class UserController {
    * @returns The fulfilled API response.
    */
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query } = (req.query as unknown) as GetAllUsersQuery;
+    let { offset, limit, query, academy_online } = (req.query as unknown) as GetAllUsersQuery;
 
-    // handle space in query (e.g. for full name search)
     const splitQueryParts = query?.split(' ');
     const fuzzyQueryParts = splitQueryParts?.map((p) => `%${p}%`);
 
-    const queryCriteria = fuzzyQueryParts && fuzzyQueryParts?.length > 0 ? {
-      [Op.or]: [
-        { uuid: { [Op.like]: fuzzyQueryParts[0]} },
-        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
-        { last_name: { [Op.like]: fuzzyQueryParts.length === 2 ? fuzzyQueryParts[1] : fuzzyQueryParts[0]} }, // if full name search, use second part for last name
-        { email: { [Op.like]: fuzzyQueryParts[0] } },
-        { student_id: { [Op.like]: fuzzyQueryParts[0] } },
-      ],
-    } : null;
+    const queryCriteria: WhereOptions = {
+      ...(fuzzyQueryParts && fuzzyQueryParts.length > 0 && {
+        [Op.or]: [
+          { uuid: { [Op.like]: fuzzyQueryParts[0] } },
+          { first_name: { [Op.like]: fuzzyQueryParts[0] } },
+          { last_name: { [Op.like]: fuzzyQueryParts.length === 2 ? fuzzyQueryParts[1] : fuzzyQueryParts[0] } }, // if full name search, use second part for last name
+          { email: { [Op.like]: fuzzyQueryParts[0] } },
+          { student_id: { [Op.like]: fuzzyQueryParts[0] } },
+        ],
+      }),
+      ...(academy_online && academy_online.length > 0 && {
+        academy_online: { [Op.in]: academy_online },
+      }),
+    };
 
     const { count, rows } = await User.findAndCountAll({
       ...(queryCriteria && {

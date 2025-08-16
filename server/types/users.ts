@@ -59,6 +59,7 @@ export type GetAllUsersQuery = {
   offset: number;
   limit: number;
   query?: string;
+  academy_online?: number[];
 };
 
 export type GetAllUserApplicationsQuery = {

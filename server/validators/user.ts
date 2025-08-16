@@ -61,6 +61,7 @@ export const getAllUsersSchema = joi.object({
   offset: joi.number().integer().default(0),
   limit: joi.number().integer().default(50),
   query: joi.string().max(100),
+  academy_online: joi.array().items(joi.number().integer()).optional(), 
 });
 
 export const getAllUserApplicationsSchema = joi.object({
