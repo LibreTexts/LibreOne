@@ -64,6 +64,7 @@ export type GetAllUsersQuery = {
   offset: number;
   limit: number;
   query?: string;
+  admin_role?: string[];
 };
 
 export type GetAllUserApplicationsQuery = {
