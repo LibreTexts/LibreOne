@@ -478,7 +478,7 @@ export class UserController {
    * @returns The fulfilled API response.
    */
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query } = (req.query as unknown) as GetAllUsersQuery;
+    const { offset, limit, query, admin_role } = (req.query as unknown) as GetAllUsersQuery;
 
     const include = [{
       model: Organization,
@@ -490,11 +490,32 @@ export class UserController {
       attributes: ['tag', 'english_name'],
     }];
 
+    let whereConditions: WhereOptions = {};
+    
+    if (admin_role && admin_role.length > 0) {
+
+      // Find user IDs with the specified admin roles
+      const userOrgRows = await UserOrganization.findAll({
+        attributes: ['user_id'],
+        where: {
+          admin_role: { [Op.in]: admin_role }
+        },
+        group: ['user_id']
+      });
+      const userIds = userOrgRows.map(row => row.user_id);
+
+      // Filter users by these IDs
+      whereConditions = {
+        uuid: { [Op.in]: userIds }
+      };
+    }
+
     if (!query) {
       const { count, rows } = await User.findAndCountAll({
         offset,
         limit,
         include,
+        where: whereConditions,
         order: [['email', 'desc']]
       });
       return res.send({ meta: { offset, limit, total: count }, data: rows });
@@ -520,17 +541,17 @@ export class UserController {
     };
 
     const fuzzyConditions = {
-      [Op.or]: [
-        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
-        { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
-        { email: { [Op.like]: fuzzyQueryParts[0] } },
-        ...(splitQueryParts.length === 2 ? [
-          // Full name search
-          Sequelize.where(
-            Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
-            { [Op.like]: `%${exactMatch}%` }
-          )
-        ] : [])
+          [Op.or]: [
+            { first_name: { [Op.like]: fuzzyQueryParts[0] } },
+            { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
+            { email: { [Op.like]: fuzzyQueryParts[0] } },
+            ...(splitQueryParts.length === 2 ? [
+              // Full name search
+              Sequelize.where(
+                Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
+                { [Op.like]: `%${exactMatch}%` }
+              )
+            ] : [])
       ]
     };
 
