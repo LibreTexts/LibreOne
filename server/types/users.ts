@@ -65,6 +65,7 @@ export type GetAllUsersQuery = {
   limit: number;
   query?: string;
   admin_role?: string[];
+  academy_online?: number[];
 };
 
 export type GetAllUserApplicationsQuery = {

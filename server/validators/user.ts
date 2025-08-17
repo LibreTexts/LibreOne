@@ -62,6 +62,7 @@ export const getAllUsersSchema = joi.object({
   limit: joi.number().integer().default(50),
   query: joi.string().trim().max(100).allow(""),
   admin_role: joi.array().items(joi.string().valid('org_admin', 'org_sys_admin')).optional(),
+  academy_online: joi.array().items(joi.number().integer()).optional(), 
 });
 
 export const getAllUserApplicationsSchema = joi.object({

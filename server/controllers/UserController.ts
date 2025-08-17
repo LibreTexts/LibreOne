@@ -478,7 +478,7 @@ export class UserController {
    * @returns The fulfilled API response.
    */
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query, admin_role } = (req.query as unknown) as GetAllUsersQuery;
+    const { offset, limit, query, admin_role, academy_online } = (req.query as unknown) as GetAllUsersQuery;
 
     const include = [{
       model: Organization,
@@ -493,7 +493,6 @@ export class UserController {
     let whereConditions: WhereOptions = {};
     
     if (admin_role && admin_role.length > 0) {
-
       // Find user IDs with the specified admin roles
       const userOrgRows = await UserOrganization.findAll({
         attributes: ['user_id'],
@@ -508,6 +507,10 @@ export class UserController {
       whereConditions = {
         uuid: { [Op.in]: userIds }
       };
+    }
+
+    if (academy_online && academy_online.length > 0) {
+      whereConditions.academy_online = { [Op.in]: academy_online };
     }
 
     if (!query) {
