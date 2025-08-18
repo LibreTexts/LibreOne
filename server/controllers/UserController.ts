@@ -184,50 +184,50 @@ export class UserController {
    * @param res - Outgoing API response.
    * @returns The fulfilled API response.
    */
-    public async updateUserEmailDirect(req: Request, res: Response): Promise<Response> {
-      const { uuid } = req.params as UserUUIDParams;
-      const { email, remove_external_auth } = req.body as EmailChangeDirectRequestBody;
+  public async updateUserEmailDirect(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { email, remove_external_auth } = req.body as EmailChangeDirectRequestBody;
 
-      // Ensure the new email is unique
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser) {
-        return errors.badRequest(res, 'Email already in use.');
-      }
-  
-      const foundUser = await User.findOne({ where: { uuid } });
-      if (!foundUser) {
-        return errors.notFound(res);
-      }
-
-      // Check for external identity provider
-      if (foundUser.external_idp || foundUser.external_subject_id) {
-        if (!remove_external_auth) {
-          return errors.badRequest(res, 'User is linked to an external identity provider and remove_external_auth was not passed.');
-        }
-
-        // If removing external authentication, generate a random pass (user will need to reset their password to login)
-        const randomPassHash = await this.generateHashedRandomPassword();
-        if (!randomPassHash) {
-          return errors.internalServerError(res, 'Failed to generate a random password for user during external authentication removal.');
-        }
-
-        foundUser.external_idp = null;
-        foundUser.external_subject_id = null;
-        foundUser.password = randomPassHash;
-      }
-
-      foundUser.email = email;
-      const updated = await foundUser.save();
-      EventSubscriberEmitter.emit('user:updated', updated.get({plain: true}));
-      
-      return res.send({
-        data: {
-          central_identity_id: foundUser.uuid,
-          email,
-        },
-        ...(remove_external_auth && { meta: { message: "External authentication removed. Password reset required." } })
-      });
+    // Ensure the new email is unique
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return errors.badRequest(res, 'Email already in use.');
     }
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    // Check for external identity provider
+    if (foundUser.external_idp || foundUser.external_subject_id) {
+      if (!remove_external_auth) {
+        return errors.badRequest(res, 'User is linked to an external identity provider and remove_external_auth was not passed.');
+      }
+
+      // If removing external authentication, generate a random pass (user will need to reset their password to login)
+      const randomPassHash = await this.generateHashedRandomPassword();
+      if (!randomPassHash) {
+        return errors.internalServerError(res, 'Failed to generate a random password for user during external authentication removal.');
+      }
+
+      foundUser.external_idp = null;
+      foundUser.external_subject_id = null;
+      foundUser.password = randomPassHash;
+    }
+
+    foundUser.email = email;
+    const updated = await foundUser.save();
+    EventSubscriberEmitter.emit('user:updated', updated.get({ plain: true }));
+
+    return res.send({
+      data: {
+        central_identity_id: foundUser.uuid,
+        email,
+      },
+      ...(remove_external_auth && { meta: { message: "External authentication removed. Password reset required." } })
+    });
+  }
 
   /**
    * Creates a new EmailVerification opportunity for a user to change their email address.
@@ -457,10 +457,10 @@ export class UserController {
         ],
       },
       {
-        model: Language,  
-        attributes: ['tag', 'english_name'],  
+        model: Language,
+        attributes: ['tag', 'english_name'],
       },
-    ],
+      ],
     });
     if (!foundUser) {
       return errors.notFound(res);
@@ -483,15 +483,14 @@ export class UserController {
     const include = [{
       model: Organization,
       attributes: ['id', 'name', 'logo', 'system_id'],
-      through: { attributes: [] },
+      through: { attributes: ['admin_role'], as: 'user_organization' },
     },
     {
       model: Language,
       attributes: ['tag', 'english_name'],
     }];
 
-    let whereConditions: WhereOptions = {};
-    
+    const whereConditions: WhereOptions = {};
     if (admin_role && admin_role.length > 0) {
       // Find user IDs with the specified admin roles
       const userOrgRows = await UserOrganization.findAll({
@@ -504,9 +503,7 @@ export class UserController {
       const userIds = userOrgRows.map(row => row.user_id);
 
       // Filter users by these IDs
-      whereConditions = {
-        uuid: { [Op.in]: userIds }
-      };
+      whereConditions.uuid = { [Op.in]: userIds };
     }
 
     if (academy_online && academy_online.length > 0) {
@@ -532,7 +529,8 @@ export class UserController {
       [Op.or]: [
         { email: { [Op.eq]: exactMatch } },
         { uuid: { [Op.eq]: exactMatch } },
-      ]
+      ],
+      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
     };
 
     const startsWithConditions = {
@@ -540,22 +538,24 @@ export class UserController {
         { first_name: { [Op.like]: `${splitQueryParts[0]}%` } },
         { last_name: { [Op.like]: `${splitQueryParts[splitQueryParts.length - 1]}%` } },
         { email: { [Op.like]: `${exactMatch}%` } },
-      ]
+      ],
+      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
     };
 
     const fuzzyConditions = {
-          [Op.or]: [
-            { first_name: { [Op.like]: fuzzyQueryParts[0] } },
-            { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
-            { email: { [Op.like]: fuzzyQueryParts[0] } },
-            ...(splitQueryParts.length === 2 ? [
-              // Full name search
-              Sequelize.where(
-                Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
-                { [Op.like]: `%${exactMatch}%` }
-              )
-            ] : [])
-      ]
+      [Op.or]: [
+        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
+        { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
+        { email: { [Op.like]: fuzzyQueryParts[0] } },
+        ...(splitQueryParts.length === 2 ? [
+          // Full name search
+          Sequelize.where(
+            Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
+            { [Op.like]: `%${exactMatch}%` }
+          )
+        ] : [])
+      ],
+      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
     };
 
     const [exactResults, startsWithResults, fuzzyResults] = await Promise.all([
@@ -567,7 +567,7 @@ export class UserController {
     // Combine and deduplicate results while maintaining priority order
     const seenIds = new Set<string>();
     const combinedResults: User[] = [];
-    
+
     for (const result of [...exactResults, ...startsWithResults, ...fuzzyResults]) {
       if (!seenIds.has(result.uuid)) {
         seenIds.add(result.uuid);
