@@ -18,6 +18,7 @@ import {
   UserApplication,
   UserOrganization,
   VerificationRequest,
+  Session,
 } from '../models';
 import type {
   CreateUserApplicationBody,
@@ -1394,6 +1395,27 @@ export class UserController {
         disabled: false
       }
     });
+  }
+
+  /**
+   * Deletes a user account.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async deleteUser(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    await Session.destroy({ where: { user_id: uuid } });
+    await foundUser.destroy();
+
+    return res.send({ data: {} });
   }
 
   public async getNotes(req: Request, res: Response): Promise<Response> {
