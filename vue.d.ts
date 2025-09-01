@@ -1,4 +1,4 @@
 declare module '*.vue' {
-  const Component: any;
-  export default Component;
+  import Vue from "vue";
+  export default Vue;
 }
