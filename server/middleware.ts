@@ -56,7 +56,7 @@ export async function verifyBasicAuthorization(req: Request, res: Response, next
     if (authParts.length < 2) {
       return errors.badRequest(res);
     }
-    const { isAuthorized, permissions } = await APIUserController.verifyAPIUserAuth(authParts[0], authParts[1], req.ip);
+    const { isAuthorized, permissions } = await APIUserController.verifyAPIUserAuth(authParts[0], authParts[1], req.ip || '');
     if (!isAuthorized) {
       return errors.unauthorized(res, undefined, 'LibreOne API');
     }

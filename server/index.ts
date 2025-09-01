@@ -50,7 +50,7 @@ const clientRouter = express.Router();
 clientRouter.route('*').get(async (req: Request, res: Response, next: NextFunction) => {
   const userController = new UserController();
   const { expired, sessionInvalid, isAuthenticated, userUUID } = await AuthController.verifyClientAuthentication(req);
-  let user;
+  let user: Record<string, string> | null = null;
   if (isAuthenticated && userUUID) {
     user = await userController.getUserInternal(userUUID, true);
   }
@@ -84,7 +84,7 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
     urlOriginal: req.originalUrl,
     productionURL: getProductionURL(),
     ...(user && { user }),
-  };
+  } as PageContext; // TODO: use `@universal-middleware/core` types
 
   const { httpResponse, redirectTo } = await renderPage(pageContextInit);
   const { statusCode, headers } = httpResponse || {};

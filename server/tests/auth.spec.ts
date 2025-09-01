@@ -98,8 +98,8 @@ describe('Authentication and Authorization', async () => {
       expect(response.status).to.equal(200);
       expect(response.body?.data).to.deep.equal({ uuid: user1.uuid });
       expect(response.get('Set-Cookie')).to.be.an('array').with.length(2);
-      expect(response.get('Set-Cookie')[0]).to.contain('one_access=');
-      expect(response.get('Set-Cookie')[1]).to.contain('one_signed=');
+      expect(response.get('Set-Cookie')?.[0]).to.contain('one_access=');
+      expect(response.get('Set-Cookie')?.[1]).to.contain('one_signed=');
       await user1.destroy();
     });
     it('should fail to verify with incorrect code', async () => {
@@ -193,8 +193,8 @@ describe('Authentication and Authorization', async () => {
         .set('Cookie', await createSessionCookiesForTest(user1.uuid));
       expect(response.status).to.equal(302);
       expect(response.get('Set-Cookie')).to.be.an('array').with.length(2);
-      expect(response.get('Set-Cookie')[0]).to.contain('one_access=;'); // cleared
-      expect(response.get('Set-Cookie')[1]).to.contain('one_signed=;'); // cleared
+      expect(response.get('Set-Cookie')?.[0]).to.contain('one_access=;'); // cleared
+      expect(response.get('Set-Cookie')?.[1]).to.contain('one_signed=;'); // cleared
 
       await user1.destroy();
     });

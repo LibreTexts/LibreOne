@@ -37,6 +37,7 @@ import { ApplicationLicense } from './ApplicationLicense';
 import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { UserLicenseEntitlement } from './UserLicenseEntitlement';
 import { AccessCode } from './AccessCode';
+import type { Transaction } from 'sequelize';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -132,7 +133,7 @@ async function createDefaultTimeZones() {
  * Creates default Licenses where necessary.
  */
 async function createDefaultLicenses() {
-  let transaction;
+  let transaction: Transaction | undefined;
   try {
     console.log('[DB] Creating default licenses...');
     const existing = await License.findAll();
