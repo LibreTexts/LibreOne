@@ -12,7 +12,7 @@
   >
   
     <FontAwesomeIcon
-      icon="fa-solid fa-rocket"
+      :icon="faRocket"
       class="text-primary rounded-md"
       size="2x"
     />
@@ -79,6 +79,7 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { faRocket } from '@fortawesome/free-solid-svg-icons';
   import { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
