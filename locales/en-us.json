@@ -272,7 +272,6 @@
     "start-trial-action": "Start Trial",
     "start-trial-success": "Success! Your {application} trial has started. You can now access all features of the application for 14 days. Don't worry, we'll remind you before your trial ends.",
     "start-trial-continue": "Continue to {application}",
-    "skip-trial-action": "Skip trial and purchase",
     "start-trial-error": "Oops, something went wrong while starting your trial. Please try again later or contact our Support Center.",
     "have-code": "Have an access code?",
     "trial-expired-header": "Your {application} trial has expired.",

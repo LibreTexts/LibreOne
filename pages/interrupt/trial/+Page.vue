@@ -37,11 +37,6 @@
               {{ $t('subscriptions.start-trial-action') }}
             </ThemedButton>
             <div class="flex flex-row items-center justify-start gap-x-2 mt-4 text-slate-500 text-sm/6">
-              <a :href="`${commonsStoreUrl}/product/${props.application?.stripe_id}?mtm_source=libreone`"
-                class="font-semibold text-center pt-1 lg:text-left hover:underline">
-                {{ $t('subscriptions.skip-trial-action') }}?
-              </a>
-              |
               <a href="/redeem" class="font-semibold text-center pt-1 lg:text-left hover:underline">
                 {{ $t('subscriptions.have-code') }}
               </a>
