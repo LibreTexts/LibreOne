@@ -40,7 +40,7 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
-    "express": "^4.21.0",
+    "express": "^4.21.2",
     "fast-xml-parser": "^4.5.1",
     "helmet": "^6.0.0",
     "http-cas-client": "^0.4.3",
