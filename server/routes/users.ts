@@ -49,6 +49,11 @@ usersRouter.route('/:uuid')
     ensureUserResourcePermission(true),
     validate(UserValidator.updateUserSchema, 'body'),
     catchInternal((req, res) => controller.updateUser(req, res)),
+  ).delete(
+    verifyAPIAuthentication,
+    ensureUserResourcePermission(true),
+    validate(UserValidator.uuidParamSchema, 'params'),
+    catchInternal((req, res) => controller.deleteUser(req, res)),
   );
 
 usersRouter.route('/:uuid/academy-online').patch(
