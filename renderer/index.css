@@ -18,7 +18,7 @@ body {
 .support-center-widget {
   position: fixed;
   z-index: 9999;
-  display: inline-flex;
+  display: block;
   bottom: 0px;
   right: 10px;
 }
