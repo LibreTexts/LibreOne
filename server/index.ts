@@ -19,6 +19,12 @@ import { getProductionURL } from './helpers';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swagger.json'
 import type { PageContext } from '@renderer/types';
+import rateLimit from "express-rate-limit";
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per windowMs
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,6 +32,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const root = `${__dirname}/..`;
 
 const app = express();
+app.use(apiLimiter);
 app.use(helmet.hidePoweredBy()); // TODO: Improve helmet utilization
 app.use(compression());
 app.use(bodyParser.json());
