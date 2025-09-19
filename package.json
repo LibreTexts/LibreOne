@@ -41,6 +41,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.22.1",
+    "express-rate-limit": "^8.1.0",
     "fast-xml-parser": "^5.3.8",
     "helmet": "^6.0.0",
     "http-cas-client": "^0.4.3",
