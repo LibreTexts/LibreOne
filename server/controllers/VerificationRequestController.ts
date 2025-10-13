@@ -308,7 +308,7 @@ export class VerificationRequestController {
       return foundVerifyReq;
     });
 
-    if (prevStatus === 'needs_change' && status === 'open') {
+    if (prevStatus === 'needs_change' && props.status === "open") {
       await this.sendAdminUpdatedRequestNotification();
     }
     return updatedReq;

@@ -13,7 +13,7 @@
     'https://cdn.libretexts.net/DefaultImages/avatar.png';
   const props = withDefaults(
     defineProps<{
-      src: string;
+      src: string | undefined;
       width: number;
     }>(),
     {

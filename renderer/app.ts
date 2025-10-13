@@ -43,6 +43,7 @@ export function createApp(pageContext: PageContext) {
   const dataRef = shallowRef(pageContext.data);
   const pageRef = shallowRef(pageContext.Page);
 
+  // @ts-ignore
   const RootComponent = () => h(BaseLayout, {}, () => h(pageRef.value, pageContextRef.value.pageProps));
   const app = createSSRApp(RootComponent);
   setPageContext(app, pageContextRef);

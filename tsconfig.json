@@ -18,7 +18,8 @@
     "paths": {
       "@server/*": ["./server/*"],
       "@renderer/*": ["./renderer/*"],
-      "@locales/*": ["./locales/*"]
+      "@locales/*": ["./locales/*"],
+      "@components/*": ["./components/*"]
     }
   },
   "ts-node": {

@@ -66,7 +66,7 @@
             :class="$props.authorized ? 'text-gray-500' : 'text-black'"
           >
             <FontAwesomeIcon
-              icon="right-from-bracket"
+              :icon="faRightFromBracket"
               class="w-6 h-6 mt-1.5"
               v-if="$props.authorized"
             />
@@ -77,7 +77,7 @@
             @click="menuOpen = !menuOpen"
             aria-label="Open Navigation Menu"
             :class="menuOpen ? 'motion-safe:-rotate-90' : ''"
-            icon="fa-solid fa-bars"
+            :icon="faBars"
             size="lg"
           />
         </div>
@@ -143,6 +143,7 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { faRightFromBracket, faBars } from '@fortawesome/free-solid-svg-icons';
   import AppSwitcher from './AppSwitcher.vue';
   import { usePageContext } from '@renderer/usePageContext';
   import UserAvatar from '../account_management/UserAvatar.vue';

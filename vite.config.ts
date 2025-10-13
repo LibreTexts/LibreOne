@@ -25,11 +25,11 @@ const config: UserConfig = {
   },
   optimizeDeps: {
     include: [
-      "@fontawesome/fontawesome-svg-core",
+      "@fortawesome/fontawesome-svg-core",
       "@fortawesome/free-solid-svg-icons",
       "@fortawesome/vue-fontawesome",
-    ]
-  }
+    ],
+  },
 };
 
 export default config;
