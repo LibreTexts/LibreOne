@@ -1,5 +1,5 @@
 import createCasClientExpressMiddleware from 'http-cas-client/wrap/express';
-import express from 'express';
+import express, { CookieOptions } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
 import {
@@ -17,7 +17,8 @@ const controller = new AuthController();
 
 const _selfDomain = process.env.DOMAIN || 'localhost:5001';
 const _selfDomainSafe = _selfDomain.startsWith('https://') ? _selfDomain : `https://${_selfDomain}`;
-const CAS_BRIDGE_SERVER_URL = process.env.CAS_BRIDGE_SERVER_URL || 'http://localhost:8443/cas';
+const _casPrefix = process.env.CAS_BRIDGE_SERVER_URL || 'http://localhost:8443/cas';
+const CAS_BRIDGE_SERVER_URL = (_casPrefix.startsWith('https://') || _casPrefix.startsWith('http://')) ? _casPrefix : `https://${_casPrefix}`;
 const SELF_URL = `${_selfDomainSafe}/api/v1/auth/cas-bridge`;
 
 
@@ -51,7 +52,7 @@ authRouter.route('/auto-provision').post(
   ensureAPIUserHasPermission(['users:write']),
   validate(AuthValidator.autoProvisionUserSchema, 'body'),
   catchInternal((req, res) => controller.autoProvisionUser(req, res)),
-)
+);
 
 authRouter.route('/cas-interrupt-check').get(
   verifyAPIAuthentication,
@@ -90,8 +91,41 @@ authRouter.route('/passwordrecovery/complete').post(
 );
 
 authRouter.route('/cas-bridge').get(
-  (req, _res, next) => { req.url = req.originalUrl; return next(); }, // force proper endpoint
-  createCasClientExpressMiddleware({ casServerUrlPrefix: CAS_BRIDGE_SERVER_URL, serverName: SELF_URL }),
+  catchInternal((req, res, next) => {
+    const cookies = req.cookies;
+    const { gateway: gatewayParam, ticket: ticketParam } = req.query;
+    const isGateway = gatewayParam === 'true';
+    if (isGateway) {
+      const cookieConfig: CookieOptions = {
+        path: '/',
+        secure: true,
+        domain: 'libretexts.org',
+        sameSite: 'lax',
+        maxAge: 10 * 60, // 10 minutes
+      };
+      res.cookie('cas_bridge_server_gateway_attempt', 'true', cookieConfig);
+      const redirParams = new URLSearchParams({
+        gateway: 'true',
+        service: SELF_URL,
+      });
+      res.redirect(`${CAS_BRIDGE_SERVER_URL}/login?${redirParams.toString()}`);
+      return;
+    }
+    if (cookies?.cas_bridge_server_gateway_attempt && cookies?.cas_bridge_redirect) {
+      const stCookie = cookies?.st;
+      if (!ticketParam && !stCookie) {
+        // attempted gateway but no session found, silently redirect
+        res.redirect(cookies.cas_bridge_redirect);
+        return;
+      }
+    }
+    req.url = req.originalUrl; // force proper endpoint
+    if (next) return next();
+  }),
+  createCasClientExpressMiddleware({
+    casServerUrlPrefix: CAS_BRIDGE_SERVER_URL,
+    serverName: SELF_URL,
+  }),
   catchInternal((req, res) => controller.handleCASBridgeAuthentication(req, res)),
 );
 
