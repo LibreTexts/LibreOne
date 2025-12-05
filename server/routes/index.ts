@@ -1,6 +1,7 @@
 import express from 'express';
 import { apiUsersRouter } from './apiusers';
 import { applicationsRouter } from './applications';
+import { announcementsRouter } from './announcements';
 import { authRouter } from './auth';
 import { licensesRouter } from './licenses';
 import { organizationsRouter } from './organizations';
@@ -17,6 +18,7 @@ const APIRouter = express.Router();
 
 APIRouter.use('/api-users', apiUsersRouter);
 APIRouter.use('/applications', applicationsRouter);
+APIRouter.use('/announcements', announcementsRouter);
 APIRouter.use('/auth', authRouter);
 APIRouter.use('/event-subscribers', eventSubscribersRouter);
 APIRouter.use('/licenses', licensesRouter);

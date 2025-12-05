@@ -4,9 +4,17 @@
     v-bind="$attrs"
   >
     <div>
+      <div class="flex flex-col gap-y-3">
+      <AnnouncementBanner
+        v-for="announcement in $props.announcements || []"
+        :key="announcement.uuid"
+        :announcement="announcement"
+        :rounded="true"
+      />
       <NotVerifiedBanner
         v-if="$props.authorized && pageContext?.user?.user_type === 'instructor' && pageContext?.user?.verify_status === 'not_attempted'"
       />
+      </div>
       <p class="text-3xl font-medium">
         {{
           $t(
@@ -137,16 +145,20 @@
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import { useAxios } from '@renderer/useAxios';
   import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
+  import { Announcement } from '@server/models';
+  import AnnouncementBanner from './layout/AnnouncementBanner.vue';
 
   // Props & Context
   const props = withDefaults(
     defineProps<{
       authorized?: boolean;
       publicApps?: Application[];
+      announcements?: Announcement[];
     }>(),
     {
       authorized: false,
       publicApps: undefined,
+      announcements: undefined,
     },
   );
   const pageContext = usePageContext();

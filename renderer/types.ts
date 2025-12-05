@@ -1,6 +1,7 @@
 import type { App, ComponentPublicInstance } from "vue";
 import { Application } from "@server/types/applications";
 import { User } from "@server/types/users";
+import { Announcement } from "@server/models";
 
 export type PageContextUser = User & { apps?: Application[] };
 
@@ -31,6 +32,7 @@ declare global {
       isAuthenticated: boolean;
       expiredAuth: boolean;
       redirectTo?: string;
+      announcements?: Announcement[];
       user?: PageContextUser;
     }
   }

@@ -1,7 +1,7 @@
 import type { Config } from "vike/types";
 
 export default {
-  passToClient: ["pageProps", "locale", "user", "routeParams"],
+  passToClient: ["pageProps", "locale", "user", "routeParams", "announcements"],
   clientRouting: true,
   prefetchStaticAssets: "viewport",
   meta: {
