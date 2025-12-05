@@ -1,13 +1,23 @@
 <template>
   <StagingEnvBanner v-if="!isProduction" />
+  <AnnouncementBanner
+    v-for="announcement in pageContext?.announcements || []"
+    :key="announcement.uuid"
+    :announcement="announcement"
+  />
   <slot />
-  <div id="support-widget-container" class="support-center-widget" v-if="!plainLayout"></div>
+  <div
+    id="support-widget-container"
+    class="support-center-widget"
+    v-if="!plainLayout"
+  ></div>
 </template>
 
 <script lang="ts" setup>
 import { computed, onMounted } from "vue";
 import { usePageContext } from "@renderer/usePageContext";
 import StagingEnvBanner from "./layout/StagingEnvBanner.vue";
+import AnnouncementBanner from "./layout/AnnouncementBanner.vue";
 
 onMounted(() => {
   const supportScript = document.createElement("script");

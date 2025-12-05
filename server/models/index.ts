@@ -6,6 +6,7 @@ import { Alias } from './Alias';
 import { APIUser } from './APIUser';
 import { APIUserPermissionConfig } from './APIUserPermissionConfig';
 import { Application } from './Application';
+import { Announcement } from './Announcement';
 import { defaultTimeZones } from '../timezones';
 import { Domain } from './Domain';
 import { EmailVerification } from './EmailVerification';
@@ -60,6 +61,7 @@ sequelize.addModels([
   Application,
   ApplicationLicense,
   ApplicationLicenseEntitlement,
+  Announcement,
   AccessCode,
   AccessRequest,
   AccessRequestApplication,
@@ -226,6 +228,7 @@ export {
   Application,
   ApplicationLicense,
   ApplicationLicenseEntitlement,
+  Announcement,
   DeleteAccountRequest,
   Domain,
   EmailVerification,

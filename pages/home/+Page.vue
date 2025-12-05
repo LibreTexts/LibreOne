@@ -3,6 +3,7 @@
     <LaunchpadComponent
       :authorized="isAuthorized"
       :public-apps="props.publicApps"
+      :announcements="props.announcements"
     />
   </StandardPageLayout>
 </template>
@@ -13,7 +14,8 @@
   import { useAuthStatus } from '@renderer/useAuthStatus';
   import { Application } from '@server/types/applications';
   import { usePageProps } from '@renderer/usePageProps';
+  import { Announcement } from '@server/models';
 
-  const props = usePageProps<{ publicApps?: Application[] }>()
+  const props = usePageProps<{ publicApps?: Application[]; announcements?: Announcement[] }>()
   const isAuthorized = useAuthStatus();
 </script>

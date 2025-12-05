@@ -28,7 +28,7 @@ const config: UserConfig = {
       "@fontawesome/fontawesome-svg-core",
       "@fortawesome/free-solid-svg-icons",
       "@fortawesome/vue-fontawesome",
-    ]
+    ],
   }
 };
 
