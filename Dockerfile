@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:22-alpine
 LABEL org.opencontainers.image.source="https://github.com/LibreTexts/LibreOne"
 
 WORKDIR /usr/src/libreone
