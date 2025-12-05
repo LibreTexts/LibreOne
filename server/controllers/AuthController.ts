@@ -236,7 +236,7 @@ export class AuthController {
       valid: true,
       created_at: new Date(),
       expires_at: sessionExpiry,
-      ...(ticket && { session_ticket: ticket })
+      ...(ticket && { session_ticket: ticket }),
     });
 
     const sessionJWT = await AuthController.createSessionJWT(finalUserUUID, sessionID);
@@ -1056,7 +1056,7 @@ export class AuthController {
       casParams.set('gateway', 'true');
       res.cookie('one_tried_gateway', true, {
         httpOnly: true,
-        maxAge: 60 * 1000, // 60 seconds
+        maxAge: 10 * 60, // 10 minutes
         ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
       });
     }
