@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import errors from './errors';
 
-type APIFunction = (request: Request, response: Response) => Response | void;
-type AsyncAPIFunction = (request: Request, response: Response) => Promise<Response | void>;
+type APIFunction = (request: Request, response: Response, next: NextFunction) => Response | void;
+type AsyncAPIFunction = (request: Request, response: Response, next: NextFunction) => Promise<Response | void>;
 
 /**
  * Wraps an async API function in order to catch internal errors and return an HTTP
@@ -12,9 +12,9 @@ type AsyncAPIFunction = (request: Request, response: Response) => Promise<Respon
  * @returns A response fulfilled by the API function, or a HTTP 500 error.
  */
 export function catchInternal(fn: APIFunction | AsyncAPIFunction): AsyncAPIFunction {
-  return async function safeFunction(req: Request, res: Response): Promise<Response | void> {
+  return async function safeFunction(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-      return await fn(req, res);
+      return await fn(req, res, next);
     } catch (e) {
       console.error(e);
       return errors.internalServerError(res);
