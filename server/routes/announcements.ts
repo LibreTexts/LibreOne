@@ -1,7 +1,7 @@
 import { AnnouncementController } from "@server/controllers/AnnouncementController";
 import * as AnnouncementValidator from "@server/validators/announcements";
 import { catchInternal } from "@server/helpers";
-import { ensureUserResourcePermission, validate, verifyAPIAuthentication } from "@server/middleware";
+import { ensureUserResourcePermission, validate, verifyAPIAuthentication, useLibreTextsCORS } from "@server/middleware";
 import express from "express";
 
 const announcementsRouter = express.Router();
@@ -12,6 +12,7 @@ announcementsRouter.route("/").get(
 );
 
 announcementsRouter.route("/:scope").get(
+  useLibreTextsCORS,
   validate(AnnouncementValidator.announcementParamSchema, "params"),
   catchInternal((req, res) =>
     controller.getAllActiveAnnouncementsByScope(req, res)
