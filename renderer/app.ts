@@ -22,6 +22,8 @@ import {
   faChevronUp,
   faChevronDown,
   faChevronRight,
+  faUser,
+  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { setPageContext } from "./usePageContext";
 import { initAxios } from "./useAxios";
@@ -92,7 +94,9 @@ export function createApp(pageContext: PageContext) {
     faChevronUp,
     faPlay,
     faChevronDown,
-    faChevronRight
+    faChevronRight,
+    faUser,
+    faLock,
   );
   app.component("FontAwesomeIcon", FontAwesomeIcon);
 
