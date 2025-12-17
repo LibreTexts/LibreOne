@@ -1,4 +1,5 @@
 import { IncomingHttpHeaders } from 'http';
+import { Arrayify } from './misc';
 
 export type ADAPTSpecialRole = 'instructor' | 'grader' | 'question-editor' | 'tester';
 
@@ -19,14 +20,38 @@ export type VerifyEmailBody = {
   code: number;
 };
 
-export type CreateUserFromExternalIdPHeaders = IncomingHttpHeaders & {
-  clientname: string;
-  principalattributes: string;
-  principalid: string;
-  profileattributes: string;
-  profileid: string;
-  profiletypeid: string;
+export type CreateUserFromExternalIdPBody = {
+  profileAttributes: CreateUserFromExternalIdPBodyProfileAttributes;
+  clientName: string;
+  profileId: string;
+  profileTypedId: string;
+  principalId: string;
+  principalAttributes: CreateUserFromExternalIdPBodyPrincipalAttributes;
 };
+
+export type CreateUserFromExternalIdPBodyProfileAttributes = {
+  at_hash?: string;
+  sub?: string;
+  email_verified?: boolean;
+  id_token?: string;
+  iss?: string;
+  given_name?: string;
+  picture?: string;
+  access_token?: string;
+  token_expiration_advance?: number;
+  aud?: string[];
+  azp?: string;
+  name?: string;
+  expiration?: number;
+  hd?: string;
+  exp?: string | number;
+  family_name?: string;
+  iat?: string | number;
+  email?: string;
+  preferred_username?: string;
+};
+
+export type CreateUserFromExternalIdPBodyPrincipalAttributes = Arrayify<CreateUserFromExternalIdPBodyProfileAttributes>;
 
 export type CheckCASInterruptQuery = {
   registeredService: string;

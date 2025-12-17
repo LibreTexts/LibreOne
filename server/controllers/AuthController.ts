@@ -9,6 +9,7 @@ import {
   importPKCS8,
   importSPKI,
   JWK,
+  JWTPayload,
   jwtVerify,
   KeyLike,
   SignJWT,
@@ -16,7 +17,7 @@ import {
 import { TextEncoder } from 'util';
 import { URLSearchParams } from 'url';
 import { Agent } from 'https';
-import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
+import { Op, UniqueConstraintError } from 'sequelize';
 import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { Application, ResetPasswordToken, sequelize, Session, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
@@ -28,7 +29,6 @@ import { CookieOptions, Request, Response } from 'express';
 import type {
   RegisterBody,
   VerifyEmailBody,
-  CreateUserFromExternalIdPHeaders,
   CompleteLoginQuery,
   InitLoginQuery,
   InitResetPasswordBody,
@@ -40,6 +40,7 @@ import type {
   ADAPTSpecialRole,
   BackChannelSLOBody,
   BackChannelSLOQuery,
+  CreateUserFromExternalIdPBody,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 import { XMLParser } from 'fast-xml-parser';
@@ -701,32 +702,45 @@ export class AuthController {
    * @returns The fulfilled API response.
    */
   public async createUserFromExternalIdentityProvider(req: Request, res: Response): Promise<Response> {
-    const headers = req.headers as CreateUserFromExternalIdPHeaders;
-    const userData = {
-      clientname: headers.clientname,
-      userSub: headers.principalid,
-      principalattributes: AuthController.parseCASKeyValueHeader(headers.principalattributes),
-      profileattributes: AuthController.parseCASKeyValueHeader(headers.profileattributes),
-    };
+    const body = req.body as CreateUserFromExternalIdPBody;
 
-    const getDiscoveryURI = (clientName: string): string => {
+    const getDiscoveryURI = (clientName: string): string | null => {
       switch (clientName) {
         case 'GoogleWorkspace':
           return 'https://accounts.google.com/.well-known/openid-configuration';
         case 'MicrosoftActiveDirectory':
           return 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
         default:
-          return 'INVALID_URI';
+          return null;
       }
     };
 
-    const discoveryURI = getDiscoveryURI(userData.clientname);
-    const discoveryConfig = await axios.get(discoveryURI);
+    const discoveryURI = getDiscoveryURI(body.clientName);
+    if (!discoveryURI) {
+      return errors.badRequest(res, 'Unsupported external identity provider!');
+    }
+
+    const idToken = body.principalAttributes.id_token && body.principalAttributes.id_token.length > 0 ? body.principalAttributes.id_token[0] : null;
+    if (!idToken) {
+      return errors.badRequest(res, 'No ID token provided from external identity provider!');
+    }
+
+    const issuer = body.principalAttributes.iss && body.principalAttributes.iss.length > 0 ? body.principalAttributes.iss[0] : null;
+    const audience = body.principalAttributes.aud && body.principalAttributes.aud.length > 0 ? body.principalAttributes.aud[0] : null;
+    if (!issuer || !audience) {
+      return errors.badRequest(res, 'Invalid issuer or audience from external identity provider!');
+    }
+
+    const discoveryConfig = await axios.get(discoveryURI).catch(() => null);
+    if (!discoveryConfig || !discoveryConfig.data || !discoveryConfig.data.jwks_uri) {
+      return errors.badRequest(res, 'Unable to retrieve discovery configuration from external identity provider!');
+    }
+
     const jwksURI = discoveryConfig.data.jwks_uri;
     const jwks = createRemoteJWKSet(new URL(jwksURI));
-    const { payload } = await jwtVerify(userData.principalattributes.id_token, jwks, {
-      issuer: userData.principalattributes.iss,
-      audience: userData.principalattributes.aud,
+    const { payload } = await jwtVerify(idToken, jwks, {
+      issuer,
+      audience,
     });
 
     let givenName = payload.given_name as string;
@@ -739,27 +753,41 @@ export class AuthController {
       }
     }
 
-    const getEmailPayloadField = (clientName: string): string => {
-      switch (clientName) {
-        case 'GoogleWorkspace':
-          return 'email';
-        case 'MicrosoftActiveDirectory':
-          return 'upn';
-        default:
-          return 'INVALID_FIELD';
+    const getEmailFromPayload = (clientName: string, payload: JWTPayload): string | null => {
+      let email: string | null = null;
+      
+      if (clientName === 'GoogleWorkspace') {
+        email = payload.email as string;
       }
+
+      // Microsoft AD can be tricky with what fields it returns
+      if (clientName === 'MicrosoftActiveDirectory') {
+        email = payload.email as string;
+        if (!email && payload.upn) {
+          email = payload.upn as string;
+        }
+        if (!email && payload.preferred_username) {
+          email = payload.preferred_username as string;
+        }
+      };
+
+      return email;
     };
 
-    const email = payload[getEmailPayloadField(userData.clientname)];
-
-    const criteria: WhereOptions[] = [{ external_subject_id: payload.sub }];
-    if (email) {
-      criteria.push({ email });
+    const email = getEmailFromPayload(body.clientName, payload);
+    if (!email) {
+      return errors.badRequest(res, 'No email provided from external identity provider!');
     }
 
     const foundUser = await User.findOne({
-      where: criteria.length > 1 ? { [Op.or]: criteria } : criteria[0],
+      where: {
+        [Op.or]: [
+          { email },
+          { external_subject_id: payload.sub }
+        ]
+      }
     });
+
     if (!foundUser) {
       const created = await User.create({
         uuid: uuidv4(),
@@ -773,7 +801,7 @@ export class AuthController {
         legacy: false,
         ip_address: payload.ipaddr,
         verify_status: 'not_attempted',
-        external_idp: userData.clientname,
+        external_idp: body.clientName,
         last_access: new Date(),
         registration_type: 'self'
       });
@@ -787,7 +815,7 @@ export class AuthController {
         last_name: familyName?.trim() ?? DEFAULT_LAST_NAME,
         avatar: payload.picture || DEFAULT_AVATAR,
         ip_address: payload.ipaddr,
-        external_idp: userData.clientname,
+        external_idp: body.clientName,
         last_access: new Date(),
       });
 

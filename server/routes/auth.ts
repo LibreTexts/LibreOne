@@ -41,6 +41,7 @@ authRouter.route('/external-provision').post(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:write']),
+  validate(AuthValidator.externalProvisionUserSchema, 'body'),
   catchInternal((req, res) => controller.createUserFromExternalIdentityProvider(req, res)),
 );
 
