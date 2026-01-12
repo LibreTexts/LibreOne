@@ -58,6 +58,13 @@
           required
           class="my-4"
         />
+        <ThemedInput
+          id="mktg_email_opt_in_input"
+          v-model="mktgEmailOptIn"
+          type="checkbox"
+          :label="'Yes, I\'d like to receive occasional update and newsletter emails from LibreTexts. You can unsubscribe at any time using the link in our emails.'"
+          class="my-4"
+        />
         <div class="my-4">
         <p class="text-sm font-light mt-4">
           {{ $t("common.email") }}
@@ -139,6 +146,7 @@
   const editMode = ref(false);
   const firstName = ref('');
   const lastName = ref('');
+  const mktgEmailOptIn = ref(false);
   const firstErr = ref(false);
   const lastErr = ref(false);
   const isDirty = ref(false);
@@ -148,10 +156,11 @@
   // Intialize the form with the user's current name
   firstName.value = pageContext.user?.first_name ?? '';
   lastName.value = pageContext.user?.last_name ?? '';
+  mktgEmailOptIn.value = pageContext.user?.mktg_email_opt_in ?? false;
 
   // Watch for changes to the form fields and set the dirty flag
   watch(
-    () => [firstName.value, lastName.value, fileToUploadName.value],
+    () => [firstName.value, lastName.value, fileToUploadName.value, mktgEmailOptIn.value],
     () => {
       if (isDirty.value) return; // Don't set dirty flag if already dirty
       isDirty.value = true;
@@ -282,6 +291,7 @@
       const response = await axios.patch(`/users/${pageContext.user.uuid}`, {
         first_name: firstName.value,
         last_name: lastName.value,
+        mktg_email_opt_in: mktgEmailOptIn.value,
       });
 
       if (!response.data) {

@@ -159,6 +159,10 @@ export class User extends Model {
   @Column(DataType.STRING)
   declare stripe_id: string;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare mktg_email_opt_in: boolean;
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 

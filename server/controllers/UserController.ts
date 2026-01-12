@@ -806,6 +806,7 @@ export class UserController {
       'student_id',
       'verify_status',
       'lang',
+      'mktg_email_opt_in',
     ];
     const unallowedExternalKeys = ['first_name', 'last_name'];
     const apiUserOnlyKeys = ['verify_status'];
