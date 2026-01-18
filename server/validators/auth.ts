@@ -32,7 +32,7 @@ export const externalProvisionUserSchema = joi.object({
     iat: joi.string(),
     email: joi.string(),
     preferred_username: joi.string(), // Microsoft AD may return this instead of email
-  }).required(),
+  }).required().unknown(true),
   principalAttributes: joi.object({
     at_hash: joi.array().items(joi.string()),
     sub: joi.array().items(joi.string()),
@@ -53,8 +53,8 @@ export const externalProvisionUserSchema = joi.object({
     iat: joi.array().items(joi.string()),
     email: joi.array().items(joi.string()),
     preferred_username: joi.array().items(joi.string()), // Microsoft AD may return this instead of email
-  }).required(),
-});
+  }).required().unknown(true),
+}).unknown(true);
 
 export const autoProvisionUserSchema = joi.object({
   email: joi.string().email().required(),
