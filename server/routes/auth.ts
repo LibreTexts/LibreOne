@@ -101,7 +101,7 @@ authRouter.route('/cas-bridge').get(
         secure: true,
         domain: 'libretexts.org',
         sameSite: 'lax',
-        maxAge: 10 * 60, // 10 minutes
+        maxAge: 60 * 1000, // 60 seconds
       };
       res.cookie('cas_bridge_server_gateway_attempt', 'true', cookieConfig);
       const redirParams = new URLSearchParams({
