@@ -814,6 +814,8 @@ export class AuthController {
         first_name: givenName?.trim() ?? DEFAULT_FIRST_NAME,
         last_name: familyName?.trim() ?? DEFAULT_LAST_NAME,
         avatar: payload.picture || DEFAULT_AVATAR,
+        disabled: false,
+        expired: false,
         ip_address: payload.ipaddr,
         external_idp: body.clientName,
         last_access: new Date(),
@@ -1157,6 +1159,16 @@ export class AuthController {
     const foundUser = await User.findOne({ where: { uuid: localUUID } });
     if (!foundUser) {
       return errors.badRequest(res);
+    }
+
+    /** If the user registered via an external IdP and their account is disabled, re-enable it now
+     * Technically, CAS shouldn't have authenticated them if their account was disabled, but this is a
+     * "self-healing" mechanism for accounts that may have been disabled/edge-case scenarios during registration
+     * and they made it through CAS successfully.
+     */
+    if (foundUser.disabled && foundUser.external_subject_id) {
+      foundUser.disabled = false;
+      await foundUser.save();
     }
 
     if (!foundUser.registration_complete) {
