@@ -11,6 +11,13 @@
     </p>
     <div class="mt-6 flex flex-col-reverse lg:flex-row lg:divide-x lg:divide-slate-200">
       <div class="basis-2/3 px-4 py-2">
+        <RegistrationAnnouncement
+          v-for="announcement in props.announcements"
+          :key="announcement.id"
+          :announcement="announcement"
+          rounded
+          class="mb-4"
+        />
         <form
           class="lg:mt-4"
           @submit="submitForm"
@@ -199,13 +206,16 @@
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
+  import RegistrationAnnouncement from './RegistrationAnnouncement.vue';
   import { getPasswordStrength } from '@renderer/utils/auth';
+  import { Announcement } from '@server/models';
 
-  defineProps<{
+  const props = defineProps<{
     loginURL: string;
     recoveryURL: string;
     googleRegisterURL: string;
     microsoftRegisterURL: string;
+    announcements?: Announcement[]
   }>();
   const emit = defineEmits<{
     (e: 'register', email: string): void;
