@@ -44,6 +44,7 @@ export class User extends Model {
   @Column(DataType.STRING)
   declare uuid: string;
 
+  @Index({ name: 'external_subject_id', unique: true })
   @Column(DataType.STRING)
   declare external_subject_id?: string | null;
 
