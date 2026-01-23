@@ -38,7 +38,7 @@ export class ApplicationController {
     return Application.findOne({
       where: {
         id: applicationID,
-        hide_from_apps: false,
+        hide_from_apps_api: false,
       },
     });
   }
@@ -79,7 +79,7 @@ export class ApplicationController {
       default_access,
     } = (req.query as unknown) as GetAllApplicationsQuery;
 
-    const criteria: WhereOptions[] = [{ hide_from_apps: false }];
+    const criteria: WhereOptions[] = [{ hide_from_apps_api: false }];
     if (query) {
       criteria.push({
         name: { [Op.like]: `%${query}%` },
@@ -126,6 +126,7 @@ export class ApplicationController {
     type,
     onlyCASSupported,
     default_access,
+    is_launchpad_context = false
   }:{
       offset?: number;
       limit?: number;
@@ -133,9 +134,10 @@ export class ApplicationController {
       type?: string;
       onlyCASSupported?: boolean;
       default_access?: string;
+      is_launchpad_context?: boolean;
     } ): Promise<APIResponse<Application[]>> {
     
-    const criteria: WhereOptions[] = [{ hide_from_apps: false }];
+    const criteria: WhereOptions[] = [{ hide_from_apps_api: false }];
     if (query) {
       criteria.push({
         name: { [Op.like]: `%${query}%` },
@@ -149,6 +151,11 @@ export class ApplicationController {
     }
     if (default_access) {
       criteria.push({ default_access });
+    }
+    if (is_launchpad_context) {
+      criteria.push({
+        launchpad_visibility: { [Op.ne]: 'none' }
+      })
     }
   
     const { count, rows } = await Application.findAndCountAll({

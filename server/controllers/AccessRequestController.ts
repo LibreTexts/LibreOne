@@ -33,7 +33,7 @@ export class AccessRequestController {
    */
   public async validateRequestedApplications(application_ids: number[]) {
     const allApps = await Application.findAll({
-      where: { hide_from_apps: false },
+      where: { hide_from_apps_api: false },
     });
     return application_ids.reduce((acc, curr) => {
       if (!acc) {
@@ -58,7 +58,7 @@ export class AccessRequestController {
     try {
       const props = req.body as CreateAccessRequestBody;
 
-      const allApps = await Application.findAll({ where: { hide_from_apps: false } });
+      const allApps = await Application.findAll({ where: { hide_from_apps_api: false } });
       const { allValid, numLibrary } = props.applications.reduce((acc, curr) => {
         if (!acc.allValid) {
           return acc;

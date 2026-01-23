@@ -141,9 +141,7 @@
   import { computed, ref } from 'vue';
   import { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
-  import { getUserAppsAndLibraries } from '@renderer/utils/apps';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import { useAxios } from '@renderer/useAxios';
   import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
   import { Announcement } from '@server/models';
   import AnnouncementBanner from './layout/AnnouncementBanner.vue';
@@ -154,20 +152,22 @@
       authorized?: boolean;
       publicApps?: Application[];
       announcements?: Announcement[];
+      userApps?: Application[];
+      userLibraries?: Application[];
     }>(),
     {
       authorized: false,
       publicApps: undefined,
       announcements: undefined,
+      userApps: undefined,
+      userLibraries: undefined,
     },
   );
   const pageContext = usePageContext();
-  const axios = useAxios();
 
   // Data & UI
-  const loading = ref(false);
-  const apps = ref<Application[]>([]);
-  const libs = ref<Application[]>([]);
+  const apps = ref<Application[]>(props.authorized ? props.userApps || [] : props.publicApps?.filter((a) => a.app_type === 'standalone') || []);
+  const libs = ref<Application[]>(props.authorized ? props.userLibraries || [] : props.publicApps?.filter((a) => a.app_type === 'library') || []);
   const hasUnsupportedApps = computed(() =>
     apps.value.reduce((acc, curr) => {
       if (acc) {
@@ -179,94 +179,6 @@
       return false;
     }, false),
   );
-
-  // Init
-  if (props.authorized) {
-    loadUsersApps();
-  } else {
-    loadPublicApps();
-  }
-
-  // Methods
-  async function loadUsersApps() {
-    try {
-      // temporary fix for academy online
-      const academyOnline = {
-        id : "28",
-        name: "Academy Online",
-        app_type: "standalone",
-        main_url: "https://libretexts.org/academy/online",
-        cas_service_url: "https://libretexts.org/casservice",
-        default_access: "none",
-        icon: "https://cdn.libretexts.net/Logos/academy_full.png?v=1",
-        description: "Professional Development for Instructional Staff",
-        primary_color: "#127BC4",
-        hide_from_apps: false,
-        hide_from_user_apps: false,
-        is_default_library: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-        supports_cas: true,
-      }
-
-      if (!pageContext.value?.user?.uuid) {
-        throw new Error('nouuid');
-      }
-      if (pageContext.value.user?.apps) {
-        apps.value = pageContext.value.user.apps.filter((a) => a.app_type === 'standalone');
-        libs.value = pageContext.value.user.apps.filter((a) => a.app_type === 'library');
-        if(pageContext.value.user?.user_type === 'instructor'){
-          // @ts-ignore
-          apps.value.unshift(academyOnline);
-        }
-        return;
-      }
-
-      loading.value = true;
-      [apps.value, libs.value] = await getUserAppsAndLibraries(
-        pageContext.value.user.uuid,
-      );
-
-      if (pageContext.value.user?.user_type === 'instructor'){
-        // @ts-ignore
-        apps.value.unshift(academyOnline);
-      }
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  async function loadPublicApps() {
-    try {
-      if (props.publicApps) {
-        apps.value = props.publicApps.filter((a) => a.app_type === 'standalone');
-        libs.value = props.publicApps.filter((a) => a.app_type === 'library');
-        return;
-      }
-
-      loading.value = true;
-
-      const res = await axios.get('/applications');
-      if (!res.data.data || !Array.isArray(res.data.data)) {
-        throw new Error('badres');
-      }
-
-      apps.value = res.data.data.filter((app: Application) => {
-        return app.app_type === 'standalone';
-      });
-
-      libs.value = res.data.data.filter((app: Application) => {
-        return app.app_type === 'library';
-      });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      loading.value = false;
-    }
-  }
 
   // User has edit access to a library if they
   function hasEditAccess(name: string): boolean {

@@ -12,7 +12,7 @@ import {
 } from 'sequelize-typescript';
 import { AccessRequest } from './AccessRequest';
 import { AccessRequestApplication } from './AccessRequestApplication';
-import { ApplicationType } from '../types/applications';
+import { ApplicationLaunchpadVisibility, ApplicationType } from '../types/applications';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 
@@ -64,15 +64,19 @@ export class Application extends Model {
   @Column(DataType.STRING)
   declare primary_color: string;
 
+  @Default('all')
+  @Column(DataType.ENUM('none', 'students', 'instructors', 'verified_instructors', 'all'))
+  declare launchpad_visibility: ApplicationLaunchpadVisibility;
+
   /** Hide record from Applications API results */
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
-  declare hide_from_apps: boolean;
+  declare hide_from_apps_api: boolean;
 
   /** Hide record from Users API application results */
   @AllowNull(false)
   @Column(DataType.BOOLEAN)
-  declare hide_from_user_apps: boolean;
+  declare hide_from_user_apps_api: boolean;
 
   /** Include in list of "default" libraries for instructors */
   @AllowNull(false)

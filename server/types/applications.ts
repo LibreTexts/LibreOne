@@ -4,8 +4,9 @@ export type Application = {
   app_type: ApplicationType;
   main_url: string;
   cas_service_url: string;
-  hide_from_apps: boolean;
-  hide_from_user_apps: boolean;
+  launchpad_visibility: ApplicationLaunchpadVisibility;
+  hide_from_apps_api: boolean;
+  hide_from_user_apps_api: boolean;
   is_default_library: boolean;
   supports_cas: boolean;
   default_access: 'all' | 'instructors' | 'none';
@@ -22,6 +23,7 @@ export type ApplicationIDParams = {
   applicationID: number;
 };
 
+export type ApplicationLaunchpadVisibility = 'none' | 'students' | 'instructors' | 'verified_instructors' | 'all';
 export type ApplicationType = 'standalone' | 'library';
 
 export type CreateApplicationBody = Omit<Application, 'id' | 'created_at' | 'updated_at'>;
