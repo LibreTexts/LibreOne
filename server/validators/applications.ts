@@ -2,6 +2,7 @@ import joi from 'joi';
 
 export const applicationIDValidator = joi.number().integer().required();
 
+export const applicationLaunchpadVisibilityValidator = joi.string().valid('none', 'students', 'instructors', 'verified-instructors', 'all');
 export const applicationTypeValidator = joi.string().valid('standalone', 'library');
 
 export const applicationIDParamSchema = joi.object({
@@ -13,8 +14,9 @@ export const createApplicationSchema = joi.object({
   app_type: applicationTypeValidator.required(),
   main_url: joi.string().uri().required(),
   cas_service_url: joi.string().uri().required(),
-  hide_from_apps: joi.boolean().required(),
-  hide_from_user_apps: joi.boolean().required(),
+  launchpad_visibility: applicationLaunchpadVisibilityValidator.required(),
+  hide_from_apps_api: joi.boolean().required(),
+  hide_from_user_apps_api: joi.boolean().required(),
   is_default_library: joi.boolean().default(false),
   supports_cas: joi.boolean().default(true),
   default_access: joi.string().valid('all', 'instructors', 'none').required(),
@@ -38,8 +40,9 @@ export const updateApplicationSchema = joi.object({
   app_type: applicationTypeValidator,
   main_url: joi.string().uri(),
   cas_service_url: joi.string().uri(),
-  hide_from_apps: joi.boolean(),
-  hide_from_user_apps: joi.boolean(),
+  launchpad_visibility: applicationLaunchpadVisibilityValidator,
+  hide_from_apps_api: joi.boolean(),
+  hide_from_user_apps_api: joi.boolean(),
   is_default_library: joi.boolean(),
   supports_cas: joi.boolean(),
   icon: joi.string().uri(),

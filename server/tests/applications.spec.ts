@@ -99,7 +99,7 @@ describe('Applications', async () => {
       expect(omitID(omitTimestamps(response.body?.data))).to.deep.equal(testAppData());
     });
     it('should not retrieve hidden application', async () => {
-      const app1 = await Application.create(testAppData({ hide_from_apps: true }));
+      const app1 = await Application.create(testAppData({ hide_from_apps_api: true }));
 
       const response = await request(server)
         .get(`/api/v1/applications/${app1.id}`)
@@ -247,7 +247,7 @@ describe('Applications', async () => {
       expect(apps).to.have.deep.members([testAppData()]);
     });
     it('should not return hidden applications', async () => {
-      await Application.create(testAppData({ hide_from_apps: true }));
+      await Application.create(testAppData({ hide_from_apps_api: true }));
 
       const response = await request(server)
         .get('/api/v1/applications')

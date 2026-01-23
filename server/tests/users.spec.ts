@@ -596,7 +596,7 @@ describe('Users', async () => {
         expired: false,
       });
       const hiddenApp = await Application.create(
-        testAppData({ name: 'AppThree', hide_from_user_apps: true }),
+        testAppData({ name: 'AppThree', hide_from_user_apps_api: true }),
       );
       const userApp1 = await UserApplication.create({
         user_id: user1.uuid,

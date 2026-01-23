@@ -1144,11 +1144,22 @@
                         "type": "string",
                         "required": true
                     },
-                    "hide_from_apps": {
+                    "launchpad_visibility": {
+                        "type": "string",
+                        "enum": [
+                            "none",
+                            "students",
+                            "instructors",
+                            "verified-instructors",
+                            "all"
+                        ],
+                        "required": true
+                    },
+                    "hide_from_apps_api": {
                         "type": "boolean",
                         "required": true
                     },
-                    "hide_from_user_apps": {
+                    "hide_from_user_apps_api": {
                         "type": "boolean",
                         "required": true
                     },

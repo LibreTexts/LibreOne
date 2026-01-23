@@ -48,6 +48,7 @@ import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import { UserNote } from '../models/UserNote';
 import { generateSecureRandomString } from '@server/helpers';
+import { ApplicationLaunchpadVisibility } from '@server/types/applications';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
@@ -410,30 +411,48 @@ export class UserController {
    * @param uuid - User identifier.
    * @returns Array of applications (POJOs).
    */
-  public async getUserAppsAndLibrariesInternal(uuid: string): Promise<Application[]> {
-    const userApps = await Application.findAll({
-      where: { hide_from_user_apps: false },
-      include: [
-        {
-          model: User,
-          through: { attributes: [] },
-          where: { uuid },
-          attributes: [],
-        },
-      ],
-    });
-    const allApps = await Application.findAll({ where: { hide_from_apps: false } });
-    return Object.values([...userApps, ...allApps].reduce((acc, curr) => {
+  public async getUserAppsAndLibrariesInternal(uuid: string, is_launchpad_context?: boolean): Promise<Application[]> {
+    const user = await User.findOne({ where: { uuid } });
+    const userApps = await Application.findAll({where: { hide_from_user_apps_api: false }});
+    const allApps = await Application.findAll({ where: { hide_from_apps_api: false } });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const apps = Object.values([...userApps, ...allApps].reduce((acc, curr) => {
       const isLibrary = curr.get('app_type') === 'library';
       const isUnsupported = curr.get('supports_cas') === false;
-      if (
-        (isLibrary || isUnsupported || curr.default_access === 'all' || userApps.find((a) => a.get('id') === curr.get('id')))
-        && !acc[curr.get('id')]
-      ) {
-        acc[curr.get('id')] = curr.get();
+      const isInUserApps = userApps.find((a) => a.get('id') === curr.get('id'));
+
+      // Already added
+      if (acc[curr.get('id')]) {
+        return acc;
       }
+
+      // Everyone gets libraries and unsupported apps
+      if (isLibrary || isUnsupported) {
+        acc[curr.get('id')] = curr.get();
+        return acc;
+      }
+
+      // Apps with default access or user explicitly granted access
+      if (curr.default_access === 'all' || isInUserApps) {
+        acc[curr.get('id')] = curr.get();
+        return acc;
+      }
+
       return acc;
     }, {} as Record<number, Application>));
+
+    // If in the context of the Launchpad, run through visibility filtering
+    if (is_launchpad_context) {
+      const visibilityRights = this.determineLaunchpadVisibilityRights(user);
+      return apps.filter(app => visibilityRights.includes(app.launchpad_visibility));
+    }
+
+    // Else return solely on access rights
+    return apps;
   }
 
   /**
@@ -598,7 +617,7 @@ export class UserController {
     const { uuid } = req.params as UserUUIDParams;
     const { type } = req.query as GetAllUserApplicationsQuery;
 
-    const criteria: WhereOptions[] = [{ hide_from_user_apps: false }];
+    const criteria: WhereOptions[] = [{ hide_from_user_apps_api: false }];
     if (type) {
       criteria.push({ app_type: type });
     }
@@ -1474,6 +1493,24 @@ export class UserController {
     await foundNote.destroy();
 
     return res.send({ data: {} });
+  }
+
+  public determineLaunchpadVisibilityRights(user: User): ApplicationLaunchpadVisibility[] {
+    const visibilityRights: ApplicationLaunchpadVisibility[] = ['all'];
+
+    if (user.user_type === 'student') {
+      visibilityRights.push('students');
+      return visibilityRights;
+    }
+
+    if (user.user_type === 'instructor') {
+      visibilityRights.push('instructors');
+      if (user.verify_status === 'verified') {
+        visibilityRights.push('verified_instructors');
+      }
+    }
+
+    return visibilityRights;
   }
 
   private async generateHashedRandomPassword(): Promise<string | null> {
