@@ -22,6 +22,7 @@ export type User = {
   last_password_change: Date;
   lang: string;
   is_developer: boolean;
+  mktg_email_opt_in?: boolean;
   created_at: Date;
   updated_at: Date;
 };
@@ -81,6 +82,7 @@ export type UpdateUserBody = {
   time_zone?: string;
   student_id?: string;
   lang?: string;
+  mktg_email_opt_in?: boolean;
 };
 
 export type UpdateUserAcademyOnlineBody = {

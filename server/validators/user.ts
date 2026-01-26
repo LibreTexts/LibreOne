@@ -93,6 +93,7 @@ export const updateUserSchema = joi.object({
   student_id: joi.string().min(3).max(50),
   disabled: joi.boolean(),
   lang: joi.string().min(2).max(10),
+  mktg_email_opt_in: joi.boolean(),
 });
 
 export const updateUserEmailSchema = joi.object({

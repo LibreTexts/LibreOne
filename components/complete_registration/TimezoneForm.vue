@@ -29,6 +29,12 @@
         />
       </div>
     </div>
+    <ThemedInput
+      id="mktg_email_opt_in_input"
+      v-model="mktg_email_opt_in"
+      type="checkbox"
+      :label="'Yes, I\'d like to receive occasional update and newsletter emails from LibreTexts. You can unsubscribe at any time using the link in our emails.'"
+    />
     <ThemedButton
       type="submit"
       @click="handleSubmit"
@@ -53,6 +59,7 @@
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import ThemedSelectInput from '../ThemedSelectInput.vue';
+  import ThemedInput from '../ThemedInput.vue';
   import ThemedButton from '../ThemedButton.vue';
   import { TimezoneOpts } from '@renderer/utils/timezones';
 import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
@@ -71,6 +78,7 @@ import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
   // UI & Data
   const loading = ref(false);
   const timezone = ref('');
+  const mktg_email_opt_in = ref(false);
 
   // Methods
 
@@ -92,7 +100,13 @@ import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
   async function submitTimezone(data: TimezonePatch) {
     try {
       loading.value = true;
-      await axios.patch(`/users/${props.uuid}`, data);
+      console.log(
+        "mktg_email_opt_in", mktg_email_opt_in.value
+      )
+      await axios.patch(`/users/${props.uuid}`, {
+        ...data,
+        mktg_email_opt_in: mktg_email_opt_in.value,
+      });
 
       const queryParams = new URLSearchParams(window.location.search);
 
