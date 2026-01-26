@@ -17,6 +17,7 @@ export const ANNOUNCEMENT_SCOPES: AnnouncementScope[] = [
   "launchpad",
   "launchpad-instructors",
   "launchpad-students",
+  "registration",
 ];
 
 export const ANNOUNCEMENT_VARIANTS: AnnouncementVariant[] = [

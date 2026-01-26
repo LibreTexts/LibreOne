@@ -42,6 +42,7 @@ import {
 import AuthForm from "@components/registration/AuthForm.vue";
 import { usePageContext } from "@renderer/usePageContext";
 import { usePageProps } from "@renderer/usePageProps";
+import { Announcement } from "@server/models";
 const VerifyEmail = defineAsyncComponent(
   () => import("@components/registration/VerifyEmail.vue")
 );
@@ -52,6 +53,7 @@ const props = usePageProps<{
   googleRegisterURL: string;
   microsoftRegisterURL: string;
   serviceURL?: string;
+  announcements?: Announcement[]
 }>();
 
 const stage = shallowRef(AuthForm);
