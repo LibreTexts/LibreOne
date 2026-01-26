@@ -51,7 +51,8 @@ usersRouter.route('/:uuid')
     catchInternal((req, res) => controller.updateUser(req, res)),
   ).delete(
     verifyAPIAuthentication,
-    ensureUserResourcePermission(true),
+    ensureActorIsAPIUser,
+    ensureAPIUserHasPermission(['users:write']),
     validate(UserValidator.uuidParamSchema, 'params'),
     catchInternal((req, res) => controller.deleteUser(req, res)),
   );

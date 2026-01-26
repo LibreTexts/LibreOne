@@ -1412,6 +1412,10 @@ export class UserController {
       return errors.notFound(res);
     }
 
+    if (foundUser.is_developer) {
+      return errors.badRequest(res, "This account is marked as a developer account and cannot be deleted via the API.");
+    }
+
     await Session.destroy({ where: { user_id: uuid } });
     await foundUser.destroy();
 
