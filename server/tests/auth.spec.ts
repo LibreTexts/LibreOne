@@ -92,7 +92,7 @@ describe('Authentication and Authorization', async () => {
       );
 
       const response = await request(server)
-        .post('/api/v1/auth/verify-email')
+        .post('/api/v1/auth/verify-email-code')
         .send({ email: 'info@libretexts.org', code: verifyCode });
 
       expect(response.status).to.equal(200);
@@ -113,7 +113,7 @@ describe('Authentication and Authorization', async () => {
       );
 
       const response = await request(server)
-        .post('/api/v1/auth/verify-email')
+        .post('/api/v1/auth/verify-email-code')
         .send({ email: 'info@libretexts.org', code: 101101 });
 
       expect(response.status).to.equal(400);

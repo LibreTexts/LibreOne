@@ -42,8 +42,8 @@ import {
 import AuthForm from "@components/registration/AuthForm.vue";
 import { usePageContext } from "@renderer/usePageContext";
 import { usePageProps } from "@renderer/usePageProps";
-const VerifyEmail = defineAsyncComponent(
-  () => import("@components/registration/VerifyEmail.vue")
+const VerifyEmailForm = defineAsyncComponent(
+  () => import("@components/registration/VerifyEmailForm.vue")
 );
 
 const props = usePageProps<{
@@ -66,7 +66,7 @@ onMounted(() => {
 
 const componentProps = computed(() => {
   switch (stage.value) {
-    case VerifyEmail: {
+    case VerifyEmailForm: {
       return { email: email.value };
     }
     default: {
@@ -76,7 +76,7 @@ const componentProps = computed(() => {
 });
 const componentEvents = computed(() => {
   switch (stage.value) {
-    case VerifyEmail: {
+    case VerifyEmailForm: {
       return {};
     }
     default: {
@@ -92,6 +92,6 @@ const componentEvents = computed(() => {
  */
 function handleInitialRegistrationComplete(resEmail: string) {
   email.value = resEmail;
-  stage.value = VerifyEmail;
+  stage.value = VerifyEmailForm;
 }
 </script>
