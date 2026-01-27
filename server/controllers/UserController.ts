@@ -258,11 +258,12 @@ export class UserController {
       throw new Error('No mail sender available to issue email verification!');
     }
 
-    const verifyCode = await verificationController.createVerification(uuid, email);
+    const { token, code } = await verificationController.createVerification(uuid, email);
     const emailRes = await verificationController.sendEmailVerificationMessage(
       mailSender,
       email,
-      verifyCode,
+      code,
+      token,
     );
     mailSender.destroy();
     if (!emailRes) {
@@ -987,7 +988,7 @@ export class UserController {
       return errors.notFound(res);
     }
 
-    const verification = await new EmailVerificationController().checkVerification(email, code);
+    const verification = await new EmailVerificationController().checkVerificationCode(uuid, code);
     if (!verification || !verification.uuid || !verification.email) {
       return errors.badRequest(res);
     }

@@ -107,6 +107,19 @@
     "instructor_guide": "You can now use LibreOne to complete your instructor verification. This will allow LibreTexts to give you advanced access to services reserved for educators only.",
     "continue_verification": "Continue to Instructor Verification"
   },
+  "email_verification": {
+    "header": "Email Verification",
+    "loading": "Checking your verification token...",
+    "verify_thanks": "Thanks for helping to keep our community safe!",
+    "success_header": "Email Verified!",
+    "success_tagline": "Your email has been successfully verified. You can now sign in to LibreOne with your email and password.",
+    "continue_to_signin": "Continue to Sign In",
+    "error_header": "Verification Failed",
+    "error_invalid": "Oops, it looks like your verification token is invalid. If you already entered your six-digit verification code during registration, you can safely ignore this message and sign in to LibreOne.",
+    "error_expired": "Oops, it looks like your verification token has expired. Please request a new verification email below.",
+    "resend_verification": "Resend Verification Email",
+    "resend_success": "Success! A new verification email has been sent to your email address. You can safely close this page now."
+  },
   "password": {
     "strength": "Strength",
     "short": "Too short",

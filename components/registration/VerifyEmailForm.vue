@@ -120,7 +120,7 @@
     }
     loading.value = true;
     try {
-      await axios.post('/auth/verify-email', {
+      await axios.post('/auth/verify-email-code', {
         email: props.email,
         code: code.value,
       });
