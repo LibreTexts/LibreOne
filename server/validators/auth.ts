@@ -64,9 +64,17 @@ export const autoProvisionUserSchema = joi.object({
   time_zone: timeZoneValidator.required(),
 });
 
-export const verifyEmailSchema = joi.object({
+export const verifyEmailCodeSchema = joi.object({
   email: joi.string().email().required(),
   code: joi.number().integer().min(100000).max(999999).required(),
+});
+
+export const verifyEmailTokenSchema = joi.object({
+  token: joi.string().length(64).required(),
+});
+
+export const resendVerificationEmailSchema = joi.object({
+  uuid: joi.string().uuid().required(),
 });
 
 export const initLoginQuerySchema = joi.object({

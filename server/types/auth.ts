@@ -15,9 +15,17 @@ export type RegisterBody = {
   password: string;
 };
 
-export type VerifyEmailBody = {
+export type VerifyEmailCodeBody = {
   email: string;
   code: number;
+};
+
+export type VerifyEmailTokenBody = {
+  token: string;
+};
+
+export type ResendVerificationEmailBody = {
+  uuid: string;
 };
 
 export type CreateUserFromExternalIdPBody = {

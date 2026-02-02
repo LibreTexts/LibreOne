@@ -28,10 +28,11 @@ import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
 import { UserNote } from './UserNote';
 import { UserLicenseEntitlement } from './UserLicenseEntitlement';
+import { EmailVerification } from './EmailVerification';
 
 @DefaultScope(() => ({
   attributes: {
-    exclude: ['password', 'ip_address', 'email_verify_code'],
+    exclude: ['password', 'ip_address', 'email_verifications'],
   },
 }))
 @Table({
@@ -94,6 +95,10 @@ export class User extends Model {
 
   @Column(DataType.DATE)
   declare disabled_date: Date | null;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  declare email_verified: boolean;
 
   @Default(false)
   @Column(DataType.BOOLEAN)
@@ -171,6 +176,9 @@ export class User extends Model {
 
   @HasMany(() => AccessRequest)
   access_requests?: Array<AccessRequest>;
+
+  @HasMany(() => EmailVerification)
+  email_verifications?: Array<EmailVerification>;
 
   @HasMany(() => LoginEvent)
   login_events?: Array<LoginEvent>;

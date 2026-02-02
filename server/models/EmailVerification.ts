@@ -22,11 +22,15 @@ export class EmailVerification extends Model {
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  declare email: string;
+  declare email: string; // The email being verified. Useful for email change verifications.
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
   declare code: number;
+
+  @AllowNull(false)
+  @Column(DataType.STRING)
+  declare token: string;
 
   @AllowNull(false)
   @Column(DataType.DATE)
