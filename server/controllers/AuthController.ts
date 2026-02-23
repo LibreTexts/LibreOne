@@ -23,7 +23,7 @@ import { Application, ResetPasswordToken, sequelize, Session, User, UserApplicat
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
-import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getProductionURL } from '../helpers';
+import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getPrettyDefaultAccessString, getProductionURL } from '../helpers';
 import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
 import type {
@@ -991,18 +991,33 @@ export class AuthController {
 
     // If app's default access is not 'all', we need to check if the user has access to it
     if (foundApp.default_access !== 'all') {
+      let hasAccess = false;
+      
+      // Check if app has group-based access that user matches
+      if (foundApp.default_access === 'instructors' && foundUser.user_type === 'instructor') {
+        hasAccess = true; // Instructor only apps
+      }
+      if (foundApp.default_access === 'verified_instructors' && foundUser.user_type === 'instructor' && foundUser.verify_status === 'verified') {
+        hasAccess = true; // Verified instructor only apps
+      }
+
+      // Check if user has explicit access to the app
       const foundUserApp = await UserApplication.findOne({
         where: {
           user_id: foundUser.get('uuid'),
           application_id: foundApp.get('id'),
         },
       });
-      if (!foundUserApp) {
+      if (foundUserApp) {
+        hasAccess = true; 
+      }
+
+      if (!hasAccess) {
         return res.send({
           interrupt: true,
           block: true,
           ssoEnabled: false,
-          message: 'Sorry, you don\'t have access to this application. Please request access in your <a href="https://one.libretexts.org/instructor">LibreOne instructor profile</a> or <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
+          message: `Sorry, you don\'t have access to this application. Access to this application is available to ${getPrettyDefaultAccessString(foundApp.default_access)} by default. Please request access in your <a href="https://one.libretexts.org/instructor">LibreOne instructor profile</a> or <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.`,
           links: {},
         });
       }

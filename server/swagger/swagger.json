@@ -1128,6 +1128,7 @@
                         "enum": [
                             "all",
                             "instructors",
+                            "verified_instructors",
                             "none"
                         ],
                         "required": true

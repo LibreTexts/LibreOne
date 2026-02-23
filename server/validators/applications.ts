@@ -2,7 +2,7 @@ import joi from 'joi';
 
 export const applicationIDValidator = joi.number().integer().required();
 
-export const applicationLaunchpadVisibilityValidator = joi.string().valid('none', 'students', 'instructors', 'verified-instructors', 'all');
+export const applicationLaunchpadVisibilityValidator = joi.string().valid('none', 'students', 'instructors', 'verified_instructors', 'all');
 export const applicationTypeValidator = joi.string().valid('standalone', 'library');
 
 export const applicationIDParamSchema = joi.object({
@@ -19,7 +19,7 @@ export const createApplicationSchema = joi.object({
   hide_from_user_apps_api: joi.boolean().required(),
   is_default_library: joi.boolean().default(false),
   supports_cas: joi.boolean().default(true),
-  default_access: joi.string().valid('all', 'instructors', 'none').required(),
+  default_access: joi.string().valid('all', 'instructors', 'verified_instructors', 'none').required(),
   icon: joi.string().uri().required(),
   description: joi.string().min(2).max(100).required(),
   primary_color: joi.string().regex(/^#[A-Fa-f0-9]{6}/).required(), // hex color
@@ -32,7 +32,7 @@ export const getAllApplicationsSchema = joi.object({
   query: joi.string().max(100),
   type: applicationTypeValidator,
   onlyCASSupported: joi.boolean(),
-  default_access: joi.string().valid('all', 'instructors', 'none'),
+  default_access: joi.string().valid('all', 'instructors', 'verified_instructors', 'none'),
 });
 
 export const updateApplicationSchema = joi.object({
