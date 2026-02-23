@@ -33,7 +33,8 @@
       id="mktg_email_opt_in_input"
       v-model="mktg_email_opt_in"
       type="checkbox"
-      :label="'Yes, I\'d like to receive occasional update and newsletter emails from LibreTexts. You can unsubscribe at any time using the link in our emails.'"
+      label="Be the first to hear about the latest updates and new features available across the LibreVerse, as well as opportunities for professional development and collaboration with your peers in open education. We promise to keep emails to a minimum, and you can unsubscribe at any time."
+      class="!my-6"
     />
     <ThemedButton
       type="submit"
