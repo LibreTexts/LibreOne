@@ -9,7 +9,7 @@ export type Application = {
   hide_from_user_apps_api: boolean;
   is_default_library: boolean;
   supports_cas: boolean;
-  default_access: 'all' | 'instructors' | 'none';
+  default_access: 'all' | 'instructors' | 'verified_instructors' | 'none';
   icon: string;
   preview_image?: string | null;
   stripe_id?: string | null;
@@ -34,7 +34,7 @@ export type GetAllApplicationsQuery = {
   query?: string;
   type?: ApplicationType;
   onlyCASSupported?: boolean;
-  default_access?: 'all' | 'instructors' | 'none';
+  default_access?: 'all' | 'instructors' | 'verified_instructors' | 'none';
 };
 
 export type UpdateApplicationBody = Partial<CreateApplicationBody>;

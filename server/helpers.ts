@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import errors from './errors';
+import { Application } from './types/applications';
 
 type APIFunction = (request: Request, response: Response, next: NextFunction) => Response | void;
 type AsyncAPIFunction = (request: Request, response: Response, next: NextFunction) => Promise<Response | void>;
@@ -116,6 +117,21 @@ export function generateSecureRandomString(length: number): string {
   }
   
   return result.join('');
+}
+
+export function getPrettyDefaultAccessString(defaultAccess: Application['default_access']): string {
+  switch (defaultAccess) {
+    case 'all':
+      return 'everyone';
+    case 'instructors':
+      return 'instructors';
+    case 'verified_instructors':
+      return 'verified instructors';
+    case 'none':
+      return 'no one';
+    default:
+      return defaultAccess; // Fallback to the original string if it's an unexpected value
+  }
 }
 
 export const DEFAULT_FIRST_NAME = 'LibreTexts';

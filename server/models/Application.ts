@@ -46,8 +46,8 @@ export class Application extends Model {
 
   /** User groups that can access the application by default */
   @AllowNull(false)
-  @Column(DataType.ENUM('all', 'instructors', 'none'))
-  declare default_access: 'all' | 'instructors' | 'none';
+  @Column(DataType.ENUM('all', 'instructors', 'verified_instructors', 'none'))
+  declare default_access: 'all' | 'instructors' | 'verified_instructors' | 'none';
 
   @AllowNull(false)
   @Column(DataType.STRING)
