@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
   import ThemedSelectInput from '../ThemedSelectInput.vue';
@@ -81,7 +81,33 @@ import { ADAPT_SPECIAL_ROLES } from '@renderer/utils/auth';
   const timezone = ref('');
   const mktg_email_opt_in = ref(false);
 
+  // Lifecycle Hooks
+  onMounted(() => {
+    detectAndSetTimezone();
+  });
+
   // Methods
+
+  /**
+   * Detects the browser's timezone and sets it as the default value if it matches
+   * one of the available timezone options.
+   */
+  function detectAndSetTimezone() {
+    try {
+      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const matchingOption = TimezoneOpts.find(
+        (tz) => tz.value === browserTimezone
+      );
+
+      if (matchingOption && !timezone.value) {
+        timezone.value = matchingOption.value;
+      }
+    } catch (error) {
+      // Silently fail - this is not critical
+      console.warn('Unable to detect browser timezone:', error);
+    }
+  }
 
   /**
    * Validates the timezone selection and requests a timezone update.
