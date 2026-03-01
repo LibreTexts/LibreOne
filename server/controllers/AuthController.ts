@@ -28,7 +28,6 @@ import errors from '../errors';
 import { CookieOptions, Request, Response } from 'express';
 import type {
   RegisterBody,
-  VerifyEmailBody,
   CompleteLoginQuery,
   InitLoginQuery,
   InitResetPasswordBody,
@@ -41,6 +40,9 @@ import type {
   BackChannelSLOBody,
   BackChannelSLOQuery,
   CreateUserFromExternalIdPBody,
+  VerifyEmailTokenBody,
+  VerifyEmailCodeBody,
+  ResendVerificationEmailBody,
 } from '../types/auth';
 import { LoginEventController } from '@server/controllers/LoginEventController';
 import { XMLParser } from 'fast-xml-parser';
@@ -493,17 +495,18 @@ export class AuthController {
       const newUser = await User.create({
         uuid: uuidv4(),
         email: props.email,
+        email_verified: false, // Email is not yet verified
         password: hashed,
         first_name: DEFAULT_FIRST_NAME,
         last_name: DEFAULT_LAST_NAME,
-        disabled: true,
+        disabled: false,
         expired: false,
         legacy: false,
         ip_address: ip,
         verify_status: 'not_attempted',
         registration_type: 'self',
       });
-      const verifyCode = await verificationController.createVerification(
+      const { code, token } = await verificationController.createVerification(
         newUser.get('uuid'),
         props.email,
       );
@@ -512,7 +515,8 @@ export class AuthController {
       const emailRes = await verificationController.sendEmailVerificationMessage(
         mailSender,
         props.email,
-        verifyCode,
+        code,
+        token,
       );
       mailSender.destroy();
       if (!emailRes) {
@@ -541,20 +545,21 @@ export class AuthController {
    * @param res - Outgoing API response.
    * @returns The fulfilled API response.
    */
-  public async verifyRegistrationEmail(req: Request, res: Response): Promise<Response> {
-    const { email, code } = req.body as VerifyEmailBody;
+  public async verifyRegistrationEmailCode(req: Request, res: Response): Promise<Response> {
+    const { email, code } = req.body as VerifyEmailCodeBody;
 
-    const foundVerification = await new EmailVerificationController().checkVerification(email, code);
-    if (!foundVerification || !foundVerification.uuid) {
-      return errors.badRequest(res);
-    }
-
-    const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
+    const foundUser = await User.findOne({ where: { email } });
     if (!foundUser) {
       return errors.badRequest(res);
     }
 
-    foundUser.disabled = false;
+    const foundVerification = await new EmailVerificationController().checkVerificationCode(foundUser.uuid, code);
+    if (!foundVerification || !foundVerification.uuid) {
+      return errors.badRequest(res);
+    }
+
+
+    foundUser.email_verified = true;
     await foundUser.save();
 
     // Create a short-lived local session
@@ -563,10 +568,98 @@ export class AuthController {
     await this.createAndAttachLocalSession(res, foundUser.uuid, undefined, 30);
 
     return res.send({
+      success: true,
       data: {
         uuid: foundUser.uuid,
       },
     });
+  }
+
+  /**
+   * Validates a provided email verification link token, then marks the user's email as verified.
+   * Intended for async email verification via link vs. code entry. A short-lived local session is not
+   * created because this is intended to be used via link click rather than immediate onboarding continuation.
+   * 
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async verifyRegistrationEmailToken(req: Request, res: Response): Promise<Response> {
+    const { token } = req.body as VerifyEmailTokenBody;
+
+    const foundVerification = await new EmailVerificationController().checkVerificationToken(token);
+    if (!foundVerification || !foundVerification.uuid) {
+      return errors.badRequest(res, "Invalid verification token!");
+    }
+
+    // Verification token was found, but it's expired
+    if (foundVerification.expired) {
+      return res.send({
+        success: false,
+        error: "Verification token has expired. Please request a new verification email.",
+        data: {
+          uuid: foundVerification.uuid,
+        },
+      })
+    }
+
+    const foundUser = await User.findOne({ where: { uuid: foundVerification.uuid } });
+    if (!foundUser) {
+      return errors.badRequest(res);
+    }
+
+    foundUser.email_verified = true;
+    await foundUser.save();
+
+    return res.send({
+      success: true,
+      data: {
+        uuid: foundUser.uuid,
+      },
+    })
+  }
+
+  /**
+   * Resends an email verification message to a user. Only a token is sent because this is intended
+   * for 
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns - The fulfilled API response.
+   */
+  public async resendVerificationEmail(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.body as ResendVerificationEmailBody;
+
+    const foundUser = await User.findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.badRequest(res);
+    }
+
+    const verificationController = new EmailVerificationController();
+    const mailSender = new MailController();
+    if (!mailSender.isReady()) {
+      throw new Error('No mail sender available to issue email verification!');
+    }
+
+    const { token } = await verificationController.createVerification(
+      foundUser.get('uuid'),
+      foundUser.get('email'),
+    );
+
+    // Send email verification
+    const emailRes = await verificationController.sendEmailVerificationMessage(
+      mailSender,
+      foundUser.get('email'),
+      null, // Token only for resends
+      token,
+    );
+
+    mailSender.destroy();
+    
+    if (!emailRes) {
+      throw new Error('Unable to send email verification!');
+    }
+
+    return res.send({ success: true });
   }
 
   /**
@@ -793,6 +886,7 @@ export class AuthController {
         uuid: uuidv4(),
         external_subject_id: payload.sub,
         email,
+        email_verified: true, // Email is verified by external IdP
         first_name: givenName?.trim() ?? DEFAULT_FIRST_NAME,
         last_name: familyName?.trim() ?? DEFAULT_LAST_NAME,
         avatar: payload.picture || DEFAULT_AVATAR,
@@ -811,6 +905,7 @@ export class AuthController {
       const updated = await foundUser.update({
         external_subject_id: payload.sub,
         email,
+        email_verified: true, // Email is verified by external IdP
         first_name: givenName?.trim() ?? DEFAULT_FIRST_NAME,
         last_name: familyName?.trim() ?? DEFAULT_LAST_NAME,
         avatar: payload.picture || DEFAULT_AVATAR,
@@ -913,6 +1008,22 @@ export class AuthController {
         ssoEnabled: false,
         message: 'This account has been disabled. Please <a href="https://commons.libretexts.org/support/contact">submit a support ticket</a> for assistance.',
         links: {},
+      });
+    }
+
+    if (foundUser.email_verified === false) {
+      const redirectParams = new URLSearchParams({
+        redirectCASServiceURI: req.query.service ? (req.query.service as string) : CAS_LOGIN,
+      });
+      return res.send({
+        interrupt: true,
+        block: true,
+        ssoEnabled: true,
+        message: 'We need to verify your email address before you can continue. Please use the link below to begin the verification process.',
+        autoRedirect: true,
+        links: {
+          'Go': `${SELF_BASE}/api/v1/auth/login?${redirectParams.toString()}`,
+        },
       });
     }
 
