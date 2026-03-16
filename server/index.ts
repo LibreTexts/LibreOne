@@ -21,8 +21,16 @@ import { PageContext } from '@renderer/types';
 import rateLimit from "express-rate-limit";
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 1 * 60 * 1000, // 1 minute
+  limit: 400, // Limit each IP to 400 requests per windowMs
+  keyGenerator: (req) => {
+    const xff = req.headers['x-forwarded-for'];
+    if (xff && typeof xff === 'string') {
+      const ips = xff.split(',').map(ip => ip.trim());
+      return ips[ips.length - 1]; // rightmost = injected by ALB = avoid spoofing
+    }
+    return req.ip || '';
+  }
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +39,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const root = `${__dirname}/..`;
 
 const app = express();
+app.set("trust proxy", 1); // trust first proxy (ALB)
 app.use(apiLimiter);
 app.use(helmet.hidePoweredBy()); // TODO: Improve helmet utilization
 app.use(compression());
@@ -75,14 +84,14 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
     return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
   }
 
-  if(expired) {
+  if (expired) {
     const redirParams = new URLSearchParams({
       redirectURI: encodeURIComponent(req.url),
     });
     return res.redirect(307, `/api/v1/auth/login?${redirParams.toString()}`);
   }
 
-  if(sessionInvalid) {
+  if (sessionInvalid) {
     return res.redirect(307, '/api/v1/auth/logout');
   }
 
@@ -95,7 +104,7 @@ clientRouter.route('*').get(async (req: Request, res: Response, next: NextFuncti
 
   const { httpResponse, redirectTo } = await renderPage(pageContextInit);
   const { statusCode, headers } = httpResponse || {};
-  
+
   if (redirectTo) {
     return res.redirect(307, redirectTo);
   }
