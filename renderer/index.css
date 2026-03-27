@@ -1,6 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #127BC4;
+  --color-secondary: #8553FE;
+  --color-accent: #5F65F5;
+  --color-neutral: #18181B;
+  --color-base-100: #2A303C;
+  --color-info: #38BDF8;
+  --color-save: #22c55e;
+  --color-success: #338650;
+  --color-warning: #BB5C21;
+  --color-error: #DC3838;
+  --color-blue-750: #0B34D9;
+  --color-sky-550: #179AEB;
+  --transition-property-width: width;
+}
 
 body {
   @apply font-sans;

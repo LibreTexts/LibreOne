@@ -1,15 +1,11 @@
 import path from "path";
 import vue from "@vitejs/plugin-vue";
 import vike from "vike/plugin";
+import tailwindcss from "@tailwindcss/vite";
 import { UserConfig } from "vite";
-// @ts-ignore
-import postcss from "./postcss.config";
 
 const config: UserConfig = {
-  css: {
-    postcss,
-  },
-  plugins: [vue(), vike()],
+  plugins: [tailwindcss(), vue(), vike()],
   resolve: {
     alias: {
       "@server": path.join(__dirname, "server"),
