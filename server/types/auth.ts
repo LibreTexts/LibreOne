@@ -1,8 +1,6 @@
 import { IncomingHttpHeaders } from 'http';
 import { Arrayify } from './misc';
 
-export type ADAPTSpecialRole = 'instructor' | 'grader' | 'question-editor' | 'tester';
-
 export type TokenAuthenticationVerificationResult = {
   expired: boolean;
   sessionInvalid: boolean;
@@ -71,7 +69,6 @@ export type CompleteLoginQuery = {
 
 export type completeRegistrationBody = {
   source?: 'adapt-registration';
-  adapt_role?: ADAPTSpecialRole;
 };
 
 export type InitResetPasswordBody = {

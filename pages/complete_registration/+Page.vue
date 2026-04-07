@@ -151,8 +151,8 @@
   /**
    * Advances the page to the Organization selection state upon receiving the 'role-update' event.
    */
-  function handleRoleSelectionComplete(role: string, adapt_role?: string) {
-    handleNavigation('/complete-registration/organization', adapt_role ? { adapt_role } : undefined);
+  function handleRoleSelectionComplete() {
+    handleNavigation('/complete-registration/organization');
   }
 
   /**
