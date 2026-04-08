@@ -12,7 +12,7 @@
         :aria-busy="loading"
       >
         <div v-if="!complete">
-          <h1 class="text-3xl text-center font-medium lt:mt-2">
+          <h1 class="text-3xl text-center font-semibold lt:mt-2">
             {{ $t('passwordrecovery.completeheader') }}
           </h1>
           <p class="text-center mt-4">
@@ -20,36 +20,24 @@
           </p>
           <form @submit="submitForm">
             <div class="mt-4">
-              <label
-                for="pass_input"
-                class="block text-sm font-medium"
+              <Input
+                name="pass_input"
+                :type="showPassword ? 'text' : 'password'"
+                :label="$t('passwordrecovery.newpassword')"
+                placeholder="********"
+                v-model="password"
+                :error="passErr"
+                required
+              />
+              <button
+                type="button"
+                @click="toggleShowPassword"
+                class="text-xs text-slate-500 mt-1 hover:underline"
               >
-                {{ $t('passwordrecovery.newpassword') }}
-              </label>
-              <div class="flex rounded-md h-10 mt-2">
-                <input
-                  id="pass_input"
-                  :type="showPassword ? 'text' : 'password'"
-                  aria-required="true"
-                  v-model="password"
-                  placeholder="********"
-                  :class="['border', passErr ? 'border-red-600' : 'border-gray-300', 'h-full', 'w-full', 'rounded-md', 'rounded-r-none', 'px-2', 'block', 'flex-1', 'placeholder:text-slate-400', 'placeholder:font-light']"
-                >
-                <button
-                  type="button"
-                  @click="toggleShowPassword"
-                  class="bg-gray-200 hover:bg-gray-300 w-10 h-full inline-flex border border-gray-300 border-l-0 items-center justify-center rounded-r-md"
-                >
-                  <FontAwesomeIcon :icon="['fa-solid', showPassword ? 'fa-eye-slash' : 'fa-eye']" />
-                  <span class="sr-only">
-                    {{ showPassword ? $t('common.hide') : $t('common.show') }} {{ $t('common.password') }}
-                  </span>
-                </button>
-              </div>
+                {{ showPassword ? $t('common.hide') : $t('common.show') }} {{ $t('common.password') }}
+              </button>
               <div class="mt-1">
-                <PasswordStrengthMeter
-                  :strength="passStrength"
-                />
+                <PasswordStrengthMeter :strength="passStrength" />
               </div>
             </div>
             <i18n-t
@@ -59,28 +47,23 @@
               class="text-error font-medium text-center mt-6"
             >
               <template #startreset>
-                <a
-                  :href="restartURI"
-                  class="text-neutral"
-                >
+                <a :href="restartURI" class="text-neutral">
                   {{ $t('passwordrecovery.restart').toLocaleLowerCase() }}
                 </a>
               </template>
             </i18n-t>
-            <button
+            <Button
               type="submit"
-              class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-8 mb-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
+              full-width
+              :loading="loading"
+              class="mt-8 mb-2"
             >
-              <span v-if="!loading">{{ $t('passwordrecovery.setpassword') }}</span>
-              <template v-else>
-                <LoadingIndicator />
-                <span class="ml-2">{{ $t('passwordrecovery.submitting') }}</span>
-              </template>
-            </button>
+              {{ $t('passwordrecovery.setpassword') }}
+            </Button>
           </form>
         </div>
         <div v-else>
-          <h1 class="text-3xl text-center font-medium mt-4 lg:mt-2">
+          <h1 class="text-3xl text-center font-semibold mt-4 lg:mt-2">
             {{ $t('passwordrecovery.completedheader') }}
           </h1>
           <p class="text-center mt-6 mb-4">
@@ -90,7 +73,7 @@
             v-if="willRedirect"
             class="flex flex-col items-center justify-center mt-8"
           >
-            <LoadingIndicator class="!h-8 !w-8" />
+            <Spinner size="lg" />
             <p class="text-center italic my-4">
               {{ $t('passwordrecovery.redirecting') }}
             </p>
@@ -107,9 +90,7 @@
               class="text-center ml-2"
             >
               <template #source>
-                <a
-                  :href="props.signInURI"
-                >
+                <a :href="props.signInURI">
                   {{ $t('common.signin') }}
                 </a>
               </template>
@@ -126,7 +107,7 @@
   import { AxiosError } from 'axios';
   import { useAxios } from '@renderer/useAxios';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import { Input, Button, Spinner } from '@libretexts/davis-vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
   import { getPasswordStrength } from '@renderer/utils/auth';
   import { usePageProps } from '@renderer/usePageProps';
@@ -150,30 +131,19 @@
   const passStrength = computed(() => getPasswordStrength(password.value));
   const restartURI = computed(() => {
     const params = new URLSearchParams({
-      ...(props.origRedirectURI && { 
-        redirect_uri: props.origRedirectURI,
-      }),
+      ...(props.origRedirectURI && { redirect_uri: props.origRedirectURI }),
     });
     return `/passwordrecovery?${params.toString()}`;
   });
 
-  /**
-   * Toggles between the show and hide password states.
-   */
   function toggleShowPassword() {
     showPassword.value = !showPassword.value;
   }
 
-  /**
-   * Resets any active error states in the form.
-   */
   function resetFormErrors() {
     passErr.value = false;
   }
 
-  /**
-   * Validates all form fields and sets any error states, if necessary.
-   */
   function validateForm() {
     let valid = true;
     if (passStrength.value < 3) {
@@ -183,18 +153,10 @@
     return valid;
   }
 
-  /**
-   * Submits the reset token and new password to the server, then handles redirect
-   * on success (if necessary).
-   *
-   * @param e - Form submission event.
-   */
   async function submitForm(e: Event) {
     e.preventDefault();
     resetFormErrors();
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     loading.value = true;
     try {
       await axios.post('/auth/passwordrecovery/complete', {
@@ -220,5 +182,4 @@
       }
     }
   }
-
 </script>

@@ -1,12 +1,12 @@
 <template>
   <div aria-live="polite" :aria-busy="loading">
-    <h1 class="text-center text-3xl font-medium">
+    <Heading :level="3" class="text-center">
       {{
         $t("complete_registration_role.header", {
           name: pageContext?.user?.first_name,
         })
       }}
-    </h1>
+      </Heading>
     <p class="text-center mt-4">
       {{
         $t(
@@ -30,19 +30,13 @@
         leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
       >
         <template v-if="!isInstructorType">
-          <div class="mt-8">
-            <button
-              class="inline-flex items-center justify-center h-10 bg-primary p-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
-              @click="handleStudentClick"
-            >
+          <div class="mt-8 flex flex-col gap-4">
+            <Button full-width @click="handleStudentClick">
               {{ $t("complete_registration_role.student_user") }}
-            </button>
-            <button
-              class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-4 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
-              @click="isInstructorType = true"
-            >
+            </Button>
+            <Button full-width @click="isInstructorType = true">
               {{ $t("complete_registration_role.instructor_user") }}
-            </button>
+            </Button>
             <p class="text-center text-gray-500 text-xs mt-3 mx-3">
               <FontAwesomeIcon icon="fa-solid fa-circle-info" />
               {{ $t("complete_registration_role.instructor_info") }}
@@ -51,17 +45,15 @@
         </template>
 
         <template v-else>
-          <div class="mt-8">
-            <button
+          <div class="mt-8 flex flex-col gap-4">
+            <Button
               v-for="(role, idx) in ADAPT_SPECIAL_ROLES"
               :key="role"
+              full-width
               @click="handleAdaptSpecialRoleClick(role)"
-              :class="`inline-flex items-center justify-center h-10 bg-primary p-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow ${
-                idx > 0 ? 'mt-4' : ''
-              }`"
             >
               {{ $t(`complete_registration_role.adapt_special_roles.${role}`) }}
-            </button>
+            </Button>
             <div class="flex items-center justify-center">
               <a
                 @click="isInstructorType = false"
@@ -71,7 +63,6 @@
                 {{ $t("common.goback") }}
               </a>
             </div>
-
             <p class="text-center text-gray-500 text-xs mt-3 mx-3">
               <FontAwesomeIcon icon="fa-solid fa-circle-info" />
               {{ $t("complete_registration_role.adapt_special_roles_desc") }}
@@ -92,6 +83,7 @@ import { useAxios } from "@renderer/useAxios";
 import { usePageContext } from "@renderer/usePageContext";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import LoadingIndicator from "@components/LoadingIndicator.vue";
+import { Button, Heading } from "@libretexts/davis-vue";
 import { ADAPT_SPECIAL_ROLES } from "@renderer/utils/auth";
 
 const props = defineProps<{ uuid: string }>();
@@ -104,31 +96,18 @@ const axios = useAxios();
 const loading = ref(false);
 const isInstructorType = ref(false);
 
-/**
- * Triggers submission of the 'student' role to the server.
- */
 function handleStudentClick() {
   submitRoleUpdate("student");
 }
 
-/**
- * Triggers submission of the 'instructor' role to the server with additional ADAPT-specific role.
- */
 function handleAdaptSpecialRoleClick(adapt_role: string) {
   submitRoleUpdate("instructor", adapt_role);
 }
 
-/**
- * Submits the role to the server, then emits the 'role-update' event.
- *
- * @param role - Role identifier to submit.
- */
 async function submitRoleUpdate(role: string, adapt_role?: string) {
   loading.value = true;
   try {
-    await axios.patch(`/users/${props.uuid}`, {
-      user_type: role,
-    });
+    await axios.patch(`/users/${props.uuid}`, { user_type: role });
     loading.value = false;
     emit("role-update", role, adapt_role);
   } catch (e) {

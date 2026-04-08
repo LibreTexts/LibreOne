@@ -2,9 +2,9 @@
   <StandardPageLayout>
     <div aria-live="polite">
       <div class="mb-4">
-        <h1 class="text-left text-3xl font-medium">
+        <p class="text-3xl font-medium">
           {{ $t("profile.profile") }}
-        </h1>
+        </p>
         <p class="mt-2 text-left text-slate-500">
           {{ $t("profile.infoline") }}
         </p>

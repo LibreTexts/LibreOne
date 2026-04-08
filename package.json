@@ -24,6 +24,8 @@
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/vue-fontawesome": "^3.0.2",
     "@hapi/boom": "^10.0.0",
+    "@libretexts/davis-core": "^1.5.0",
+    "@libretexts/davis-vue": "^1.5.0",
     "@tabler/icons-vue": "^3.34.0",
     "@types/swagger-ui-express": "^4.1.6",
     "@vitejs/plugin-vue": "^5.2.1",

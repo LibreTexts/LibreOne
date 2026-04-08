@@ -1,7 +1,7 @@
 <template>
-  <h1 class="text-center text-3xl font-medium">
+  <Heading :level="3" class="text-center">
     {{ $t('complete_registration_org.header') }}
-  </h1>
+  </Heading>
   <p class="text-center mt-4">
     {{ $t('complete_registration_org.tagline') }}
   </p>
@@ -10,28 +10,22 @@
   </p>
   <template v-if="!loading">
     <div class="lg:my-4">
-      <label
-        for="search_input"
-        class="block text-sm font-medium"
-      >
-        {{ $t('complete_registration_org.search_label') }}
-      </label>
-      <input
-        id="search_input"
-        type="text"
+      <Input
+        name="search_input"
+        :label="$t('complete_registration_org.search_label')"
         v-model="query"
         placeholder="Start typing to search"
-        class="border block h-10 mt-2 w-full rounded-md px-2 placeholder:text-slate-400 placeholder:font-light"
-      >
+        class="mt-2"
+      />
       <span class="ml-1 mt-2 text-xs text-center text-gray-500">{{ $t('complete_registration_org.results_live') }}</span>
       <div
         v-if="firstQuery"
         class="mt-8"
       >
-        <h2 class="pb-2 font-medium text-lg border-b-2 border-b-slate-300">
+        <Heading :level="3" class="pb-2 border-b-2 border-b-slate-300">
           {{ $t('complete_registration_org.results') }}
           <span class="sr-only">({{ $t('complete_registration_org.results_found', { num: numResults.toLocaleString() }) }})</span>
-        </h2>  
+        </Heading>
         <ul>
           <li
             v-for="result in results"
@@ -42,22 +36,24 @@
               <span>{{ result.name }}</span>
             </div>
             <div class="flex items-center">
-              <button
-                class="flex items-center justify-center h-8 bg-secondary p-2 mr-2 rounded-md text-white w-16 text-sm font-medium hover:bg-violet-700 hover:shadow"
+              <Button
+                size="sm"
                 @click="submitOrganization({ organization_id: result.id })"
+                class="mr-2"
               >
                 {{ $t('complete_registration_org.select') }}
-              </button>
+              </Button>
             </div>
           </li>
         </ul>
         <div class="flex justify-center mt-6">
-          <button
-            class="text-sm text-gray-700 hover:underline"
+          <Button
+            variant="ghost"
+            size="sm"
             @click="submitOrganization({ use_default_organization: true })"
           >
             {{ $t('complete_registration_org.org_not_listed') }}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -75,6 +71,7 @@
   import { computed, ref, Ref, watch } from 'vue';
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import { Heading, Input, Button } from '@libretexts/davis-vue';
 
   // Local Types
   type OrganizationResult = {

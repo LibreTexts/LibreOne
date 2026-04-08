@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@libretexts/davis-vue/styles.css";
+@source "../node_modules/@libretexts/davis-vue/dist/index.js";
 
 @theme {
   --color-primary: #127BC4;
