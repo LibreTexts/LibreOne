@@ -1,7 +1,7 @@
 <template>
-  <h1 class="text-center text-3xl font-medium">
+  <Heading :level="3" class="text-center">
     {{ $t("complete_registration_timezone.header") }}
-  </h1>
+  </Heading>
   <p class="text-center mt-4">
     {{ $t("complete_registration_timezone.tagline") }}
   </p>
@@ -63,6 +63,7 @@
   import ThemedInput from '../ThemedInput.vue';
   import ThemedButton from '../ThemedButton.vue';
   import { TimezoneOpts } from '@renderer/utils/timezones';
+import { Heading } from '@libretexts/davis-vue';
 
   // Local Types
   type TimezonePatch = {

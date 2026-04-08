@@ -19,39 +19,31 @@
             <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
             <span class="ml-2">{{ sourceText }}</span>
           </a>
-          <h1 class="text-3xl text-center font-medium mt-4 lt:mt-2">
+          <h1 class="text-3xl text-center font-semibold mt-4 lt:mt-2">
             {{ $t('register.forgotpassword') }}
           </h1>
           <p class="text-center mt-4">
             {{ $t('passwordrecovery.forgottagline') }}
           </p>
           <form @submit="submitForm">
-            <div class="my-6">
-              <label
-                for="email_input"
-                class="block text-sm font-medium"
-              >
-                {{ $t('common.email') }}
-              </label>
-              <input
-                id="email_input"
-                type="email"
-                aria-required="true"
-                v-model="email"
-                :placeholder="$t('common.email_placeholder')"
-                :class="['border', emailErr ? 'border-red-600' : 'border-gray-300', 'block', 'h-10', 'mt-2', 'w-full', 'rounded-md', 'px-2', 'placeholder:text-slate-400', 'placeholder:font-light']"
-              >
-            </div>
-            <button
+            <Input
+              name="email_input"
+              type="email"
+              :label="$t('common.email')"
+              :placeholder="$t('common.email_placeholder')"
+              v-model="email"
+              :error="emailErr"
+              required
+              class="my-6"
+            />
+            <Button
               type="submit"
-              class="inline-flex items-center justify-center h-10 bg-primary p-2 mb-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
+              full-width
+              :loading="loading"
+              class="mb-2"
             >
-              <span v-if="!loading">{{ $t('passwordrecovery.sendlink') }}</span>
-              <template v-else>
-                <LoadingIndicator />
-                <span class="ml-2">{{ $t('passwordrecovery.sending') }}</span>
-              </template>
-            </button>
+              {{ $t('passwordrecovery.sendlink') }}
+            </Button>
           </form>
         </div>
         <div v-else>
@@ -62,7 +54,7 @@
             <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
             <span class="ml-2">{{ sourceText }}</span>
           </a>
-          <h1 class="text-3xl text-center font-medium mt-4 lg:mt-2">
+          <h1 class="text-3xl text-center font-semibold mt-4 lg:mt-2">
             {{ $t('passwordrecovery.checkemail') }}
           </h1>
           <i18n-t
@@ -85,9 +77,9 @@
   import { useI18n } from 'vue-i18n';
   import { useAxios } from '@renderer/useAxios';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-  import LoadingIndicator from '@components/LoadingIndicator.vue';
+  import { Input, Button } from '@libretexts/davis-vue';
   import { usePageProps } from '@renderer/usePageProps';
-  
+
   const props = usePageProps<{
     source: string;
     sourceURL: string;
@@ -109,16 +101,10 @@
     return t('passwordrecovery.backtosource', { source });
   });
 
-  /**
-   * Resets any active error states in the form.
-   */
   function resetFormErrors() {
     emailErr.value = false;
   }
 
-  /**
-   * Validates all form fields and sets any error states, if necessary.
-   */
   function validateForm() {
     let valid = true;
     if (email.value.trim().length < 3 || email.value.trim().length > 320 || !email.value.includes('@')) {
@@ -128,24 +114,15 @@
     return valid;
   }
 
-  /**
-   * Submits the password reset request to the server.
-   *
-   * @param e - Form submission event.
-   */
   async function submitForm(e: Event) {
     e.preventDefault();
     resetFormErrors();
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     loading.value = true;
     try {
       await axios.post('/auth/passwordrecovery', {
         email: email.value,
-        ...(props.redirectURI && {
-          redirectURI: props.redirectURI,
-        }),
+        ...(props.redirectURI && { redirectURI: props.redirectURI }),
       });
       loading.value = false;
       sent.value = true;
@@ -154,5 +131,4 @@
       alert(t('common.unknownerror'));
     }
   }
-
 </script>
