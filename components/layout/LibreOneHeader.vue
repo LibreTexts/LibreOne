@@ -30,6 +30,14 @@
             {{ item.title }}
           </a>
           <a
+            href="https://commons.libretexts.org/accessibility"
+            target="_blank"
+            key="accessibility-link"
+            class="text-md font-semibold leading-6 text-gray-900 ml-6"
+          >
+            {{ $t("common.accessibility") }}
+          </a>
+          <a
             href="https://donate.libretexts.org"
             target="_blank"
             key="donate-link"
@@ -187,6 +195,13 @@
               class="text-md font-semibold leading-6 text-gray-900 my-2"
             >
               {{ item.title }}
+            </a>
+            <a
+              href="https://commons.libretexts.org/accessibility"
+              target="_blank"
+              class="text-md font-semibold leading-6 text-gray-900 my-2"
+            >
+              {{ $t("common.accessibility") }}
             </a>
             <button
               @click="$props.authorized ? handleLogout() : handleGoToLogin()"

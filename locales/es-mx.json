@@ -14,7 +14,8 @@
     "signin": "Iniciar sesión",
     "logout": "Descerrar sesión",
     "continue": "Continuar",
-    "updating": "Actualizando"
+    "updating": "Actualizando",
+    "accessibility": "Accesibilidad"
   },
   "welcome": {
     "register": "Registrarse para una cuenta LibreOne",
