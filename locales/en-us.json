@@ -67,15 +67,7 @@
     "changelater": "(Don't worry, you can change this later.)",
     "student_user": "I'm a Student or other Reader",
     "instructor_user": "I'm an Instructor or other Educator",
-    "instructor_info": "If you're a Teaching/Research Assistant or otherwise working with an instructor, you can also use the Instructor option.",
-    "adapt_special_roles_tagline": "Tell us more about your role.",
-    "adapt_special_roles": {
-      "instructor": "Instructor",
-      "grader": "Grader",
-      "question-editor": "Question Editor",
-      "tester": "Tester"
-    },
-    "adapt_special_roles_desc": "If you're unsure which role to select, choose 'Instructor'."
+    "instructor_info": "If you're a Teaching/Research Assistant or otherwise working with an instructor, you can also use the Instructor option."
   },
   "complete_registration_org": {
     "header": "About your institution.",

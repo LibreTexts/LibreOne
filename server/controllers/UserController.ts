@@ -828,8 +828,14 @@ export class UserController {
       'lang',
       'mktg_email_opt_in',
     ];
+
+    // External users cannot update name fields as they are managed by the external identity provider (or rather, will be overwritten on next login), and allowing updates to them would cause confusion.
     const unallowedExternalKeys = ['first_name', 'last_name'];
+    
+    // Only API actors can update verification status
     const apiUserOnlyKeys = ['verify_status'];
+    
+    // Filter out any keys that shouldn't be updated based on user type and requestor
     const allowedKeys = updatableKeys.filter((k) => (
       (!isExternalUser || !unallowedExternalKeys.includes(k))
       && (isAPIUser || !apiUserOnlyKeys.includes(k))

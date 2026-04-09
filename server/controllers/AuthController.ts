@@ -37,7 +37,6 @@ import type {
   CheckCASInterruptQuery,
   AutoProvisionUserBody,
   completeRegistrationBody,
-  ADAPTSpecialRole,
   BackChannelSLOBody,
   BackChannelSLOQuery,
   CreateUserFromExternalIdPBody,
@@ -579,7 +578,7 @@ export class AuthController {
    */
   public async completeRegistration(req: Request, res: Response): Promise<Response | void> {
     const { userUUID } = req;
-    const { source, adapt_role } = req.body as completeRegistrationBody;
+    const { source } = req.body as completeRegistrationBody;
 
     const foundUser = await User.findOne({ where: { uuid: userUUID } });
     if (!foundUser) {
@@ -604,7 +603,7 @@ export class AuthController {
 
     const webhookPromises = [
       this._notifyConductorOfNewUser(foundUser),
-      this._notifyADAPTOfNewUser(foundUser, source, adapt_role)
+      this._notifyADAPTOfNewUser(foundUser, source)
     ];
 
     const webhookResults = await Promise.all(webhookPromises); // both return false and log if failed, so they shouldn't affect each other
@@ -1558,7 +1557,7 @@ export class AuthController {
     }
   }
 
-  private async _notifyADAPTOfNewUser(user: User, source?: string, adapt_role?: ADAPTSpecialRole): Promise<string | boolean> {
+  private async _notifyADAPTOfNewUser(user: User, source?: string): Promise<string | boolean> {
     try {
       const adaptWebhookBase = this._getADAPTWebhookBase();
       const adaptWebhookURL = adaptWebhookBase + '/api/oidc/libreone/new-user-created';
@@ -1569,7 +1568,7 @@ export class AuthController {
         last_name: user.last_name,
         email: user.email,
         time_zone: user.time_zone,
-        role: adapt_role ? adapt_role : user.user_type ?? 'student', // default to student if no role provided or otherwise can't be determined
+        role: user.user_type ?? 'student', // default to student if no role provided or otherwise can't be determined
         verify_status: user.verify_status,
         ...(user.avatar && { avatar: user.avatar }),
         ...(source && { source }),
