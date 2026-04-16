@@ -73,7 +73,7 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.329.0",
+    "@aws-sdk/types": "^3.973.7",
     "@commitlint/cli": "^17.4.2",
     "@commitlint/config-conventional": "^17.4.2",
     "@swc/core": "^1.3.27",
