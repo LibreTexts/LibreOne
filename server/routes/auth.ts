@@ -27,9 +27,19 @@ authRouter.route('/register').post(
   catchInternal((req, res) => controller.register(req, res)),
 );
 
-authRouter.route('/verify-email').post(
-  validate(AuthValidator.verifyEmailSchema, 'body'),
-  catchInternal((req, res) => controller.verifyRegistrationEmail(req, res)),
+authRouter.route('/verify-email-code').post(
+  validate(AuthValidator.verifyEmailCodeSchema, 'body'),
+  catchInternal((req, res) => controller.verifyRegistrationEmailCode(req, res)),
+);
+
+authRouter.route('/verify-email-token').post(
+  validate(AuthValidator.verifyEmailTokenSchema, 'body'),
+  catchInternal((req, res) => controller.verifyRegistrationEmailToken(req, res)),
+);
+
+authRouter.route('/resend-verification-email').post(
+  validate(AuthValidator.resendVerificationEmailSchema, 'body'),
+  catchInternal((req, res) => controller.resendVerificationEmail(req, res)),
 );
 
 authRouter.route('/complete-registration').post(
