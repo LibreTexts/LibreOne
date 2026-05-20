@@ -250,6 +250,7 @@ export class AuthController {
     };
     res.cookie('one_access', access, {
       path: '/',
+      httpOnly: true,
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
     res.cookie('one_signed', signed, {
@@ -1206,6 +1207,7 @@ export class AuthController {
     };
     res.clearCookie('one_access', {
       path: '/',
+      httpOnly: true,
       ...(process.env.NODE_ENV === 'production' && prodCookieConfig),
     });
     res.clearCookie('one_signed', {
