@@ -1,5 +1,5 @@
-import { App, InjectionKey, inject, Ref } from "vue";
-import { PageContext } from "vike/types";
+import { type App, type InjectionKey, inject, type Ref } from "vue";
+import type { PageContext } from "vike/types";
 
 const key: InjectionKey<Ref<PageContext>> = Symbol();
 

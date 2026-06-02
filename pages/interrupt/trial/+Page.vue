@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { usePageProps } from '@renderer/usePageProps';
-import { Application } from '@server/types/applications';
+import type { Application } from '@server/types/applications';
 import ThemedButton from '../../../components/ThemedButton.vue';
 import { useI18n } from 'vue-i18n';
 import { usePageContext } from '@renderer/usePageContext';

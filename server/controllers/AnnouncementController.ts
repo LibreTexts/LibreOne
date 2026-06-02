@@ -1,6 +1,6 @@
 import { Announcement, User } from "@server/models";
-import { AnnouncementScope } from "@server/types/announcements";
-import { UserUUIDParams } from "@server/types/users";
+import type { AnnouncementScope } from "@server/types/announcements";
+import type { UserUUIDParams } from "@server/types/users";
 import { Op } from "sequelize";
 
 export class AnnouncementController {

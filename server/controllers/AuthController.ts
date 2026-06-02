@@ -8,10 +8,10 @@ import {
   exportJWK,
   importPKCS8,
   importSPKI,
-  JWK,
-  JWTPayload,
+  type JWK,
+  type JWTPayload,
   jwtVerify,
-  KeyLike,
+  type KeyLike,
   SignJWT,
 } from 'jose';
 import { TextEncoder } from 'util';
@@ -25,7 +25,7 @@ import { MailController } from './MailController';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
 import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getPrettyDefaultAccessString, getProductionURL } from '../helpers';
 import errors from '../errors';
-import { CookieOptions, Request, Response } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 import type {
   RegisterBody,
   VerifyEmailBody,

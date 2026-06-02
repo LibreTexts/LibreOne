@@ -1,4 +1,4 @@
-import { Application } from '@server/types/applications';
+import type { Application } from '@server/types/applications';
 import { useAxios } from '@renderer/useAxios';
 
 /**

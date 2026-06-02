@@ -9,7 +9,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 import { VerificationRequest } from './VerificationRequest';
-import { VerificationRequestStatus } from '../types/verificationrequests';
+import type { VerificationRequestStatus } from '../types/verificationrequests';
 import { verificationRequestStatuses } from '../controllers/VerificationRequestController';
 
 @Table({

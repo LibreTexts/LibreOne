@@ -1,8 +1,8 @@
-import {
+import type {
   AnnouncementScope,
   AnnouncementVariant,
 } from "@server/types/announcements";
-import { NonAttribute } from "sequelize";
+import type { NonAttribute } from "sequelize";
 import {
   AllowNull,
   Column,

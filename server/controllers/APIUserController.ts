@@ -1,15 +1,15 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { APIUser, APIUserPermissionConfig, sequelize } from '../models';
 import {
-  APIUserAuthCheckOutput,
-  APIUserIDParams,
-  APIUserPermission,
-  CreateAPIUserBody,
-  UpdateAPIUserBody,
+  type APIUserAuthCheckOutput,
+  type APIUserIDParams,
+  type APIUserPermission,
+  type CreateAPIUserBody,
+  type UpdateAPIUserBody,
   isAPIUserPermission,
 } from '../types/apiusers';
 import bcrypt from 'bcryptjs';
-import { CreationAttributes, UniqueConstraintError } from 'sequelize';
+import { type CreationAttributes, UniqueConstraintError } from 'sequelize';
 import errors from '../errors';
 
 export const API_USERS_PERMISSIONS = [

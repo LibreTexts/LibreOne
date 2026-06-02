@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Service, sequelize } from '../models';
 import { getProductionURL, safeJSONParse } from '../helpers';
 import errors from '../errors';

@@ -149,7 +149,7 @@
   import ThemedInput from '../ThemedInput.vue';
   import ThemedSelectInput from '../ThemedSelectInput.vue';
   import ThemedTextarea from '../ThemedTextarea.vue';
-  import { Application } from '../../server/types/applications';
+  import { type Application } from '../../server/types/applications';
   import { isInstructorVerificationStatus } from '@renderer/utils/typeHelpers';
   import { useI18n } from 'vue-i18n';
   import { useAxios } from '@renderer/useAxios';

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { ForeignKeyConstraintError, Op, UniqueConstraintError } from 'sequelize';
 import {
   Alias,

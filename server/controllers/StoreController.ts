@@ -1,9 +1,9 @@
 import errors from '../errors';
 import { AccessCode, ApplicationLicense } from '../models';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { MailController } from './MailController';
-import { BulkGenerateAccessCodesRequestBody, GenerateAccessCodeRequestBody } from '@server/types/store';
+import type { BulkGenerateAccessCodesRequestBody, GenerateAccessCodeRequestBody } from '@server/types/store';
 
 export class StoreController {
 

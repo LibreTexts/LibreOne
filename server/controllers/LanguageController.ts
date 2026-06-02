@@ -1,7 +1,7 @@
 import errors from '../errors';
 import { Language, sequelize } from '../models';
-import { GetAllLanguagesQuery, LanguageIDParams } from '@server/types/languages';
-import { Request, Response } from 'express';
+import type { GetAllLanguagesQuery, LanguageIDParams } from '@server/types/languages';
+import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 
 export class LanguageController {

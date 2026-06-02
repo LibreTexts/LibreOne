@@ -14,7 +14,7 @@ import {
 } from 'sequelize-typescript';
 import { AccessRequest } from './AccessRequest';
 import { User } from './User';
-import { VerificationRequestStatus } from '../types/verificationrequests';
+import type { VerificationRequestStatus } from '../types/verificationrequests';
 import { VerificationRequestHistory } from './VerificationRequestHistory';
 
 @Table({

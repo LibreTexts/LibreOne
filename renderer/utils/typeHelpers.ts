@@ -1,4 +1,4 @@
-import { InstructorVerificationStatus } from '../../server/types/users';
+import type { InstructorVerificationStatus } from '../../server/types/users';
 
 export const isInstructorVerificationStatus = (
   status: string,

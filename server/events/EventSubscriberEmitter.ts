@@ -1,6 +1,6 @@
 import { EventSubscriberController } from "@server/controllers/EventSubscriberController";
 import TypedEventEmitter from "./TypedEventEmitter";
-import { EventSubscriberEvents } from "@server/types/eventsubscribers";
+import type { EventSubscriberEvents } from "@server/types/eventsubscribers";
 
 export const EventSubscriberEmitter =
   new TypedEventEmitter<EventSubscriberEvents>();

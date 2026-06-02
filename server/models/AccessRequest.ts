@@ -11,7 +11,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 import { AccessRequestApplication } from './AccessRequestApplication';
-import { AccessRequestStatus } from '../types/accessrequests';
+import type { AccessRequestStatus } from '../types/accessrequests';
 import { Application } from './Application';
 import { User } from './User';
 import { VerificationRequest } from './VerificationRequest';

@@ -1,5 +1,5 @@
 import { UniqueConstraintError } from 'sequelize';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { marked } from 'marked';
 import {
   AccessRequest,
@@ -9,7 +9,7 @@ import {
   UserApplication,
   sequelize,
 } from '../models';
-import {
+import type {
   AccessRequestEffect,
   AccessRequestIDParams,
   CreateAccessRequestBody,

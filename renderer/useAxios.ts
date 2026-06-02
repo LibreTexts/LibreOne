@@ -1,5 +1,5 @@
-import axios, { AxiosInstance} from 'axios';
-import { App, InjectionKey, inject } from 'vue';
+import axios, { type AxiosInstance} from 'axios';
+import { type App, type InjectionKey, inject } from 'vue';
 
 interface AxiosOptions {
   baseUrl?: string;

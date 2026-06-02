@@ -31,7 +31,7 @@
   import InstructorProfileForm from '../../components/instructor_profile/InstructorProfileForm.vue';
   import InstructorGettingStarted from '../../components/instructor_profile/InstructorGettingStarted.vue';
   import { usePageContext } from '@renderer/usePageContext';
-  import { Application } from '@server/types/applications';
+  import type { Application } from '@server/types/applications';
 import { usePageProps } from '@renderer/usePageProps';
 
   const pageContext = usePageContext();
