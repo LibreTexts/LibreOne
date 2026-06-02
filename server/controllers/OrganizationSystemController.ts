@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Organization, OrganizationSystem } from '../models';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import type {

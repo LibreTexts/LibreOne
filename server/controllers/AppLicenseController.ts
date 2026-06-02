@@ -1,4 +1,4 @@
-import {
+import type {
   CheckLicenseAccessResponse,
   LicenseOperationRequestBody,
   AppLicenseType,
@@ -21,7 +21,7 @@ import {
   sequelize,
   ApplicationLicenseEntitlement,
 } from '../models';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Op, Transaction } from 'sequelize';
 import errors from '../errors';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';

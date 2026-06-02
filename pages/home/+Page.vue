@@ -14,7 +14,7 @@
 import StandardPageLayout from "../../components/layout/StandardPageLayout.vue";
 import LaunchpadComponent from "../../components/LaunchpadComponent.vue";
 import { useAuthStatus } from "@renderer/useAuthStatus";
-import { Application } from "@server/types/applications";
+import type { Application } from "@server/types/applications";
 import { usePageProps } from "@renderer/usePageProps";
 import { Announcement } from "@server/models";
 

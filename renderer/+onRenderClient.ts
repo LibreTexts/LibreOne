@@ -1,5 +1,5 @@
 import { createApp } from "./app";
-import { OnRenderClientAsync } from "vike/types";
+import type { OnRenderClientAsync } from "vike/types";
 import { getPageTitle } from "./helpers";
 import "./index.css";
 

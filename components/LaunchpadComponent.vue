@@ -139,7 +139,7 @@
 
 <script setup lang="ts">
   import { computed, ref } from 'vue';
-  import { Application } from '@server/types/applications';
+  import type { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';

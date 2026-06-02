@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, Ref, watch } from 'vue';
+  import { computed, ref, type Ref, watch } from 'vue';
   import { useAxios } from '@renderer/useAxios';
   import LoadingIndicator from '@components/LoadingIndicator.vue';
 

@@ -2,7 +2,7 @@ import { renderToNodeStream } from "@vue/server-renderer";
 import { createApp } from "./app";
 import { escapeInject } from "vike/server";
 import faviconURL from "./favicon.ico";
-import { OnRenderHtmlAsync, PageContextBuiltIn } from "vike/types";
+import type { OnRenderHtmlAsync, PageContextBuiltIn } from "vike/types";
 import { getPageTitle, getPageDescription } from "./helpers";
 
 /**

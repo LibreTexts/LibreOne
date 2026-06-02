@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, Transaction, WhereOptions } from 'sequelize';
+import type { NextFunction, Request, Response } from 'express';
+import { Op, Sequelize, Transaction, type WhereOptions } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -49,7 +49,7 @@ import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import { UserNote } from '../models/UserNote';
 import { generateSecureRandomString } from '@server/helpers';
-import { ApplicationLaunchpadVisibility } from '@server/types/applications';
+import type { ApplicationLaunchpadVisibility } from '@server/types/applications';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');

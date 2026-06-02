@@ -1,7 +1,7 @@
 import errors from '../errors';
 import { License, LicenseVersion, sequelize } from '../models';
-import { GetAllLicensesQuery, LicenseIDParams } from '@server/types/licenses';
-import { Request, Response } from 'express';
+import type { GetAllLicensesQuery, LicenseIDParams } from '@server/types/licenses';
+import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 
 export class LicenseController {

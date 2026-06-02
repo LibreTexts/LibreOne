@@ -9,7 +9,7 @@ import {
   UpdatedAt,
 } from "sequelize-typescript";
 import { User } from "./User";
-import { DeleteAccountRequestStatus } from "@server/types/deleteaccountrequests";
+import type { DeleteAccountRequestStatus } from "@server/types/deleteaccountrequests";
 
 @Table({
   timestamps: true,

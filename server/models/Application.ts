@@ -12,7 +12,7 @@ import {
 } from 'sequelize-typescript';
 import { AccessRequest } from './AccessRequest';
 import { AccessRequestApplication } from './AccessRequestApplication';
-import { ApplicationLaunchpadVisibility, ApplicationType } from '../types/applications';
+import type { ApplicationLaunchpadVisibility, ApplicationType } from '../types/applications';
 import { User } from './User';
 import { UserApplication } from './UserApplication';
 

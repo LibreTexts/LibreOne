@@ -1,14 +1,14 @@
-import { Op, UniqueConstraintError, WhereOptions } from 'sequelize';
-import { Request, Response } from 'express';
+import { Op, UniqueConstraintError, type WhereOptions } from 'sequelize';
+import type { Request, Response } from 'express';
 import { Application, UserApplication, sequelize } from '../models';
-import {
+import type {
   ApplicationIDParams,
   CreateApplicationBody,
   GetAllApplicationsQuery,
   UpdateApplicationBody,
 } from '../types/applications';
 import errors from '../errors';
-import { APIResponse } from '@server/types/misc';
+import type { APIResponse } from '@server/types/misc';
 
 export class ApplicationController {
 

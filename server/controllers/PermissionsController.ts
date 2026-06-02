@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { CheckPermissionBody } from '../types/permissions';
+import type { Request, Response } from 'express';
+import type { CheckPermissionBody } from '../types/permissions';
 import { Organization, OrganizationSystem, User } from '../models';
 import errors from '../errors';
 

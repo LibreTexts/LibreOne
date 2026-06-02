@@ -1,14 +1,14 @@
 import { EventSubscriber } from "@server/models/EventSubscriber";
 import { EventSubscriberEventConfig } from "@server/models/EventSubscriberEventConfig";
-import {
+import type {
   EventSubscriberEvents,
   SendTestEventBody,
 } from "@server/types/eventsubscribers";
 import axios from "axios";
 import { SignJWT } from "jose";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import errors from "@server/errors";
-import { User } from "@server/types/users";
+import type { User } from "@server/types/users";
 
 export const EVENT_SUBSCRIBER_EVENTS = [
   "user:created",

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { marked } from 'marked';
 import {
@@ -13,14 +13,14 @@ import {
 } from '../models';
 import errors from '../errors';
 import { MailController } from './MailController';
-import {
+import type {
   GetAllVerificationRequestsQuery,
   UpdateVerificationRequestByAdminBody,
   VerificationRequestIDParams,
 } from '../types/verificationrequests';
 import { UserController } from './UserController';
 import { AuthController } from "@server/controllers/AuthController";
-import { CreateUserVerificationRequestBody, UpdateUserVerificationRequestBody } from '@server/types/users';
+import type { CreateUserVerificationRequestBody, UpdateUserVerificationRequestBody } from '@server/types/users';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 
 export const verificationRequestEffects = ['approve', 'deny', 'request_change'];
