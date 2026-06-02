@@ -38,6 +38,8 @@ import { ApplicationLicense } from './ApplicationLicense';
 import { ApplicationLicenseEntitlement } from './ApplicationLicenseEntitlement';
 import { UserLicenseEntitlement } from './UserLicenseEntitlement';
 import { AccessCode } from './AccessCode';
+import { EmailEvent } from './EmailEvent';
+import { MarketingConsentEvent } from './MarketingConsentEvent';
 
 const env = (process.env.NODE_ENV || 'test').toUpperCase();
 
@@ -67,6 +69,7 @@ sequelize.addModels([
   AccessRequestApplication,
   DeleteAccountRequest,
   Domain,
+  EmailEvent,
   EmailVerification,
   EventSubscriber,
   EventSubscriberEventConfig,
@@ -74,6 +77,7 @@ sequelize.addModels([
   LicenseVersion,
   Language,
   LoginEvent,
+  MarketingConsentEvent,
   Organization,
   OrganizationAlias,
   OrganizationDomain,
@@ -231,11 +235,13 @@ export {
   Announcement,
   DeleteAccountRequest,
   Domain,
+  EmailEvent,
   EmailVerification,
   Language,
   License,
   LicenseVersion,
   LoginEvent,
+  MarketingConsentEvent,
   Organization,
   OrganizationAlias,
   OrganizationDomain,

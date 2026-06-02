@@ -9,6 +9,7 @@ import { AccessRequestController } from './AccessRequestController';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { VerificationRequestController } from './VerificationRequestController';
+import { recordConsentChange } from '../services/marketingConsent';
 import {
   Application,
   Language,
@@ -840,13 +841,37 @@ export class UserController {
       (!isExternalUser || !unallowedExternalKeys.includes(k))
       && (isAPIUser || !apiUserOnlyKeys.includes(k))
     ));
+    let mktgOptInChange: boolean | undefined;
     Object.entries(props).forEach(([key, value]) => {
-      if (allowedKeys.includes(key)) {
-        updateObj[key] = value;
+      if (!allowedKeys.includes(key)) return;
+      if (key === 'mktg_email_opt_in') {
+        mktgOptInChange = value as boolean;
+        return;
       }
+      updateObj[key] = value;
     });
 
     const updatedUser = await foundUser.update(updateObj);
+
+    if (typeof mktgOptInChange === 'boolean') {
+      const actorUuid = req.userUUID ?? null;
+      const isSelf = !isAPIUser && actorUuid === uuid;
+      const source = isAPIUser ? 'API' : (isSelf ? 'USER_SELF_SERVICE' : 'ADMIN');
+      let reason: 'USER_OPT_IN' | 'USER_UNSUBSCRIBE' | 'ADMIN_ADJUSTMENT';
+      if (isSelf) {
+        reason = mktgOptInChange ? 'USER_OPT_IN' : 'USER_UNSUBSCRIBE';
+      } else {
+        reason = 'ADMIN_ADJUSTMENT';
+      }
+      await recordConsentChange({
+        user: updatedUser,
+        newValue: mktgOptInChange,
+        source,
+        reason,
+        actorUserUuid: actorUuid,
+      });
+      await updatedUser.reload();
+    }
 
     // update name on libraries if necessary
     if (updateObj.first_name || updateObj.last_name) {

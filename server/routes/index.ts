@@ -14,6 +14,7 @@ import { languagesRouter } from './languages';
 import { eventSubscribersRouter } from './event-subscribers';
 import { storeRouter } from './store';
 import { appLicensesRouter } from './app-licenses';
+import { snsEventsRouter } from './sns-events';
 const APIRouter = express.Router();
 
 APIRouter.use('/api-users', apiUsersRouter);
@@ -27,6 +28,7 @@ APIRouter.use('/organizations', organizationsRouter);
 APIRouter.use('/organization-systems', organizationSystemsRouter);
 APIRouter.use('/permissions', permissionsRouter);
 APIRouter.use('/services', servicesRouter);
+APIRouter.use('/sns', snsEventsRouter);
 APIRouter.use('/users', usersRouter);
 APIRouter.use('/verification-requests', verificationRequestsRouter);
 APIRouter.use('/store', storeRouter);
