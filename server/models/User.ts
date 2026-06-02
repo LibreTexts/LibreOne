@@ -164,6 +164,23 @@ export class User extends Model {
   @Column(DataType.BOOLEAN)
   declare mktg_email_opt_in: boolean;
 
+  @Column(DataType.DATE)
+  declare mktg_opt_in_at: Date | null;
+
+  @Column(DataType.STRING)
+  declare mktg_opt_in_source: string | null;
+
+  @Column(DataType.DATE)
+  declare mktg_suppressed_at: Date | null;
+
+  @Column(DataType.STRING)
+  declare mktg_suppression_reason: string | null;
+
+  @Default('DELIVERABLE')
+  @AllowNull(false)
+  @Column(DataType.ENUM('DELIVERABLE', 'SUPPRESSED'))
+  declare email_deliverability_status: 'DELIVERABLE' | 'SUPPRESSED';
+
   @BelongsTo(() => Language, {
     foreignKey: 'lang',
     targetKey: 'tag' 
