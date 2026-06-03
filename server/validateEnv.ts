@@ -22,24 +22,34 @@ if (process.env.NODE_ENV === 'production' && (Boolean(process.env.SES_SNS_SKIP_S
   process.exit(1);
 }
 
-function parsePositiveInt(name: string, raw: string | undefined, defaultValue: number): number {
+function parseNonNegativeInt(name: string, raw: string | undefined, defaultValue: number): number {
   if (raw === undefined || raw.trim() === '') {
     return defaultValue;
   }
   const trimmed = raw.trim();
   if (!/^\d+$/.test(trimmed)) {
-    console.error(`FATAL: ${name}="${raw}" is invalid. Must be a positive integer.`);
+    console.error(`FATAL: ${name}="${raw}" is invalid. Must be a non-negative integer.`);
     process.exit(1);
   }
   const n = Number(trimmed);
-  if (!Number.isInteger(n) || n < 1) {
+  if (!Number.isInteger(n) || n < 0) {
+    console.error(`FATAL: ${name}="${raw}" is invalid. Must be a non-negative integer (>= 0).`);
+    process.exit(1);
+  }
+  return n;
+}
+
+function parsePositiveInt(name: string, raw: string | undefined, defaultValue: number): number {
+  const n = parseNonNegativeInt(name, raw, defaultValue);
+  if (n < 1) {
     console.error(`FATAL: ${name}="${raw}" is invalid. Must be a positive integer (>= 1).`);
     process.exit(1);
   }
   return n;
 }
 
-export const TRUST_PROXY_HOPS = parsePositiveInt('TRUST_PROXY_HOPS', process.env.TRUST_PROXY_HOPS, 1);
+// 0 disables proxy trust (Express uses socket.remoteAddress). 1+ is the number of trusted proxy hops.
+export const TRUST_PROXY_HOPS = parseNonNegativeInt('TRUST_PROXY_HOPS', process.env.TRUST_PROXY_HOPS, 1);
 
 export const RATE_LIMIT_FLOOD_PER_MIN = parsePositiveInt('RATE_LIMIT_FLOOD_PER_MIN', process.env.RATE_LIMIT_FLOOD_PER_MIN, 2000);
 export const RATE_LIMIT_UNAUTH_PER_MIN = parsePositiveInt('RATE_LIMIT_UNAUTH_PER_MIN', process.env.RATE_LIMIT_UNAUTH_PER_MIN, 60);
