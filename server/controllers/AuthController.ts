@@ -22,6 +22,7 @@ import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
 import { Application, ResetPasswordToken, sequelize, Session, User, UserApplication } from '../models';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
+import { emailTemplates } from '../emails/templates';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
 import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getPrettyDefaultAccessString, getProductionURL } from '../helpers';
 import errors from '../errors';
@@ -1327,17 +1328,7 @@ export class AuthController {
     const resetLink = `${getProductionURL()}/passwordrecovery/complete?${linkParams.toString()}`;
     const emailRes = await mailSender.send({
       destination: { to: [email] },
-      subject: 'Reset Your LibreOne Password',
-      htmlContent: `
-        <p>Hello there,</p>
-        <p>We received a request to reset your LibreOne password. You can do so by following this link:</p>
-        <a href="${resetLink}" target="_blank" rel="noopener noreferrer">${resetLink}</a>
-        <p>If this wasn't you, you can safely ignore this email.</p>
-        <p>Best,</p>
-        <p>The LibreTexts Team</p>
-        <p>&nbsp;</p>
-        <p>P.S.: Stay safe by never opening suspicious or unsolicited links received via email. Official communication from LibreTexts will always come from an <em>@libretexts.org</em> address.</p>
-      `,
+      ...emailTemplates.passwordResetLink({ resetLink }),
     });
     mailSender.destroy();
     if (!emailRes) {
@@ -1391,14 +1382,7 @@ export class AuthController {
         const timeStr = now.toLocaleTimeString('en-US', { timeZone: 'UTC' });
         const emailRes = await mailSender.send({
           destination: { to: [foundUser.email] },
-          subject: 'LibreOne Password Changed',
-          htmlContent: `
-            <p>Hello there,</p>
-            <p>We're writing to confirm that your LibreOne password was updated on ${dateStr} at ${timeStr} UTC.</p>
-            <p>If this wasn't you, please <a href="mailto:support@libretexts.org?subject=Unrecognized Password Change" target="_blank" rel="noopener">contact LibreTexts.</p>
-            <p>Best,</p>
-            <p>The LibreTexts Team</p>
-          `,
+          ...emailTemplates.passwordChanged({ dateStr, timeStr }),
         });
         mailSender.destroy();
         if (!emailRes) {
