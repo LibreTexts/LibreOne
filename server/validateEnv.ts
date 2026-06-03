@@ -2,7 +2,6 @@ const REQUIRED_SECRETS = [
   'SESSION_SECRET',
   'CAS_JWT_SIGN_SECRET',
   'CAS_JWT_ENCRYPT_SECRET',
-  'SES_SNS_TOPIC_ARNS', // comma-separated list of ARNs for SNS topics to accept SES notifications from
 ] as const;
 
 const missing = REQUIRED_SECRETS.filter((key) => !process.env[key]?.trim());
@@ -12,6 +11,27 @@ if (missing.length > 0) {
     'The server cannot start without these. Check your .env file.',
   );
   process.exit(1);
+}
+
+// SES_SNS_TOPIC_ARNS is optional — environments that don't listen for SES events
+// (e.g. dev, staging) can leave it unset/empty. When a value IS provided, every
+// entry in the comma-separated list must be a well-formed SNS topic ARN.
+const sesSnsTopicArnsRaw = process.env.SES_SNS_TOPIC_ARNS?.trim();
+if (sesSnsTopicArnsRaw) {
+  // arn:<partition>:sns:<region>:<account-id>:<topic-name>
+  const SNS_TOPIC_ARN_PATTERN = /^arn:aws[a-z-]*:sns:[a-z0-9-]+:\d{12}:[A-Za-z0-9_-]+$/;
+  const invalidArns = sesSnsTopicArnsRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((arn) => !SNS_TOPIC_ARN_PATTERN.test(arn));
+  if (invalidArns.length > 0) {
+    console.error(
+      `FATAL: SES_SNS_TOPIC_ARNS contains invalid SNS topic ARN(s): ${invalidArns.join(', ')}. ` +
+      'Each entry must look like arn:aws:sns:<region>:<account-id>:<topic-name>.',
+    );
+    process.exit(1);
+  }
 }
 
 if (process.env.NODE_ENV === 'production' && (Boolean(process.env.SES_SNS_SKIP_SIGNATURE) === true || process.env.SES_SNS_SKIP_SIGNATURE === 'true')) {
