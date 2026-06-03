@@ -131,6 +131,26 @@ function contentTooLarge(res: Response, detail?: string): Response {
  * @param detail - A custom detailed error message.
  * @returns The fulfilled API response.
  */
+/**
+ * Completes an API request with a standard 429 Too Many Requests response.
+ *
+ * @param res - The response to hydrate.
+ * @param retryAfterSeconds - Seconds the client should wait before retrying. Sets the Retry-After header.
+ * @param detail - A custom detailed error message.
+ * @returns The fulfilled API response.
+ */
+function tooManyRequests(res: Response, retryAfterSeconds?: number, detail?: string): Response {
+  if (typeof retryAfterSeconds === 'number' && retryAfterSeconds > 0) {
+    res.set('Retry-After', String(Math.ceil(retryAfterSeconds)));
+  }
+  return sendErrorResponse(res, {
+    status: '429',
+    code: 'too_many_requests',
+    title: 'Too Many Requests',
+    detail: detail || 'Rate limit exceeded. Please slow down and try again shortly.',
+  });
+}
+
 function internalServerError(res: Response, detail?: string): Response {
   return sendErrorResponse(res, {
     status: '500',
@@ -164,6 +184,7 @@ export default {
   notFound,
   conflict,
   contentTooLarge,
+  tooManyRequests,
   internalServerError,
   notImplemented,
 };

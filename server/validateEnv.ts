@@ -21,3 +21,38 @@ if (process.env.NODE_ENV === 'production' && (Boolean(process.env.SES_SNS_SKIP_S
   );
   process.exit(1);
 }
+
+function parsePositiveInt(name: string, raw: string | undefined, defaultValue: number): number {
+  if (raw === undefined || raw.trim() === '') {
+    return defaultValue;
+  }
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    console.error(`FATAL: ${name}="${raw}" is invalid. Must be a positive integer.`);
+    process.exit(1);
+  }
+  const n = Number(trimmed);
+  if (!Number.isInteger(n) || n < 1) {
+    console.error(`FATAL: ${name}="${raw}" is invalid. Must be a positive integer (>= 1).`);
+    process.exit(1);
+  }
+  return n;
+}
+
+export const TRUST_PROXY_HOPS = parsePositiveInt('TRUST_PROXY_HOPS', process.env.TRUST_PROXY_HOPS, 1);
+
+export const RATE_LIMIT_FLOOD_PER_MIN = parsePositiveInt('RATE_LIMIT_FLOOD_PER_MIN', process.env.RATE_LIMIT_FLOOD_PER_MIN, 2000);
+export const RATE_LIMIT_UNAUTH_PER_MIN = parsePositiveInt('RATE_LIMIT_UNAUTH_PER_MIN', process.env.RATE_LIMIT_UNAUTH_PER_MIN, 60);
+export const RATE_LIMIT_AUTH_USER_PER_MIN = parsePositiveInt('RATE_LIMIT_AUTH_USER_PER_MIN', process.env.RATE_LIMIT_AUTH_USER_PER_MIN, 300);
+export const RATE_LIMIT_API_USER_PER_MIN = parsePositiveInt('RATE_LIMIT_API_USER_PER_MIN', process.env.RATE_LIMIT_API_USER_PER_MIN, 1200);
+
+if (!(RATE_LIMIT_FLOOD_PER_MIN >= RATE_LIMIT_API_USER_PER_MIN
+  && RATE_LIMIT_API_USER_PER_MIN >= RATE_LIMIT_AUTH_USER_PER_MIN
+  && RATE_LIMIT_AUTH_USER_PER_MIN >= RATE_LIMIT_UNAUTH_PER_MIN)) {
+  console.error(
+    'FATAL: Rate limit tiers are out of order. Required: ' +
+    'RATE_LIMIT_FLOOD_PER_MIN >= RATE_LIMIT_API_USER_PER_MIN >= RATE_LIMIT_AUTH_USER_PER_MIN >= RATE_LIMIT_UNAUTH_PER_MIN. ' +
+    `Got flood=${RATE_LIMIT_FLOOD_PER_MIN}, api=${RATE_LIMIT_API_USER_PER_MIN}, auth=${RATE_LIMIT_AUTH_USER_PER_MIN}, unauth=${RATE_LIMIT_UNAUTH_PER_MIN}.`,
+  );
+  process.exit(1);
+}
