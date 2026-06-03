@@ -3,6 +3,7 @@ import { AccessCode, ApplicationLicense } from '../models';
 import type { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { MailController } from './MailController';
+import { emailTemplates } from '../emails/templates';
 import type { BulkGenerateAccessCodesRequestBody, GenerateAccessCodeRequestBody } from '@server/types/store';
 
 export class StoreController {
@@ -84,33 +85,17 @@ export class StoreController {
       application_license_id: license.get('uuid'),
     });
 
-    const supportLine = 'If you have any questions, please contact our <a href="https://commons.libretexts.org/support" target="_blank" rel="noopener noreferrer">Support Center</a>.';
-
     const hostname = process.env.NODE_ENV === 'production' ? 'one.libretexts.org' : 'staging.one.libretexts.org';
-    const accessCodeGenerationMessage = (accessCode: string, appName: string) => {
-      return `
-        <p>Hi there,</p>
-        <p>We've received your order for ${appName}.</p>
-        <br/>
-        <p>Your access code is: </p>
-        <p><strong>${accessCode}</strong></p>
-        <br/>
-        <p>Please visit the following link to redeem your access code: <a href="https://${hostname}/redeem?access_code=${accessCode}">https://${hostname}/redeem?access_code=${accessCode}</a>.</p>
-        <p>Caution: Do not share this access code with anyone else, as it can only be used once!</p>
-        <br/>
-        <p>${supportLine}</p>
-        <br/>
-        <p>Best,</p>
-        <p>The LibreTexts Team</p>
-      `;
-    };
 
     const mailSender = new MailController();
     if (mailSender.isReady()) {
       const emailRes = await mailSender.send({
         destination: { to: [data.email] },
-        subject: `Your Access Code - ${license.name}`,
-        htmlContent: accessCodeGenerationMessage(results.code, license.name),
+        ...emailTemplates.storeAccessCode({
+          appName: license.name,
+          accessCode: results.code,
+          hostname,
+        }),
       });
       mailSender.destroy();
       if (!emailRes) {

@@ -1,6 +1,5 @@
 import { UniqueConstraintError } from 'sequelize';
 import type { Request, Response } from 'express';
-import { marked } from 'marked';
 import {
   AccessRequest,
   AccessRequestApplication,
@@ -10,7 +9,6 @@ import {
   sequelize,
 } from '../models';
 import type {
-  AccessRequestEffect,
   AccessRequestIDParams,
   CreateAccessRequestBody,
   GetAllAccessRequestsQuery,
@@ -18,6 +16,7 @@ import type {
 } from '../types/accessrequests';
 import errors from '../errors';
 import { MailController } from './MailController';
+import { emailTemplates } from '../emails/templates';
 
 export const accessRequestEffects = ['approve', 'deny', 'partially_approve'];
 export const accessRequestStatuses = ['open', 'denied', 'approved', 'partially_approved'];
@@ -247,76 +246,32 @@ export class AccessRequestController {
       });
 
       // <send decision email>
-      const signatureLine = `
-        <p>Best,</p>
-        <p>The LibreTexts Team</p>
-      `;
-      const supportLine = 'If you have any further questions, please feel free to reach out to <a href="mailto:support@libretexts.org">support@libretexts.org</a>.';
-      const generateApplicationsList = (apps: Application[]) => {
-        const appNames = apps.map((a) => a.get('name'));
-        return `<ul><${appNames.reduce((acc, curr) => `${acc}<li>${curr}</li>`, '')}/ul>`;
-      };
-      const getSubjectByEffect = (effect: AccessRequestEffect) => {
-        switch (effect) {
+      const decisionTemplate = (() => {
+        switch (props.effect) {
           case 'approve':
-            return 'Approved';
+            return emailTemplates.accessRequestApproved({
+              approvedApps,
+              reason: props.reason,
+            });
           case 'partial':
-            return 'Partially Approved';
+            return emailTemplates.accessRequestPartiallyApproved({
+              reqApps: reqApps || [],
+              approvedApps,
+              reason: props.reason,
+            });
           default:
-            return 'Denied';
+            return emailTemplates.accessRequestDenied({
+              reqApps: reqApps || [],
+              reason: props.reason,
+            });
         }
-      };
-      const getMessageByEffect = (effect: AccessRequestEffect) => {
-        switch (effect) {
-          case 'approve':
-            return `
-              <p>Hello there,</p>
-              <p>Good news! Your applications access request was approved by the LibreTexts team!</p>
-              <p>You can now access the following applications:</p>
-              ${generateApplicationsList(approvedApps)}
-              ${props.reason ? `
-                <p>The team member reviewing your request provided this comment:</p>
-                <p>${marked.parseInline(props.reason)}</p>
-              ` : ''}
-              <p>${supportLine}</p>
-              ${signatureLine}
-            `;
-          case 'partial':
-            return `
-              <p>Hello there,</p>
-              <p>Your applications access request has been reviewed by the LibreTexts team and we have decided to partially approve your request.</p>
-              <p>You requested access to the following applications:</p>
-              ${generateApplicationsList(reqApps || [])}
-              <p>You now have access to the following applications:</p>
-              ${generateApplicationsList(approvedApps)}
-              ${props.reason ? `
-                <p>The team member reviewing your request provided this comment:</p>
-                <p>${marked.parseInline(props.reason)}</p>
-              ` : ''}
-              <p>${supportLine}</p>
-              ${signatureLine}
-            `;
-          default:
-            return `
-              <p>Hello there,</p>
-              <p>Your applications access request has been reviewed by the LibreTexts team. Unfortunately, we have decided to deny your request to access the following applications:</p>
-              ${generateApplicationsList(reqApps || [])}
-              ${props.reason ? `
-                <p>The team member reviewing your request provided this reasoning:</p>
-                <p>${marked.parseInline(props.reason)}</p>
-              ` : ''}
-              <p>If you still need access to the requested applications, please address any comments provided. ${supportLine}</p>
-              ${signatureLine}
-            `;
-        }
-      };
+      })();
 
       const mailSender = new MailController();
       if (mailSender.isReady()) {
         const emailRes = await mailSender.send({
           destination: { to: [reqUser.get('email')] },
-          subject: `Your LibreTexts Access Request Was ${getSubjectByEffect(props.effect)}`,
-          htmlContent: getMessageByEffect(props.effect),
+          ...decisionTemplate,
         });
         mailSender.destroy();
         if (!emailRes) {

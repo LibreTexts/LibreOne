@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import { EmailVerification } from '../models';
 import { MailController } from './MailController';
+import { emailTemplates } from '../emails/templates';
 
 export class EmailVerificationController {
   static generateCode() {
@@ -50,15 +51,7 @@ export class EmailVerificationController {
 
     const emailRes = await mailSender.send({
       destination: { to: [email] },
-      subject: `LibreOne Verification Code: ${code}`,
-      htmlContent: `
-        <p>Hello there,</p>
-        <p>Please verify your email address by entering this code:</p>
-        <p style="font-size: 1.5em;">${code}</p>
-        <p>If this wasn't you, you can safely ignore this email.</p>
-        <p>Best,</p>
-        <p>The LibreTexts Team</p>
-      `,
+      ...emailTemplates.emailVerification({ code }),
     });
 
     return emailRes;
