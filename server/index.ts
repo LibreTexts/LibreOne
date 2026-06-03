@@ -37,12 +37,9 @@ app.use('/health', (_req, res) => {
   res.send({ healthy: true, msg: 'LibreOne is running.' });
 });
 
-app.use(floodLimit);
-app.use(tieredLimit);
+app.use('/api-docs', floodLimit, tieredLimit, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
-
-app.use('/api/v1', APIRouter);
+app.use('/api/v1', floodLimit, tieredLimit, APIRouter);
 
 await connectDatabase();
 

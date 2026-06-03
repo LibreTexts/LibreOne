@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import errors from './errors';
 import {
@@ -99,13 +99,14 @@ export async function floodLimit(req: Request, res: Response, next: NextFunction
     const retryAfter = rejectionRetryAfter(rejection);
     res.set('X-RateLimit-Limit', String(RATE_LIMIT_FLOOD_PER_MIN));
     res.set('X-RateLimit-Remaining', '0');
+    res.set('X-RateLimit-Reset', String(retryAfter));
     return errors.tooManyRequests(res, retryAfter);
   }
 }
 
 export async function tieredLimit(req: Request, res: Response, next: NextFunction): Promise<void | Response> {
-  const { key, limiter } = resolveLimitKey(req);
-  const limit = (limiter as unknown as { points: number }).points;
+  const { tier, key, limiter } = resolveLimitKey(req);
+  const limit = tier === 'api' ? RATE_LIMIT_API_USER_PER_MIN : tier === 'usr' ? RATE_LIMIT_AUTH_USER_PER_MIN : RATE_LIMIT_UNAUTH_PER_MIN;
   try {
     const info = await limiter.consume(key);
     applyHeaders(res, limit, info);
@@ -114,6 +115,7 @@ export async function tieredLimit(req: Request, res: Response, next: NextFunctio
     const retryAfter = rejectionRetryAfter(rejection);
     res.set('X-RateLimit-Limit', String(limit));
     res.set('X-RateLimit-Remaining', '0');
+    res.set('X-RateLimit-Reset', String(retryAfter));
     return errors.tooManyRequests(res, retryAfter);
   }
 }

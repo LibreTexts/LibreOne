@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 
 type ErrorObject = {
   status: string,
@@ -125,13 +125,6 @@ function contentTooLarge(res: Response, detail?: string): Response {
 }
 
 /**
- * Completes an API request with a standard 500 Internal Server Error response.
- *
- * @param res - The response to hydrate.
- * @param detail - A custom detailed error message.
- * @returns The fulfilled API response.
- */
-/**
  * Completes an API request with a standard 429 Too Many Requests response.
  *
  * @param res - The response to hydrate.
@@ -151,6 +144,13 @@ function tooManyRequests(res: Response, retryAfterSeconds?: number, detail?: str
   });
 }
 
+/**
+ * Completes an API request with a standard 500 Internal Server Error response.
+ *
+ * @param res - The response to hydrate.
+ * @param detail - A custom detailed error message.
+ * @returns The fulfilled API response.
+ */
 function internalServerError(res: Response, detail?: string): Response {
   return sendErrorResponse(res, {
     status: '500',
