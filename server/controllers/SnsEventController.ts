@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 import errors from '@server/errors';
-import { EmailEvent, EmailEventType } from '@server/models/EmailEvent';
+import { EmailEvent, type EmailEventType } from '@server/models/EmailEvent';
 import { User } from '@server/models/User';
 import { recordConsentChange } from '@server/services/marketingConsent';
-import { sesEventIngestSchema, SesMessage } from '@server/validators/sesEvents';
+import { sesEventIngestSchema, type SesMessage } from '@server/validators/sesEvents';
 
 type SnsEnvelope = {
   Type: 'Notification' | 'SubscriptionConfirmation' | 'UnsubscribeConfirmation';
