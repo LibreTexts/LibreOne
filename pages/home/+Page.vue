@@ -16,7 +16,7 @@ import LaunchpadComponent from "../../components/LaunchpadComponent.vue";
 import { useAuthStatus } from "@renderer/useAuthStatus";
 import type { Application } from "@server/types/applications";
 import { usePageProps } from "@renderer/usePageProps";
-import { Announcement } from "@server/models";
+import type { Announcement } from "@server/models";
 
 const props = usePageProps<{
   publicApps?: Application[];

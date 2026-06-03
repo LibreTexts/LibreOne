@@ -143,7 +143,7 @@
   import { usePageContext } from '@renderer/usePageContext';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
-  import { Announcement } from '@server/models';
+  import type { Announcement } from '@server/models';
   import AnnouncementBanner from './layout/AnnouncementBanner.vue';
 
   // Props & Context

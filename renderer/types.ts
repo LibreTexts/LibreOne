@@ -1,7 +1,7 @@
 import type { App, ComponentPublicInstance } from "vue";
-import { Application } from "@server/types/applications";
-import { User } from "@server/types/users";
-import { Announcement } from "@server/models";
+import type { Application } from "@server/types/applications";
+import type { User } from "@server/types/users";
+import type { Announcement } from "@server/models";
 
 export type PageContextUser = User & { apps?: Application[] };
 
