@@ -76,7 +76,7 @@ export const emailTemplates = {
     htmlContent: `
         ${GREETING}
         <p>We're writing to confirm that your LibreOne password was updated on ${dateStr} at ${timeStr} UTC.</p>
-        <p>If this wasn't you, please <a href="mailto:support@libretexts.org?subject=Unrecognized Password Change" target="_blank" rel="noopener">contact LibreTexts.</p>
+        ${SUPPORT}
         ${SIGNATURE}
         <p>&nbsp;</p>
         ${TRANSACTIONAL_FOOTER}
@@ -118,7 +118,7 @@ export const emailTemplates = {
           <p>You now have access to the following applications:</p>
           ${applicationNamesList(applicationNames)}
         ` : ''}
-        <p>If you have further questions, please feel free to submit a ticket in our <a href="${SUPPORT_CENTER_URL}" target="_blank">Support Center</a>.</p>
+        ${SUPPORT}
         ${SIGNATURE}
         <p>&nbsp;</p>
         ${TRANSACTIONAL_FOOTER}
