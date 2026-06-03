@@ -3,8 +3,8 @@ import { sequelize } from '@server/models';
 import { User } from '@server/models/User';
 import {
   MarketingConsentEvent,
-  MarketingConsentReason,
-  MarketingConsentSource,
+  type MarketingConsentReason,
+  type MarketingConsentSource,
 } from '@server/models/MarketingConsentEvent';
 
 export type RecordConsentChangeParams = {

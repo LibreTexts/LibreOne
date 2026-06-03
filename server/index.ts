@@ -18,7 +18,7 @@ import { UserController } from './controllers/UserController';
 import { getProductionURL } from './helpers';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swagger.json'
-import { PageContext } from '@renderer/types';
+import type { PageContext } from '@renderer/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
