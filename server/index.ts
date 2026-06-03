@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import './validateEnv';
+import { TRUST_PROXY_HOPS } from './validateEnv';
 import 'reflect-metadata';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -19,20 +19,7 @@ import { getProductionURL } from './helpers';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swagger.json'
 import type { PageContext } from '@renderer/types';
-import rateLimit from "express-rate-limit";
-
-const apiLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  limit: 400, // Limit each IP to 400 requests per windowMs
-  keyGenerator: (req) => {
-    const xff = req.headers['x-forwarded-for'];
-    if (xff && typeof xff === 'string') {
-      const ips = xff.split(',').map(ip => ip.trim());
-      return ips[ips.length - 1]; // rightmost = injected by ALB = avoid spoofing
-    }
-    return req.ip || '';
-  }
-});
+import { floodLimit, tieredLimit } from './rateLimiters';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,19 +27,19 @@ const isProduction = process.env.NODE_ENV === 'production';
 const root = `${__dirname}/..`;
 
 const app = express();
-app.set("trust proxy", 1); // trust first proxy (ALB)
-app.use(apiLimiter);
+app.set('trust proxy', TRUST_PROXY_HOPS);
 app.use(helmet.hidePoweredBy()); // TODO: Improve helmet utilization
 app.use(compression());
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
-
-app.use('/api/v1', APIRouter);
 
 app.use('/health', (_req, res) => {
   res.send({ healthy: true, msg: 'LibreOne is running.' });
 });
+
+app.use('/api-docs', floodLimit, tieredLimit, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+
+app.use('/api/v1', floodLimit, tieredLimit, APIRouter);
 
 await connectDatabase();
 
