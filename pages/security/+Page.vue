@@ -3,9 +3,9 @@
     <div aria-live="polite">
       <AccountPendingDeletionBanner :deletionDate="props.deletionDate" v-if="props.pendingDeletion"/>
       <div class="mb-4">
-        <h1 class="text-left text-3xl font-medium">
+        <p class="text-3xl font-medium">
           {{ $t("security.security") }}
-        </h1>
+        </p>
         <p class="mt-2 text-left text-slate-500">
           {{ $t("security.infoline") }}
         </p>

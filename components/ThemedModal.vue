@@ -1,33 +1,22 @@
 <template>
-  <dialog
-    class="bg-white shadow-md rounded-md p-8 z-50"
-    ref="dialogRef"
-    @click="closeFromEvent"
-  >
+  <Dialog :open="isOpen" @close="isOpen = false">
     <slot />
-  </dialog>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, defineExpose } from "vue";
-const dialogRef = ref<HTMLDialogElement | null>(null);
+import { ref } from "vue";
+import { Dialog } from "@libretexts/davis-vue";
+
+const isOpen = ref(false);
 
 const show = () => {
-  dialogRef.value?.showModal();
+  isOpen.value = true;
 };
 
 const close = () => {
-  dialogRef.value?.close();
+  isOpen.value = false;
 };
 
-const closeFromEvent = (e: MouseEvent) => {
-  if (e.currentTarget === e.target) {
-    close();
-  }
-};
-
-defineExpose({
-  show,
-  close,
-});
+defineExpose({ show, close });
 </script>
