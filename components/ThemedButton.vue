@@ -1,22 +1,20 @@
 <template>
-  <button v-bind="$attrs" :class="variantClasses" :aria-busy="$props.loading"
-    :disabled="$props.disabled || $props.loading">
-    <template v-if="!$props.loading">
-      <div class="flex items-center justify-center">
-        <component :is="TablerIconsVue[$props.icon]" class="w-5 h-5 mr-3" v-if="$props.icon" />
-        <slot />
-      </div>
-    </template>
-    <template v-else>
-      <LoadingIndicator />
-      <span class="ml-2">{{ $t("common.loading") }}...</span>
-    </template>
-  </button>
+  <Button
+    v-bind="$attrs"
+    :variant="davisVariant"
+    :size="props.small ? 'sm' : 'md'"
+    :loading="props.loading"
+    :disabled="props.disabled"
+    :full-width="!props.small"
+  >
+    <component :is="TablerIconsVue[props.icon]" class="w-5 h-5 mr-2" v-if="props.icon && !props.loading" />
+    <slot />
+  </Button>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import LoadingIndicator from "@components/LoadingIndicator.vue";
+import { Button } from "@libretexts/davis-vue";
 import * as TablerIconsVue from "@tabler/icons-vue";
 
 const props = withDefaults(
@@ -35,34 +33,16 @@ const props = withDefaults(
   }
 );
 
-const variantClasses = computed(() => {
-  const baseClasses =
-    "flex items-center justify-center rounded-md text-white font-medium hover:shadow";
-
-  const sizeClasses = props.small ? "w-40 h-6 text-sm pb-0.5" : "w-full h-10";
-
-  //If the button is disabled, we don't want to apply any of the other classes
-  if (props.disabled) {
-    return `${baseClasses} ${sizeClasses} bg-gray-400 cursor-default`;
-  }
-
-  let variantClasses = "";
+const davisVariant = computed(() => {
   switch (props.variant) {
     case "save":
-      variantClasses = "bg-save hover:bg-green-600";
-      break;
+      return "primary";
     case "outlined":
-      variantClasses =
-        "bg-transparent border border-primary text-sky-700 text-primary";
-      break;
+      return "outline";
     case "danger":
-      variantClasses = "bg-red-500 hover:bg-red-600";
-      break;
+      return "destructive";
     default:
-      variantClasses = "bg-primary hover:bg-sky-700";
-      break;
+      return "primary";
   }
-
-  return `${baseClasses} ${sizeClasses} ${variantClasses}`;
 });
 </script>

@@ -1,7 +1,7 @@
 <template>
-  <h1 class="text-center text-3xl font-medium">
+  <Heading :level="3" class="text-center">
     {{ t('complete_registration_lang.header', { name: firstName }) }}
-  </h1>
+  </Heading>
   <p class="text-center mt-4">
     {{ t('complete_registration_lang.tagline') }}
   </p>
@@ -49,6 +49,7 @@ import LoadingIndicator from '@components/LoadingIndicator.vue';
 import ThemedSelectInput from '../ThemedSelectInput.vue';
 import ThemedButton from '../ThemedButton.vue';
 import { DEFAULT_LANGUAGE } from '@server/helpers';
+import { Heading } from '@libretexts/davis-vue';
 
 type Language = {
   id: number;

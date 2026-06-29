@@ -2,7 +2,7 @@
   <div v-bind="$attrs">
     <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
       <div>
-        <h1 class="text-xl font-medium">{{ $t("subscriptions.title") }}</h1>
+        <p class="text-xl font-medium">{{ $t("subscriptions.title") }}</p>
         <div class="flex-grow border-t border-gray-400" />
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
           <p class="mt-2 text-left text-slate-500 flex-1">
