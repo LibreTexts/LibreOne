@@ -41,14 +41,13 @@ const root = `${__dirname}/..`;
 
 const app = express();
 app.set("trust proxy", 1); // trust first proxy (ALB)
-app.use(apiLimiter);
 app.use(helmet.hidePoweredBy()); // TODO: Improve helmet utilization
 app.use(compression());
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-app.use('/api/v1', APIRouter);
+app.use('/api/v1', apiLimiter, APIRouter);
 
 app.use('/health', (_req, res) => {
   res.send({ healthy: true, msg: 'LibreOne is running.' });

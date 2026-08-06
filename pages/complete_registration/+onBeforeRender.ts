@@ -1,5 +1,5 @@
 import createPathWithLocale from "@locales/createPathWithLocale";
-import { PageContextServer } from "vike/types";
+import type { PageContextServer } from "vike/types";
 
 /**
  * Redirects the user to login if they are not yet authenticated.

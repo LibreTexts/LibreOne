@@ -1,10 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
 import { AuthController } from './controllers/AuthController';
 import { APIUserController } from './controllers/APIUserController';
 import errors from './errors';
-import { APIUserPermission } from './types/apiusers';
-import { UserUUIDParams } from './types/users';
+import type { APIUserPermission } from './types/apiusers';
+import type { UserUUIDParams } from './types/users';
 import { UserController } from './controllers/UserController';
 
 type RequestPart = 'body' | 'query' | 'params';

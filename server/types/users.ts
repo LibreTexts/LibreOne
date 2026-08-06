@@ -1,6 +1,6 @@
-import { ApplicationType } from './applications';
-import { OrganizationIDParams } from './organizations';
-import { UserOrganizationAdminRole } from '../controllers/PermissionsController';
+import type { ApplicationType } from './applications';
+import type { OrganizationIDParams } from './organizations';
+import type { UserOrganizationAdminRole } from '../controllers/PermissionsController';
 
 export type User = {
   uuid: string;

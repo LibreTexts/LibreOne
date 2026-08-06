@@ -1,5 +1,5 @@
 import createCasClientExpressMiddleware from 'http-cas-client/wrap/express';
-import express, { CookieOptions } from 'express';
+import express, { type CookieOptions } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import * as AuthValidator from '../validators/auth';
 import {

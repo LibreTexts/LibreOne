@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Announcement } from "@server/models";
+import type { Announcement } from "@server/models";
 import DOMPurify from "isomorphic-dompurify";
 
 const props = defineProps<{
