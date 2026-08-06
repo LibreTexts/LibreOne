@@ -20,9 +20,12 @@
       :required="required"
       @update:model-value="$emit('update:value', $event)"
     />
-    <!-- Multi-select: use @vueform/multiselect (Davis does not support multi-select) -->
+    <!-- Multi-select: use @vueform/multiselect (Davis does not support multi-select).
+         It is not SSR/hydration-safe (throws in beforeMount), so render it client-only.
+         SSR and the first client render both emit a comment placeholder, keeping
+         hydration in sync; the widget mounts afterwards. -->
     <VueMultiSelect
-      v-else
+      v-else-if="isMounted"
       v-bind="msprops"
       v-model="_multiValue"
       :options="options"
@@ -49,9 +52,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { Select } from '@libretexts/davis-vue';
 import VueMultiSelect from '@vueform/multiselect';
+
+// @vueform/multiselect must not render during SSR/hydration; gate it until mount.
+const isMounted = ref(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 
 const emits = defineEmits<{
   (e: 'update:value', v: string | string[]): void;
