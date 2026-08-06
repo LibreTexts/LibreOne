@@ -40,7 +40,6 @@
       type="submit"
       @click="handleSubmit"
       class="mt-6"
-      :loading="loading"
     >
       {{ $t("common.submit") }}
     </ThemedButton>
@@ -127,9 +126,6 @@ import { Heading } from '@libretexts/davis-vue';
   async function submitTimezone(data: TimezonePatch) {
     try {
       loading.value = true;
-      console.log(
-        "mktg_email_opt_in", mktg_email_opt_in.value
-      )
       await axios.patch(`/users/${props.uuid}`, {
         ...data,
         mktg_email_opt_in: mktg_email_opt_in.value,

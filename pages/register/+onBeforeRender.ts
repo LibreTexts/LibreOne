@@ -4,7 +4,7 @@ import {
   getProductionLoginURL,
   isValidServiceURIForRedirect,
 } from "@server/helpers";
-import { PageContextServer } from "vike/types";
+import type { PageContextServer } from "vike/types";
 
 /**
  * Reads search parameters provided in the URL and transforms them to component props. Redirects

@@ -1,5 +1,5 @@
 import { ApplicationController } from "@server/controllers/ApplicationController";
-import { PageContextServer } from "vike/types";
+import type { PageContextServer } from "vike/types";
 import { redirectToHome } from "@renderer/utils/redirects";
 
 /**
