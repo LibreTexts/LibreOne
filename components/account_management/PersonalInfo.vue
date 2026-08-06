@@ -234,14 +234,12 @@
 
       formData.append('avatarFile', fileInput.files[0]);
 
+      // Do not set Content-Type manually. axios (>=0.27.0) keeps the header
+      // as-is when passing FormData, and a manual value omits the multipart
+      // boundary the browser would otherwise add, breaking multipart parsing.
       const response = await axios.post(
         `/users/${pageContext.user.uuid}/avatar`,
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
       );
 
       if (!response.data) {
