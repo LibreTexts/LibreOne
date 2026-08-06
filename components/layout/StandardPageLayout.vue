@@ -33,6 +33,11 @@
   import { useUserRole } from '@renderer/useUserRole';
   import { usePlainLayout } from '@renderer/usePlainLayout';
 
+  // This layout has multiple root nodes. Page props (e.g. `applications`) that Vike
+  // spreads onto the Page component fall through here and cannot auto-inherit onto a
+  // fragment, so opt out of attribute inheritance to discard them cleanly.
+  defineOptions({ inheritAttrs: false });
+
   // Props & Context
   const props = defineProps({
     fillHeight: {

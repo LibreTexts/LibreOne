@@ -1,5 +1,6 @@
 <template>
   <button
+    v-bind="$attrs"
     class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md p-2 mr-5"
     @click="isOpen = !isOpen"
     @keydown.prevent.enter="isOpen = !isOpen"
@@ -82,6 +83,10 @@
   import type { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
+
+  // Multiple root nodes (switcher button + home logo): route fallthrough attrs
+  // (e.g. positioning classes) onto the button instead of auto-inheriting.
+  defineOptions({ inheritAttrs: false });
 
   const pageContext = usePageContext().value;
 

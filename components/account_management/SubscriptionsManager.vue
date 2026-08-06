@@ -14,15 +14,14 @@
               </template>
             </i18n-t>
           </p>
-          <a href="/redeem" class="mt-4 md:mt-0 md:ml-4">
-            <ThemedButton
-              variant="default"
-              class="px-4 py-2 h-fit w-auto whitespace-nowrap"
-              icon="IconKeyFilled"
-            >
-              {{ $t("redeem.title") }}
-            </ThemedButton>
-          </a>
+          <ThemedButton
+            @click="goToRedeem"
+            variant="default"
+            class="mt-4 md:mt-0 md:ml-4 px-4 py-2 h-fit w-auto whitespace-nowrap"
+            icon="IconKeyFilled"
+          >
+            {{ $t("redeem.title") }}
+          </ThemedButton>
         </div>
       </div>
     </div>
@@ -103,6 +102,10 @@ async function fetchUserLicenses() {
 
 function manageLicense(licenseId: string) {
   console.log("Managing license:", licenseId);
+}
+
+function goToRedeem() {
+  window.location.href = "/redeem";
 }
 
 function browseLicenses() {
