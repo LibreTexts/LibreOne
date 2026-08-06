@@ -32,7 +32,7 @@
     "@zxcvbn-ts/core": "2.2.1",
     "@zxcvbn-ts/language-common": "2.0.1",
     "@zxcvbn-ts/language-en": "2.1.0",
-    "axios": "1.16.1",
+    "axios": "https://npm.aikido.io/117c6e3a177869c1f739b/axios@1.16.1-aikido.1",
     "bcryptjs": "2.4.3",
     "body-parser": "1.20.5",
     "compression": "1.8.1",
@@ -115,5 +115,10 @@
     "tailwindcss": "4.3.1",
     "typescript": "4.9.5",
     "vue-eslint-parser": "9.4.3"
+  },
+  "overrides": {
+    "http-cas-client": {
+      "axios": "https://npm.aikido.io/117c6e3a177869c1f739b/axios@0.21.4-aikido.8"
+    }
   }
 }
