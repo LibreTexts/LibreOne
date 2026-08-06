@@ -31,7 +31,7 @@
             {{ $t("complete_registration_role.instructor_user") }}
           </Button>
           <p class="text-center text-gray-500 text-xs mt-3 mx-3">
-            <FontAwesomeIcon icon="fa-solid fa-circle-info" />
+            <IconInfoCircle :size="16" class="inline align-text-bottom" />
             {{ $t("complete_registration_role.instructor_info") }}
           </p>
         </div>
@@ -47,7 +47,7 @@
 import { ref } from "vue";
 import { useAxios } from "@renderer/useAxios";
 import { usePageContext } from "@renderer/usePageContext";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { IconInfoCircle } from "@tabler/icons-vue";
 import LoadingIndicator from "@components/LoadingIndicator.vue";
 import { Button, Heading } from "@libretexts/davis-vue";
 

@@ -35,9 +35,9 @@
             class="inline-flex items-center justify-center h-10 bg-primary p-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
           >
             <span>{{ $t("registration_complete.continue_verification") }}</span>
-            <FontAwesomeIcon
-              icon="fa-solid fa-circle-arrow-right"
-              class="ml-2"
+            <IconCircleArrowRight
+              class="ml-2 inline align-text-bottom"
+              :size="18"
             />
           </a>
         </div>
@@ -47,9 +47,9 @@
             class="inline-flex items-center justify-center h-10 bg-primary p-2 mt-2 rounded-md text-white w-full font-medium hover:bg-sky-700 hover:shadow"
           >
             <span>{{ $t("common.continue") }}</span>
-            <FontAwesomeIcon
-              icon="fa-solid fa-circle-arrow-right"
-              class="ml-2"
+            <IconCircleArrowRight
+              class="ml-2 inline align-text-bottom"
+              :size="18"
             />
           </a>
         </div>
@@ -63,6 +63,7 @@ import { computed, onMounted } from "vue";
 import { usePageContext } from "@renderer/usePageContext";
 import LoadingIndicator from "@components/LoadingIndicator.vue";
 import { usePageProps } from "@renderer/usePageProps";
+import { IconCircleArrowRight } from "@tabler/icons-vue";
 
 const pageContext = usePageContext();
 const props = usePageProps<{

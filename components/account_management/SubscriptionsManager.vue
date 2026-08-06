@@ -1,10 +1,10 @@
 <template>
   <div v-bind="$attrs">
     <div class="flex flex-col md:flex-row justify-between gap-4 mb-4">
-      <div>
+      <div class="w-full">
         <p class="text-xl font-medium">{{ $t("subscriptions.title") }}</p>
-        <div class="flex-grow border-t border-gray-400" />
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <div class="flex-grow border-t border-gray-400 w-full" />
+        <div class="flex flex-col mb-4">
           <p class="mt-2 text-left text-slate-500 flex-1">
             <i18n-t keypath="subscriptions.description">
               <template #always>
@@ -14,14 +14,6 @@
               </template>
             </i18n-t>
           </p>
-          <ThemedButton
-            @click="goToRedeem"
-            variant="default"
-            class="mt-4 md:mt-0 md:ml-4 px-4 py-2 h-fit w-auto whitespace-nowrap"
-            icon="IconKeyFilled"
-          >
-            {{ $t("redeem.title") }}
-          </ThemedButton>
         </div>
       </div>
     </div>
@@ -43,11 +35,18 @@
         @manage="manageLicense"
       />
     </div>
-
+    <ThemedButton
+      @click="goToRedeem"
+      variant="default"
+      class="px-4 py-2 h-fit w-auto whitespace-nowrap"
+      icon="IconKeyFilled"
+    >
+      {{ $t("redeem.title") }}
+    </ThemedButton>
     <ThemedButton
       @click="browseLicenses"
       variant="default"
-      class="w-full py-3 text-center"
+      class="w-full mt-4 py-2 text-center"
       icon="IconShoppingCartFilled"
     >
       {{ $t("subscriptions.browse-store") }}
@@ -90,7 +89,7 @@ async function fetchUserLicenses() {
     if (!pageContext.user?.uuid) return;
 
     const response = await axios.get(
-      `/app-licenses/user/${pageContext.user.uuid}`
+      `/app-licenses/user/${pageContext.user.uuid}`,
     );
     userLicenses.value = response.data.data;
   } catch (error) {

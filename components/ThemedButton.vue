@@ -7,7 +7,7 @@
     :disabled="props.disabled"
     :full-width="!props.small"
   >
-    <component :is="TablerIconsVue[props.icon]" class="w-5 h-5 mr-2" v-if="props.icon && !props.loading" />
+    <component :is="iconMap[props.icon]" class="w-5 h-5 mr-2" v-if="props.icon && !props.loading" />
     <slot />
   </Button>
 </template>
@@ -15,7 +15,21 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Button } from "@libretexts/davis-vue";
-import * as TablerIconsVue from "@tabler/icons-vue";
+import {
+  IconKeyFilled,
+  IconShoppingCart,
+  IconShoppingCartFilled,
+  IconPlayerPlayFilled,
+  IconArrowRight,
+} from "@tabler/icons-vue";
+
+const iconMap = {
+  IconKeyFilled,
+  IconShoppingCart,
+  IconShoppingCartFilled,
+  IconPlayerPlayFilled,
+  IconArrowRight,
+};
 
 const props = withDefaults(
   defineProps<{
@@ -23,7 +37,7 @@ const props = withDefaults(
     small?: boolean;
     disabled?: boolean;
     loading?: boolean;
-    icon?: keyof typeof TablerIconsVue;
+    icon?: keyof typeof iconMap;
   }>(),
   {
     variant: "default",

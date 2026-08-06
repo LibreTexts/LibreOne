@@ -3,12 +3,11 @@
     :class="`flex min-w-fit w-28 h-6 justify-center items-center rounded ${color}`"
   >
     <p class="text-xs text-center text-white font-medium px-2">
-      <FontAwesomeIcon
+      <IconCircleCheck
         v-if="isInstructionVerified"
-        icon="fa-solid fa-check-circle"
         color="white"
-        size="sm"
-        class="pr-1"
+        :size="14"
+        class="pr-1 inline align-text-bottom"
       />
       {{ isInstructionVerified ? "Verified Instructor" : "Unverified User" }}
     </p>
@@ -17,7 +16,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconCircleCheck } from '@tabler/icons-vue';
 
   const props = withDefaults(
     defineProps<{

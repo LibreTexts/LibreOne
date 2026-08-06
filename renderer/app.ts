@@ -1,30 +1,5 @@
 import { createSSRApp, h, shallowRef } from "vue";
 import { createI18n } from "vue-i18n";
-import { library } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import {
-  faArrowRight,
-  faCartShopping,
-  faCheckCircle,
-  faCircleArrowLeft,
-  faCircleArrowRight,
-  faCircleCheck,
-  faCircleInfo,
-  faEye,
-  faEyeSlash,
-  faBars,
-  faBolt,
-  faPlay,
-  faRocket,
-  faKey,
-  faScrewdriverWrench,
-  faRightFromBracket,
-  faChevronUp,
-  faChevronDown,
-  faChevronRight,
-  faUser,
-  faLock,
-} from "@fortawesome/free-solid-svg-icons";
 import { setPageContext } from "./usePageContext";
 import { initAxios } from "./useAxios";
 import BaseLayout from "@components/BaseLayout.vue";
@@ -45,7 +20,14 @@ export function createApp(pageContext: PageContext) {
   const dataRef = shallowRef(pageContext.data);
   const pageRef = shallowRef(pageContext.Page);
 
-  const RootComponent = () => h(BaseLayout, {}, () => h(pageRef.value, pageContextRef.value.pageProps));
+  // Must be a stateful component (object with `render`), not a bare function.
+  // A functional root makes Vue resolve `$root` to null for the entire tree
+  // (getPublicInstance recurses past a non-stateful root to a null parent),
+  // which crashes libraries that read `this.$root` in lifecycle hooks
+  // (e.g. @vueform/multiselect's Vue2/3 detection in beforeMount).
+  const RootComponent = {
+    render: () => h(BaseLayout, {}, () => h(pageRef.value, pageContextRef.value.pageProps)),
+  };
   const app = createSSRApp(RootComponent);
   setPageContext(app, pageContextRef);
   setData(app, dataRef);
@@ -73,32 +55,6 @@ export function createApp(pageContext: PageContext) {
     },
   });
   app.use(i18n);
-
-  // Font Awesome
-  library.add(
-    faArrowRight,
-    faCartShopping,
-    faCheckCircle,
-    faEye,
-    faEyeSlash,
-    faCircleArrowRight,
-    faCircleCheck,
-    faCircleInfo,
-    faCircleArrowLeft,
-    faBars,
-    faBolt,
-    faKey,
-    faRocket,
-    faScrewdriverWrench,
-    faRightFromBracket,
-    faChevronUp,
-    faPlay,
-    faChevronDown,
-    faChevronRight,
-    faUser,
-    faLock,
-  );
-  app.component("FontAwesomeIcon", FontAwesomeIcon);
 
   return app;
 }

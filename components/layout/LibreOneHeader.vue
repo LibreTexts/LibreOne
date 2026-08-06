@@ -71,8 +71,7 @@
                 <span v-if="pageContext.user?.verify_status === 'verified'"> | <span class="text-green-600 font-semibold">Verified Instructor</span></span>
               </div>
             </div>
-            <FontAwesomeIcon
-              icon="chevron-down"
+            <IconChevronDown
               class="w-4 h-4 ml-1 text-gray-600 transition-transform duration-200"
               :class="userMenuOpen ? 'rotate-180' : ''"
             />
@@ -99,8 +98,7 @@
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
-                  <FontAwesomeIcon
-                    icon="user"
+                  <IconUser
                     class="w-4 h-4 mr-3 text-gray-600"
                   />
                   Profile
@@ -111,8 +109,7 @@
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
-                  <FontAwesomeIcon
-                    icon="lock"
+                  <IconLock
                     class="w-4 h-4 mr-3 text-gray-600"
                   />
                   Security
@@ -123,8 +120,7 @@
                   class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
-                  <FontAwesomeIcon
-                    icon="right-from-bracket"
+                  <IconLogout
                     class="w-4 h-4 mr-3 text-gray-600"
                   />
                   Log out
@@ -142,13 +138,12 @@
           >
             <span>{{ $t("common.signin") }}</span>
           </button>
-          <FontAwesomeIcon
+          <IconMenu2
             class="lg:hidden clicked-animation"
             @click="menuOpen = !menuOpen"
             aria-label="Open Navigation Menu"
             :class="menuOpen ? 'motion-safe:-rotate-90' : ''"
-            icon="fa-solid fa-bars"
-            size="lg"
+            :size="24"
           />
         </div>
       </section>
@@ -219,7 +214,7 @@
 
 <script lang="ts" setup>
   import { ref, computed, onMounted, onUnmounted } from 'vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconChevronDown, IconUser, IconLock, IconLogout, IconMenu2 } from '@tabler/icons-vue';
   import AppSwitcher from './AppSwitcher.vue';
   import { usePageContext } from '@renderer/usePageContext';
   import UserAvatar from '../account_management/UserAvatar.vue';

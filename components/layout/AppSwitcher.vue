@@ -1,7 +1,7 @@
 <template>
   <button
     v-bind="$attrs"
-    class="app-switcher shadow-[0_2px_5px_-1px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_5px_-1px_rgba(0,0,0,0.3)] rounded-md p-2 mr-5"
+    class="app-switcher rounded-md p-2 mr-5 h-11 w-11 cursor-pointer border border-gray-500 shadow-sm hover:border-gray-700 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700"
     @click="isOpen = !isOpen"
     @keydown.prevent.enter="isOpen = !isOpen"
     tabindex="0"
@@ -12,11 +12,7 @@
     "
   >
   
-    <FontAwesomeIcon
-      icon="fa-solid fa-rocket"
-      class="text-primary rounded-md"
-      size="2x"
-    />
+    <img src="https://cdn.libretexts.net/Icons/launchpad-rocket-icon.svg" alt="" class="h-8 w-8 pt-1" />
     <ul
       v-if="isOpen"
       class="switcher-menu"
@@ -79,7 +75,6 @@
 
 <script lang="ts" setup>
   import { ref } from 'vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import type { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
   import { getUserAppsAndLibraries } from '@renderer/utils/apps';
