@@ -53,9 +53,9 @@
               class="app-item-icon-overlay"
               v-if="!app.supports_cas"
             >
-              <FontAwesomeIcon
-                class="app-item-unsupported-icon"
-                icon="fa-solid fa-screwdriver-wrench"
+              <IconTool
+                class="text-primary"
+                :size="18"
               />
             </div>
           </div>
@@ -116,9 +116,9 @@
                 class="app-item-icon-overlay"
                 v-if="hasEditAccess(lib.name)"
               >
-                <FontAwesomeIcon
-                  class="app-item-key-icon"
-                  icon="fa-solid fa-key"
+                <IconKeyFilled
+                  class="text-primary"
+                  :size="18"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@
   import { computed, ref } from 'vue';
   import type { Application } from '@server/types/applications';
   import { usePageContext } from '@renderer/usePageContext';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconKeyFilled, IconTool } from '@tabler/icons-vue';
   import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
   import type { Announcement } from '@server/models';
   import AnnouncementBanner from './layout/AnnouncementBanner.vue';
@@ -236,15 +236,8 @@
   background-color: #f8fafc;
   border-top-right-radius: 5px;
   border-bottom-left-radius: 5px;
-  padding-top: 2px;
-}
-.app-item-key-icon {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-.app-item-unsupported-icon {
-  color: #127bc4;
-  font-size: 0.9rem;
+  padding-top: 6px;
+  padding-left: 6px;
 }
 .app-item-text-container {
   display: flex;

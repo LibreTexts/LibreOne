@@ -138,7 +138,7 @@
     (e: 'set-unknown-error', error: boolean): void;
     (e: 'data-updated'): void;
   }>();
-  const props = defineProps<{ user?: Record<string, string>, pendingDeletion?: string }>();
+  const props = defineProps<{ user?: Record<string, string>, pendingDeletion?: boolean }>();
   const { t } = useI18n();
   const axios = useAxios();
   const deleteAccountModal = ref<InstanceType<typeof ThemedModal>>();

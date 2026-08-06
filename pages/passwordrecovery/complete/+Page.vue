@@ -82,7 +82,7 @@
             v-else
             class="flex items-center justify-center mt-8 text-accent"
           >
-            <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
+            <IconCircleArrowLeft :size="18" class="inline align-text-bottom" />
             <i18n-t
               keypath="passwordrecovery.backtosource"
               tag="a"
@@ -106,7 +106,7 @@
   import { computed, ref } from 'vue';
   import { AxiosError } from 'axios';
   import { useAxios } from '@renderer/useAxios';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconCircleArrowLeft } from '@tabler/icons-vue';
   import { Input, Button, Spinner } from '@libretexts/davis-vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
   import { getPasswordStrength } from '@renderer/utils/auth';

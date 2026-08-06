@@ -18,9 +18,10 @@
           type="button"
           class="items-center justify-center mt-6 ml-2"
         >
-          <FontAwesomeIcon
+          <component
+            :is="showCurrPassword ? IconEyeOff : IconEye"
             @click="showCurrPassword = !showCurrPassword"
-            :icon="['fa-solid', showCurrPassword ? 'fa-eye-slash' : 'fa-eye']"
+            :size="20"
           />
           <span class="sr-only">
             {{ showCurrPassword ? $t("common.hide") : $t("common.show") }}
@@ -43,9 +44,10 @@
           type="button"
           class="items-center justify-center mt-6 ml-2"
         >
-          <FontAwesomeIcon
+          <component
+            :is="showNewPassword ? IconEyeOff : IconEye"
             @click="showNewPassword = !showNewPassword"
-            :icon="['fa-solid', showNewPassword ? 'fa-eye-slash' : 'fa-eye']"
+            :size="20"
           />
           <span class="sr-only">
             {{ showNewPassword ? $t("common.hide") : $t("common.show") }}
@@ -73,9 +75,10 @@
           type="button"
           class="items-center justify-center mt-6 ml-2"
         >
-          <FontAwesomeIcon
+          <component
+            :is="showNewPassword ? IconEyeOff : IconEye"
             @click="showNewPassword = !showNewPassword"
-            :icon="['fa-solid', showNewPassword ? 'fa-eye-slash' : 'fa-eye']"
+            :size="20"
           />
           <span class="sr-only">
             {{ showNewPassword ? $t("common.hide") : $t("common.show") }}
@@ -135,7 +138,7 @@
   import ThemedInput from '../ThemedInput.vue';
   import ThemedButton from '../ThemedButton.vue';
   import PasswordStrengthMeter from '../PasswordStrengthMeter.vue';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconEye, IconEyeOff } from '@tabler/icons-vue';
   import { getPasswordStrength } from '@renderer/utils/auth';
   import { useI18n } from 'vue-i18n';
 

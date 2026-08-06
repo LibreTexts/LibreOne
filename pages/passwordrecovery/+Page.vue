@@ -16,7 +16,7 @@
             class="text-accent font-medium text-sm block text-center lg:text-left"
             :href="props.sourceURL"
           >
-            <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
+            <IconCircleArrowLeft :size="18" class="inline align-text-bottom" />
             <span class="ml-2">{{ sourceText }}</span>
           </a>
           <h1 class="text-3xl text-center font-semibold mt-4 lt:mt-2">
@@ -51,7 +51,7 @@
             class="text-accent font-medium text-sm block text-center lg:text-left"
             :href="props.sourceURL"
           >
-            <FontAwesomeIcon icon="fa-solid fa-circle-arrow-left" />
+            <IconCircleArrowLeft :size="18" class="inline align-text-bottom" />
             <span class="ml-2">{{ sourceText }}</span>
           </a>
           <h1 class="text-3xl text-center font-semibold mt-4 lg:mt-2">
@@ -76,7 +76,7 @@
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useAxios } from '@renderer/useAxios';
-  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import { IconCircleArrowLeft } from '@tabler/icons-vue';
   import { Input, Button } from '@libretexts/davis-vue';
   import { usePageProps } from '@renderer/usePageProps';
 
