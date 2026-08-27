@@ -9,7 +9,7 @@ import { Op } from 'sequelize';
 import { server } from '..';
 import { Application, EmailVerification, ResetPasswordToken, User, UserApplication } from '../models';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
-import { createSessionCookiesForTest, testAppData } from './test-helpers';
+import { createSessionCookiesForTest, destroyTestSessions, testAppData } from './test-helpers';
 
 describe('Authentication and Authorization', async () => {
   let defaultApp1: Application;
@@ -22,7 +22,13 @@ describe('Authentication and Authorization', async () => {
     ]);
   });
 
+  afterEach(async () => {
+    await destroyTestSessions();
+    await User.destroy({ where: {} });
+  });
+
   after(async () => {
+    await destroyTestSessions();
     await Application.destroy({ where: {} });
     await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
@@ -79,7 +85,6 @@ describe('Authentication and Authorization', async () => {
         status: '409',
         code: 'resource_conflict',
       });
-      await user1.destroy();
     });
     it('should verify email using code and login', async () => {
       const user1 = await User.create({
@@ -100,7 +105,6 @@ describe('Authentication and Authorization', async () => {
       expect(response.get('Set-Cookie')).to.be.an('array').with.length(2);
       expect(response.get('Set-Cookie')[0]).to.contain('one_access=');
       expect(response.get('Set-Cookie')[1]).to.contain('one_signed=');
-      await user1.destroy();
     });
     it('should fail to verify with incorrect code', async () => {
       const user1 = await User.create({
@@ -124,7 +128,6 @@ describe('Authentication and Authorization', async () => {
         status: '400',
         code: 'bad_request',
       });
-      await user1.destroy();
     });
     it('should complete registration', async () => {
       const user1 = await User.create({
@@ -150,7 +153,6 @@ describe('Authentication and Authorization', async () => {
         defaultApp2.get('id'),
       ]);
 
-      await user1.destroy();
     });
     it('should not complete registration if user_type is student and student ID is missing', async () => {
       const user1 = await User.create({
@@ -171,7 +173,6 @@ describe('Authentication and Authorization', async () => {
         code: 'bad_request',
       });
 
-      await user1.destroy();
     });
   });
 
@@ -196,7 +197,6 @@ describe('Authentication and Authorization', async () => {
       expect(response.get('Set-Cookie')[0]).to.contain('one_access=;'); // cleared
       expect(response.get('Set-Cookie')[1]).to.contain('one_signed=;'); // cleared
 
-      await user1.destroy();
     });
   });
 
@@ -218,7 +218,6 @@ describe('Authentication and Authorization', async () => {
       expect(foundToken).to.exist;
       
       await foundToken?.destroy();
-      await user1.destroy();
     });
     it('should complete password reset', async () => {
       const user1 = await User.create({
@@ -244,7 +243,6 @@ describe('Authentication and Authorization', async () => {
       const updatedUser = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
       expect(updatedUser?.get('password')).to.be.a('string');
       
-      await user1.destroy();
     });
     it('should error if reset token is expired', async () => {
       const user1 = await User.create({
@@ -274,7 +272,6 @@ describe('Authentication and Authorization', async () => {
       });
       
       await token1.destroy();
-      await user1.destroy();
     });
   });
 

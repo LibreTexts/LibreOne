@@ -37,6 +37,12 @@ import { UserLicenseEntitlement } from './UserLicenseEntitlement';
 @Table({
   timestamps: true,
   tableName: 'users',
+  indexes: [
+    {
+      name: 'users_last_name_first_name',
+      fields: ['last_name', 'first_name'],
+    },
+  ],
 })
 export class User extends Model {
   @PrimaryKey

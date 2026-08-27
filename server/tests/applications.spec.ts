@@ -12,7 +12,7 @@ import {
   User,
   UserApplication,
 } from '../models';
-import { createSessionCookiesForTest, testAppData } from './test-helpers';
+import { createSessionCookiesForTest, destroyTestSessions, testAppData } from './test-helpers';
 
 describe('Applications', async () => {
   let mainAPIUser: APIUser;
@@ -51,6 +51,7 @@ describe('Applications', async () => {
     await Application.destroy({ where: {} });
   });
   after(async () => {
+    await destroyTestSessions();
     await APIUser.destroy({ where: {} });
     await User.destroy({ where: {} });
     if (server?.listening) {

@@ -326,7 +326,69 @@
                             "type": "string"
                         },
                         "required": false,
-                        "description": "Search for users"
+                        "description": "Search users by email, first name, last name, full name, or UUID. Each term is matched anywhere within those fields, and terms are AND-ed, so additional words narrow the results. Results are ranked by relevance unless an explicit sort is supplied."
+                    },
+                    {
+                        "in": "query",
+                        "name": "admin_role",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "org_admin",
+                                    "org_sys_admin"
+                                ]
+                            }
+                        },
+                        "style": "form",
+                        "explode": true,
+                        "required": false,
+                        "description": "Only return users holding one of these organization admin roles"
+                    },
+                    {
+                        "in": "query",
+                        "name": "academy_online",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "style": "form",
+                        "explode": true,
+                        "required": false,
+                        "description": "Only return users with one of these (non-expired) LibreTexts Academy Online levels"
+                    },
+                    {
+                        "in": "query",
+                        "name": "sort",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "relevance",
+                                "first_name",
+                                "last_name",
+                                "email",
+                                "created_at",
+                                "last_access"
+                            ]
+                        },
+                        "required": false,
+                        "description": "Field to sort by. Defaults to \"relevance\" when query is supplied, otherwise \"last_name\". \"relevance\" without a query falls back to \"last_name\"."
+                    },
+                    {
+                        "in": "query",
+                        "name": "order",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        },
+                        "required": false,
+                        "description": "Sort direction. Defaults to \"desc\" for relevance, created_at, and last_access, \"asc\" otherwise."
                     }
                 ],
                 "responses": {
