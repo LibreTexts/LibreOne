@@ -1,104 +1,96 @@
 <template>
-  <div
-    aria-live="polite"
-    v-bind="$attrs"
-  >
+  <div aria-live="polite" v-bind="$attrs">
     <div>
       <div class="flex flex-col gap-y-3">
-      <AnnouncementBanner
-        v-for="announcement in $props.announcements || []"
-        :key="announcement.uuid"
-        :announcement="announcement"
-        :rounded="true"
-      />
-      <NotVerifiedBanner
-        v-if="$props.authorized && pageContext?.user?.user_type === 'instructor' && pageContext?.user?.verify_status === 'not_attempted'"
-      />
+        <AnnouncementBanner
+          v-for="announcement in $props.announcements || []"
+          :key="announcement.uuid"
+          :announcement="announcement"
+          :rounded="true"
+        />
+        <NotVerifiedBanner
+          v-if="
+            $props.authorized &&
+            pageContext?.user?.user_type === 'instructor' &&
+            pageContext?.user?.verify_status === 'not_attempted'
+          "
+        />
       </div>
-      <p class="text-3xl font-medium">
+      <Heading :level="2" class="text-3xl font-medium">
         {{
           $t(
             $props.authorized
               ? "launchpad_auth.yourlibreverse"
-              : "launchpad_unauth.appsandservices"
+              : "launchpad_unauth.appsandservices",
           )
         }}
-      </p>
-      <p
-        class="mt-2 text-slate-500"
-        v-if="$props.authorized || hasUnsupportedApps"
-      >
-        <span v-if="$props.authorized">{{ $t("launchpad_auth.yourlibreversetagline") }}</span>
+      </Heading>
+      <Text class="mt-2 text-sm text-neutral-500" v-if="$props.authorized || hasUnsupportedApps">
+        <span v-if="$props.authorized">{{
+          $t("launchpad_auth.yourlibreversetagline")
+        }}</span>
         <span v-if="$props.authorized && hasUnsupportedApps">&nbsp;</span>
-        <span v-if="hasUnsupportedApps">{{ $t("launchpad_auth.not_integrated_apps") }}</span>
-      </p>
-      <div
-        class="apps-list px-2"
-        v-if="apps.length > 0"
-      >
+        <span v-if="hasUnsupportedApps">{{
+          $t("launchpad_auth.not_integrated_apps")
+        }}</span>
+      </Text>
+      <div class="apps-list" v-if="apps.length > 0">
         <a
           class="app-item-container"
-          v-for="app in apps.filter((app) => app.app_type === 'standalone').sort((a, b) => a.name.localeCompare(b.name))"
+          v-for="app in apps
+            .filter((app) => app.app_type === 'standalone')
+            .sort((a, b) => a.name.localeCompare(b.name))"
           :href="app.main_url"
           :key="app.id ?? app.name"
         >
           <div class="app-item-icon-container">
-            <img
-              :src="app.icon"
-              :alt="app.name"
-              width="160"
-              height="160"
-            >
-            <div
-              class="app-item-icon-overlay"
-              v-if="!app.supports_cas"
-            >
-              <IconTool
-                class="text-primary"
-                :size="18"
-              />
+            <img :src="app.icon" :alt="app.name" width="160" height="160" />
+            <div class="app-item-icon-overlay" v-if="!app.supports_cas">
+              <IconTool class="text-primary" :size="18" />
             </div>
           </div>
           <div class="app-item-text-container">
-            <p class="text-sm font-medium">
+            <Text class="text-sm font-semibold">
               {{ app.name }}
-            </p>
-            <p class="text-xs text-slate-600">
+            </Text>
+            <Text class="text-xs">
               {{ app.description }}
-            </p>
+            </Text>
           </div>
         </a>
       </div>
     </div>
     <div>
       <div class="mt-8 lg:mt-2">
-        <p class="text-3xl font-medium">
+        <Heading :level="2" class="text-3xl font-medium">
           {{ $t("launchpad_auth.libraries") }}
-        </p>
+        </Heading>
         <i18n-t
-          :keypath="$props.authorized ? 'launchpad_auth.libraryeditrequest' : 'launchpad_unauth.libraryeditrequest' "
-          tag="p"
-          class="mt-2 text-slate-500"
+          :keypath="
+            $props.authorized
+              ? 'launchpad_auth.libraryeditrequest'
+              : 'launchpad_unauth.libraryeditrequest'
+          "
+          tag="Text"
+          class="mt-2 text-sm text-neutral-500"
         >
           <template #requestaccesslink>
             <!-- New Instructor Verification Req URL-->
-            <a
+            <Link
               href="/instructor"
               target="_blank"
-              rel="noreferer"
-              class="text-accent"
+              rel="noreferrer"
+              class="text-sm"
+              :show-external-icon="true"
             >
               {{ $t("launchpad_auth.requestaccess") }}.
-            </a>
+            </Link>
             <span v-if="$props.authorized">
               {{ $t("launchpad_auth.libraryeditinfo") }}
             </span>
           </template>
         </i18n-t>
-        <div
-          class="apps-list px-2"
-          v-if="libs.length > 0"
-        >
+        <div class="apps-list" v-if="libs.length > 0">
           <a
             class="app-item-container"
             v-for="lib in libs"
@@ -106,29 +98,18 @@
             :key="lib.id ?? lib.name"
           >
             <div class="app-item-icon-container">
-              <img
-                :src="lib.icon"
-                :alt="lib.name"
-                width="90"
-                height="90"
-              >
-              <div
-                class="app-item-icon-overlay"
-                v-if="hasEditAccess(lib.name)"
-              >
-                <IconKeyFilled
-                  class="text-primary"
-                  :size="18"
-                />
+              <img :src="lib.icon" :alt="lib.name" width="90" height="90" />
+              <div class="app-item-icon-overlay" v-if="hasEditAccess(lib.name)">
+                <IconKeyFilled class="text-primary" :size="18" />
               </div>
             </div>
             <div class="app-item-text-container">
-              <p class="text-sm font-medium">
+              <Text class="text-sm font-semibold">
                 {{ lib.name }}
-              </p>
-              <p class="text-xs text-slate-600">
+              </Text>
+              <Text class="text-xs">
                 {{ lib.description }}
-              </p>
+              </Text>
             </div>
           </a>
         </div>
@@ -138,56 +119,65 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
-  import type { Application } from '@server/types/applications';
-  import { usePageContext } from '@renderer/usePageContext';
-  import { IconKeyFilled, IconTool } from '@tabler/icons-vue';
-  import NotVerifiedBanner from './instructor_profile/NotVerifiedBanner.vue';
-  import type { Announcement } from '@server/models';
-  import AnnouncementBanner from './layout/AnnouncementBanner.vue';
+import { computed, ref } from "vue";
+import type { Application } from "@server/types/applications";
+import { usePageContext } from "@renderer/usePageContext";
+import { IconKeyFilled, IconTool } from "@tabler/icons-vue";
+import NotVerifiedBanner from "./instructor_profile/NotVerifiedBanner.vue";
+import type { Announcement } from "@server/models";
+import AnnouncementBanner from "./layout/AnnouncementBanner.vue";
+import { Text, Heading, Link } from "@libretexts/davis-vue";
 
-  // Props & Context
-  const props = withDefaults(
-    defineProps<{
-      authorized?: boolean;
-      publicApps?: Application[];
-      announcements?: Announcement[];
-      userApps?: Application[];
-      userLibraries?: Application[];
-    }>(),
-    {
-      authorized: false,
-      publicApps: undefined,
-      announcements: undefined,
-      userApps: undefined,
-      userLibraries: undefined,
-    },
-  );
-  const pageContext = usePageContext();
+// Props & Context
+const props = withDefaults(
+  defineProps<{
+    authorized?: boolean;
+    publicApps?: Application[];
+    announcements?: Announcement[];
+    userApps?: Application[];
+    userLibraries?: Application[];
+  }>(),
+  {
+    authorized: false,
+    publicApps: undefined,
+    announcements: undefined,
+    userApps: undefined,
+    userLibraries: undefined,
+  },
+);
+const pageContext = usePageContext();
 
-  // Data & UI
-  const apps = ref<Application[]>(props.authorized ? props.userApps || [] : props.publicApps?.filter((a) => a.app_type === 'standalone') || []);
-  const libs = ref<Application[]>(props.authorized ? props.userLibraries || [] : props.publicApps?.filter((a) => a.app_type === 'library') || []);
-  const hasUnsupportedApps = computed(() =>
-    apps.value.reduce((acc, curr) => {
-      if (acc) {
-        return true;
-      }
-      if (!curr.supports_cas) {
-        return true;
-      }
-      return false;
-    }, false),
-  );
-
-  // User has edit access to a library if they
-  function hasEditAccess(name: string): boolean {
-    if (!props.authorized) return false;
-    if (apps.value.map((app) => app.name).includes(name)) {
+// Data & UI
+const apps = ref<Application[]>(
+  props.authorized
+    ? props.userApps || []
+    : props.publicApps?.filter((a) => a.app_type === "standalone") || [],
+);
+const libs = ref<Application[]>(
+  props.authorized
+    ? props.userLibraries || []
+    : props.publicApps?.filter((a) => a.app_type === "library") || [],
+);
+const hasUnsupportedApps = computed(() =>
+  apps.value.reduce((acc, curr) => {
+    if (acc) {
+      return true;
+    }
+    if (!curr.supports_cas) {
       return true;
     }
     return false;
+  }, false),
+);
+
+// User has edit access to a library if they
+function hasEditAccess(name: string): boolean {
+  if (!props.authorized) return false;
+  if (apps.value.map((app) => app.name).includes(name)) {
+    return true;
   }
+  return false;
+}
 </script>
 
 <style lang="css" scoped>
@@ -212,10 +202,14 @@
   cursor: pointer;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 4px 6px -2px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 .app-item-container:hover {
-  box-shadow: 0 6px 10px 0px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 6px 10px 0px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 .app-item-icon-container {
   position: relative;

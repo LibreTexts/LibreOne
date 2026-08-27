@@ -19,32 +19,34 @@
           >
         </a>
         <div class="hidden lg:flex lg:flex-row lg:flex-1 lg:ml-8">
-          <a
+          <Link
             v-for="(item, idx) in navItems"
             :href="item.link"
             :key="idx"
-            class="text-md font-semibold leading-6 text-gray-900"
+            class="text-md leading-6 text-black! no-underline! !hover:underline"
             :class="idx > 0 ? 'ml-6' : ''"
             :title="item.title"
           >
             {{ item.title }}
-          </a>
-          <a
+          </Link>
+          <Link
             href="https://commons.libretexts.org/accessibility"
             target="_blank"
             key="accessibility-link"
-            class="text-md font-semibold leading-6 text-gray-900 ml-6"
+            class="text-md leading-6 text-black! no-underline! !hover:underline ml-6"
+            :show-external-icon="true"
           >
             {{ $t("common.accessibility") }}
-          </a>
-          <a
+        </Link>
+          <Link
             href="https://donate.libretexts.org"
             target="_blank"
             key="donate-link"
-            class="text-md font-semibold leading-6 text-gray-900 ml-6"
+            class="text-md leading-6 text-black! !no-underline !hover:underline ml-6"
+            :show-external-icon="true"
           >
             {{ $t("common.donate") }}
-          </a>
+          </Link>
         </div>
         <div
           class="hidden lg:flex flex-row items-center w-auto relative user-menu-container"
@@ -133,7 +135,7 @@
         <div class="flex flex-row mr-2 items-center">
           <button
             @click="handleGoToLogin()"
-            class="hidden lg:block text-sm font-semibold leading-6 text-black"
+            class="hidden lg:block text-md leading-6 text-black"
             v-if="!$props.authorized"
           >
             <span>{{ $t("common.signin") }}</span>
@@ -218,6 +220,7 @@
   import AppSwitcher from './AppSwitcher.vue';
   import { usePageContext } from '@renderer/usePageContext';
   import UserAvatar from '../account_management/UserAvatar.vue';
+  import { Link } from '@libretexts/davis-vue';
 
   const pageContext = usePageContext().value;
 
