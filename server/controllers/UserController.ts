@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { Op, Sequelize, Transaction, type WhereOptions } from 'sequelize';
+import { Op, Sequelize, Transaction, type ProjectionAlias, type WhereOptions } from 'sequelize';
 import multer from 'multer';
 import sharp from 'sharp';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -20,6 +20,7 @@ import {
   UserOrganization,
   VerificationRequest,
   Session,
+  sequelize,
 } from '../models';
 import type {
   CreateUserApplicationBody,
@@ -54,6 +55,88 @@ import type { ApplicationLaunchpadVisibility } from '@server/types/applications'
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
 export const UUID_V4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/, 'i');
+
+/** Columns that may be used to sort the user list. Never interpolate raw input here. */
+const USER_SORT_COLUMNS: Record<string, string> = {
+  first_name: 'first_name',
+  last_name: 'last_name',
+  email: 'email',
+  created_at: 'created_at',
+  last_access: 'last_access',
+};
+
+/** Sorts that read most naturally newest/highest first. */
+const DESC_BY_DEFAULT_SORTS = new Set(['relevance', 'created_at', 'last_access']);
+
+/** Maximum number of whitespace-separated tokens honored in a user search. */
+const MAX_SEARCH_TOKENS = 5;
+
+/**
+ * Escapes LIKE wildcards so user input cannot widen the pattern.
+ *
+ * @param value - Raw input.
+ * @returns The input with backslash, percent, and underscore escaped.
+ */
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (character) => `\\${character}`);
+}
+
+/**
+ * Splits a search string into a bounded list of tokens.
+ *
+ * @param query - The trimmed search string.
+ * @returns Whitespace-separated tokens.
+ */
+function tokenizeSearchQuery(query: string): string[] {
+  return query.split(/\s+/).filter((token) => token.length > 0).slice(0, MAX_SEARCH_TOKENS);
+}
+
+/**
+ * Builds the search predicate and relevance expression for a user search.
+ * Tokens are AND-ed, so each additional word narrows the result set, and each token is
+ * matched as a substring, so a fragment from the middle of a name, address, or UUID still
+ * finds its user.
+ *
+ * @param query - The trimmed search string.
+ * @returns The SQL match clause and relevance expression.
+ */
+function buildUserSearchCriteria(query: string): { match: string; relevance: string } {
+  const tokens = tokenizeSearchQuery(query);
+  const exact = sequelize.escape(query);
+  const prefixOf = (value: string) => sequelize.escape(`${escapeLikePattern(value)}%`);
+  const containsOf = (value: string) => sequelize.escape(`%${escapeLikePattern(value)}%`);
+  const fullName = 'CONCAT(`User`.`first_name`, \' \', `User`.`last_name`)';
+
+  const exactClause = `(\`User\`.\`email\` = ${exact} OR \`User\`.\`uuid\` = ${exact})`;
+
+  const tokenClause = `(${tokens.map((token) => (
+    `(\`User\`.\`email\` LIKE ${containsOf(token)}`
+    + ` OR \`User\`.\`first_name\` LIKE ${containsOf(token)}`
+    + ` OR \`User\`.\`last_name\` LIKE ${containsOf(token)}`
+    + ` OR \`User\`.\`uuid\` LIKE ${containsOf(token)})`
+  )).join(' AND ')})`;
+
+  const match = `(${exactClause} OR ${tokenClause})`;
+
+  const bothNamesClause = tokens.length > 1
+    ? ` OR (\`User\`.\`first_name\` LIKE ${prefixOf(tokens[0])} AND \`User\`.\`last_name\` LIKE ${prefixOf(tokens[tokens.length - 1])})`
+      + ` OR (\`User\`.\`first_name\` LIKE ${prefixOf(tokens[tokens.length - 1])} AND \`User\`.\`last_name\` LIKE ${prefixOf(tokens[0])})`
+    : '';
+
+  const anyNamePrefixClause = tokens
+    .map((token) => `\`User\`.\`first_name\` LIKE ${prefixOf(token)} OR \`User\`.\`last_name\` LIKE ${prefixOf(token)}`)
+    .join(' OR ');
+
+  const relevance = 'CASE'
+    + ` WHEN ${exactClause} THEN 100`
+    + ` WHEN \`User\`.\`email\` LIKE ${prefixOf(query)} THEN 80`
+    + ` WHEN ${fullName} LIKE ${prefixOf(query)}${bothNamesClause} THEN 70`
+    + ` WHEN ${anyNamePrefixClause} THEN 50`
+    // Everything left matched somewhere inside a field rather than at its start.
+    + ' ELSE 25 END';
+
+  return { match, relevance };
+}
 
 export class UserController {
   private avatarUploadStorage: multer.StorageEngine;
@@ -494,12 +577,16 @@ export class UserController {
   /**
    * Retrieves all users (of any status) with pagination.
    *
+   * Search matches email, first/last/full name, and full or partial UUID. Results are
+   * ranked by relevance unless an explicit sort is requested. Ordering, filtering, and
+   * pagination are all applied in SQL so a page is a true slice of the whole result set.
+   *
    * @param req - Incoming API request.
    * @param res - Outgoing API response.
    * @returns The fulfilled API response.
    */
   public async getAllUsers(req: Request, res: Response): Promise<Response> {
-    const { offset, limit, query, admin_role, academy_online } = (req.query as unknown) as GetAllUsersQuery;
+    const { offset, limit, query, admin_role, academy_online, sort, order } = (req.query as unknown) as GetAllUsersQuery;
 
     const include = [{
       model: Organization,
@@ -511,100 +598,94 @@ export class UserController {
       attributes: ['tag', 'english_name'],
     }];
 
-    const whereConditions: WhereOptions = {};
-    if (admin_role && admin_role.length > 0) {
-      // Find user IDs with the specified admin roles
-      const userOrgRows = await UserOrganization.findAll({
-        attributes: ['user_id'],
-        where: {
-          admin_role: { [Op.in]: admin_role }
-        },
-        group: ['user_id']
-      });
-      const userIds = userOrgRows.map(row => row.user_id);
+    const searchTerm = query?.trim() ?? '';
+    const filterClauses: string[] = [];
 
-      // Filter users by these IDs
-      whereConditions.uuid = { [Op.in]: userIds };
+    if (admin_role && admin_role.length > 0) {
+      const escapedRoles = admin_role.map((role) => sequelize.escape(role)).join(', ');
+      filterClauses.push(
+        `EXISTS (SELECT 1 FROM \`user_organizations\` \`uo\` WHERE \`uo\`.\`user_id\` = \`User\`.\`uuid\` AND \`uo\`.\`admin_role\` IN (${escapedRoles}))`,
+      );
     }
 
     if (academy_online && academy_online.length > 0) {
-      whereConditions.academy_online = { [Op.in]: academy_online };
+      const escapedValues = academy_online.map((value) => sequelize.escape(value)).join(', ');
+      const activeOnly = !academy_online.includes(0)
+        ? ' AND (`User`.`academy_online_expires` IS NULL OR `User`.`academy_online_expires` > NOW())'
+        : '';
+      filterClauses.push(`(\`User\`.\`academy_online\` IN (${escapedValues})${activeOnly})`);
     }
 
-    if (!query) {
-      const { count, rows } = await User.findAndCountAll({
+    const buildWhere = (searchClause: string | null): WhereOptions | undefined => {
+      const clauses = [...filterClauses, ...(searchClause ? [searchClause] : [])];
+      if (clauses.length === 0) {
+        return undefined;
+      }
+      return Sequelize.literal(clauses.join(' AND ')) as unknown as WhereOptions;
+    };
+
+    const requestedSort = sort ?? (searchTerm ? 'relevance' : 'last_name');
+    const useRelevance = requestedSort === 'relevance' && !!searchTerm;
+    // Relevance is meaningless without a search term, so fall back to the default sort.
+    const resolvedSort = requestedSort === 'relevance' && !searchTerm ? 'last_name' : requestedSort;
+    const resolvedOrder = (order ?? (DESC_BY_DEFAULT_SORTS.has(resolvedSort) ? 'desc' : 'asc')).toUpperCase();
+    const sortColumn = USER_SORT_COLUMNS[resolvedSort] ?? USER_SORT_COLUMNS.last_name;
+
+    const buildOrder = (relevanceAvailable: boolean): string => {
+      const parts: string[] = [];
+      if (useRelevance && relevanceAvailable) {
+        parts.push(`\`relevance\` ${resolvedOrder}`);
+      } else {
+        parts.push(`\`User\`.\`${sortColumn}\` ${resolvedOrder}`);
+      }
+      // Deterministic tiebreakers keep pagination stable across pages.
+      const tiebreakers = ['last_name', 'first_name', 'uuid']
+        .filter((column) => useRelevance || column !== sortColumn)
+        .map((column) => `\`User\`.\`${column}\` ASC`);
+      return [...parts, ...tiebreakers].join(', ');
+    };
+
+    const runSearch = async (searchClause: string | null, relevanceExpression: string | null) => {
+      const where = buildWhere(searchClause);
+      const total = await User.count({ ...(where && { where }) });
+      if (total === 0) {
+        return { total, uuids: [] as string[] };
+      }
+      const rows = await User.findAll({
+        attributes: [
+          'uuid',
+          ...(relevanceExpression
+            ? [[Sequelize.literal(relevanceExpression), 'relevance'] as ProjectionAlias]
+            : []),
+        ],
+        ...(where && { where }),
+        order: Sequelize.literal(buildOrder(!!relevanceExpression)),
         offset,
         limit,
-        include,
-        where: whereConditions,
-        order: [['email', 'desc']]
+        raw: true,
       });
-      return res.send({ meta: { offset, limit, total: count }, data: rows });
+      return { total, uuids: (rows as unknown as Array<{ uuid: string }>).map((row) => row.uuid) };
+    };
+
+    const criteria = searchTerm ? buildUserSearchCriteria(searchTerm) : null;
+    const result = await runSearch(criteria?.match ?? null, criteria?.relevance ?? null);
+
+    if (result.uuids.length === 0) {
+      return res.send({ meta: { offset, limit, total: result.total }, data: [] });
     }
 
-    const splitQueryParts = query.split(' ').filter(part => part.length > 0);
-    const exactMatch = query.trim();
-    const fuzzyQueryParts = splitQueryParts.map(p => `%${p}%`);
+    const users = await User.findAll({
+      where: { uuid: { [Op.in]: result.uuids } },
+      include,
+    });
 
-    const exactConditions = {
-      [Op.or]: [
-        { email: { [Op.eq]: exactMatch } },
-        { uuid: { [Op.eq]: exactMatch } },
-      ],
-      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
-    };
-
-    const startsWithConditions = {
-      [Op.or]: [
-        { first_name: { [Op.like]: `${splitQueryParts[0]}%` } },
-        { last_name: { [Op.like]: `${splitQueryParts[splitQueryParts.length - 1]}%` } },
-        { email: { [Op.like]: `${exactMatch}%` } },
-      ],
-      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
-    };
-
-    const fuzzyConditions = {
-      [Op.or]: [
-        { first_name: { [Op.like]: fuzzyQueryParts[0] } },
-        { last_name: { [Op.like]: fuzzyQueryParts[fuzzyQueryParts.length - 1] } },
-        { email: { [Op.like]: fuzzyQueryParts[0] } },
-        ...(splitQueryParts.length === 2 ? [
-          // Full name search
-          Sequelize.where(
-            Sequelize.fn('CONCAT', Sequelize.col('first_name'), ' ', Sequelize.col('last_name')),
-            { [Op.like]: `%${exactMatch}%` }
-          )
-        ] : [])
-      ],
-      ...(Object.keys(whereConditions).length > 0 ? { [Op.and]: whereConditions } : {})
-    };
-
-    const [exactResults, startsWithResults, fuzzyResults] = await Promise.all([
-      User.findAll({ where: exactConditions, include }),
-      User.findAll({ where: startsWithConditions, include }),
-      User.findAll({ where: fuzzyConditions, include })
-    ]);
-
-    // Combine and deduplicate results while maintaining priority order
-    const seenIds = new Set<string>();
-    const combinedResults: User[] = [];
-
-    for (const result of [...exactResults, ...startsWithResults, ...fuzzyResults]) {
-      if (!seenIds.has(result.uuid)) {
-        seenIds.add(result.uuid);
-        combinedResults.push(result);
-      }
-    }
-
-    const paginatedResults = combinedResults.slice(offset, offset + limit);
+    // findAll does not preserve the ordering of an IN list, so restore the ranked order.
+    const usersByUUID = new Map(users.map((user) => [user.uuid, user]));
+    const data = result.uuids.map((uuid) => usersByUUID.get(uuid)).filter(Boolean);
 
     return res.send({
-      meta: {
-        offset,
-        limit,
-        total: combinedResults.length,
-      },
-      data: paginatedResults,
+      meta: { offset, limit, total: result.total },
+      data,
     });
   }
 

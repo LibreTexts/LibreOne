@@ -25,7 +25,7 @@ import {
 } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
-import { createSessionCookiesForTest, testAppData } from './test-helpers';
+import { createSessionCookiesForTest, destroyTestSessions, testAppData } from './test-helpers';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -61,9 +61,14 @@ describe('Users', async () => {
     });
   });
   afterEach(async () => {
+    await destroyTestSessions();
+    await UserOrganization.destroy({ where: {} });
     await User.destroy({ where: {} });
+    await Organization.destroy({ where: {} });
+    await OrganizationSystem.destroy({ where: {} });
   });
   after(async () => {
+    await destroyTestSessions();
     await VerificationRequest.destroy({ where: { } });
     await AccessRequest.destroy({ where: {} });
     await APIUser.destroy({ where: {} });
@@ -259,6 +264,7 @@ describe('Users', async () => {
             name: 'LibreTextsMain',
             logo: '',
           },
+          user_organization: { admin_role: null },
         }],
       });
 
@@ -298,12 +304,14 @@ describe('Users', async () => {
               name: 'LibreTextsMain',
               logo: '',
             },
+            user_organization: { admin_role: null },
           },
           {
             id: org2.id,
             name: 'LibreTexts+1',
             logo: null,
             system: null,
+            user_organization: { admin_role: null },
           },
         ],
       });
@@ -349,14 +357,12 @@ describe('Users', async () => {
 
       const includeFieldsList = ['uuid', 'email', 'first_name', 'last_name', 'student_id'];
 
-      before(async () => {
+      beforeEach(async () => {
         orgSystem1 = await OrganizationSystem.create({ name: 'TestSystem1', logo: '' });
         [org1, org2] = await Organization.bulkCreate([
           { name: 'Test1', system_id: orgSystem1.id },
           { name: 'Test2' },
         ]);
-      });
-      beforeEach(async () => {
         [user1, user2, user3] = await User.bulkCreate([
           {
             uuid: uuidv4(),
@@ -382,10 +388,6 @@ describe('Users', async () => {
           { user_id: user2.uuid, organization_id: org2.id },
         ]);
       });
-      after(async () => {
-        await Promise.all([org1.destroy(), org2.destroy()]);
-        await orgSystem1.destroy();
-      });
 
       it('should retrieve all users', async () => {
         const response = await request(server)
@@ -408,6 +410,7 @@ describe('Users', async () => {
               name: 'Test1',
               logo: null,
               system_id: orgSystem1.id,
+              user_organization: { admin_role: null },
             }],
           },
           {
@@ -421,6 +424,7 @@ describe('Users', async () => {
               name: 'Test2',
               logo: null,
               system_id: null,
+              user_organization: { admin_role: null },
             }],
           },
           {
@@ -513,25 +517,151 @@ describe('Users', async () => {
           },
         ]);
       });
-      it('should search users by student ID', async () => {
-        const searchParams = new URLSearchParams({ query: 'Y2X3W4' });
+      it('should search users by partial uuid (prefix)', async () => {
+        const searchParams = new URLSearchParams({ query: user2.uuid.slice(0, 8) });
         const response = await request(server)
           .get(`/api/v1/users?${searchParams.toString()}`)
           .auth(mainAPIUserUsername, mainAPIUserPassword);
-        
+
         expect(response.status).to.equal(200);
-        expect(response.body?.meta).to.exist;
         expect(response.body?.data).to.have.length(1);
-        const users = await response.body.data.map((u) => _.pick(u, includeFieldsList));
-        expect(users).to.have.deep.members([
-          {
-            uuid: user2.uuid,
-            email: user2.email,
-            first_name: user2.first_name,
-            last_name: user2.last_name,
-            student_id: user2.student_id,
-          },
+        expect(response.body.data[0].uuid).to.equal(user2.uuid);
+      });
+      it('should search users by partial uuid (middle fragment)', async () => {
+        const searchParams = new URLSearchParams({ query: user2.uuid.slice(10, 18) });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.data).to.have.length(1);
+        expect(response.body.data[0].uuid).to.equal(user2.uuid);
+      });
+      it('should search users by full name in either order', async () => {
+        for (const query of ['Alice Johnson', 'Johnson Alice']) {
+          const searchParams = new URLSearchParams({ query });
+          const response = await request(server)
+            .get(`/api/v1/users?${searchParams.toString()}`)
+            .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+          expect(response.status).to.equal(200);
+          expect(response.body?.data).to.have.length(1);
+          expect(response.body.data[0].uuid).to.equal(user1.uuid);
+        }
+      });
+      it('should narrow results as search terms are added', async () => {
+        const searchParams = new URLSearchParams({ query: 'Alice Smith' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta?.total).to.equal(0);
+        expect(response.body?.data).to.have.length(0);
+      });
+      it('should match fragments from the middle of a name', async () => {
+        const [user4, user5] = await User.bulkCreate([
+          { uuid: uuidv4(), email: 'ann@example.com', first_name: 'Ann', last_name: 'Lee' },
+          { uuid: uuidv4(), email: 'joann@example.com', first_name: 'Joann', last_name: 'Baker' },
         ]);
+        const searchParams = new URLSearchParams({ query: 'ann' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta?.total).to.equal(2);
+        expect(response.body.data.map((u) => u.uuid)).to.have.members([user4.uuid, user5.uuid]);
+      });
+      it('should enforce every term, including terms too short for word matching', async () => {
+        const searchParams = new URLSearchParams({ query: 'Alice Sm' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta?.total).to.equal(0);
+        expect(response.body?.data).to.have.length(0);
+      });
+      it('should search users by email domain', async () => {
+        const searchParams = new URLSearchParams({ query: 'libretexts' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta?.total).to.equal(3);
+        expect(response.body?.data).to.have.length(3);
+      });
+      it('should rank email matches above name matches', async () => {
+        const user4 = await User.create({
+          uuid: uuidv4(),
+          email: 'johnson@example.com',
+          first_name: 'Dave',
+          last_name: 'Miller',
+        });
+        const searchParams = new URLSearchParams({ query: 'Johnson' });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.data.map((u) => u.uuid)).to.have.ordered.members([user4.uuid, user1.uuid]);
+      });
+      it('should rank an exact email match first', async () => {
+        const searchParams = new URLSearchParams({ query: user2.email });
+        const response = await request(server)
+          .get(`/api/v1/users?${searchParams.toString()}`)
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body.data[0].uuid).to.equal(user2.uuid);
+      });
+      it('should sort across the whole result set, not within a page', async () => {
+        const pageOne = await request(server)
+          .get('/api/v1/users?limit=2&offset=0&sort=last_name&order=asc')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        const pageTwo = await request(server)
+          .get('/api/v1/users?limit=2&offset=2&sort=last_name&order=asc')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(pageOne.status).to.equal(200);
+        expect(pageTwo.status).to.equal(200);
+        expect(pageOne.body?.meta?.total).to.equal(3);
+        expect(pageTwo.body?.meta?.total).to.equal(3);
+
+        const lastNames = [
+          ...pageOne.body.data.map((u) => u.last_name),
+          ...pageTwo.body.data.map((u) => u.last_name),
+        ];
+        expect(lastNames).to.have.ordered.members(['Johnson', 'Smith', 'Williams']);
+      });
+      it('should reverse the result set when order is flipped', async () => {
+        const ascending = await request(server)
+          .get('/api/v1/users?sort=email&order=asc')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        const descending = await request(server)
+          .get('/api/v1/users?sort=email&order=desc')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(ascending.status).to.equal(200);
+        expect(descending.status).to.equal(200);
+        const ascendingEmails = ascending.body.data.map((u) => u.email);
+        expect(ascendingEmails).to.have.length(3);
+        expect(descending.body.data.map((u) => u.email)).to.have.ordered.members([...ascendingEmails].reverse());
+      });
+      it('should not inflate the total for users in multiple organizations', async () => {
+        await UserOrganization.create({ user_id: user1.uuid, organization_id: org2.id });
+
+        const response = await request(server)
+          .get('/api/v1/users')
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+        expect(response.status).to.equal(200);
+        expect(response.body?.meta?.total).to.equal(3);
+        expect(response.body?.data).to.have.length(3);
+        const returned = response.body.data.find((u) => u.uuid === user1.uuid);
+        expect(returned.organizations).to.have.length(2);
       });
     });
     it('should retrieve all user applications', async () => {
@@ -682,6 +812,9 @@ describe('Users', async () => {
         bio_url: '',
         verify_status: 'not_attempted',
         picture: DEFAULT_AVATAR,
+        academy_online: 0,
+        lang: 'en-US',
+        time_zone: 'America/Los_Angeles',
       });
       await org1.destroy();
       await orgSystem1.destroy();
@@ -726,6 +859,9 @@ describe('Users', async () => {
         bio_url: '',
         verify_status: 'not_attempted',
         picture: DEFAULT_AVATAR,
+        academy_online: 0,
+        lang: 'en-US',
+        time_zone: 'America/Los_Angeles',
       });
       await org1.destroy();
       await orgSystem1.destroy();

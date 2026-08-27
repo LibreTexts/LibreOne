@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 import { server } from '..';
 import { APIUser, APIUserPermissionConfig } from '../models';
 import { APIUserController } from '../controllers/APIUserController';
-import { APIUserPermission } from '../types/apiusers';
+import type { APIUserPermission } from '../types/apiusers';
 import { Op } from 'sequelize';
 
 describe('API Users', async () => {
