@@ -61,12 +61,22 @@ export type CreateUserVerificationRequestBody = {
   applications?: number[];
 };
 
+export type UserSortKey =
+  | 'relevance'
+  | 'first_name'
+  | 'last_name'
+  | 'email'
+  | 'created_at'
+  | 'last_access';
+
 export type GetAllUsersQuery = {
   offset: number;
   limit: number;
   query?: string;
   admin_role?: string[];
   academy_online?: number[];
+  sort?: UserSortKey;
+  order?: 'asc' | 'desc';
 };
 
 export type GetAllUserApplicationsQuery = {
