@@ -20,6 +20,9 @@ node_modules/
 coverage/
 
 # Agents
+agents/
 .agents/
 .claude/
+.codegraph/
+.mcp.json
 CLAUDE.md

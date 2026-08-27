@@ -22,3 +22,11 @@
 
 # Code Coverage Reports
 coverage
+
+# Agent tooling
+.agents/
+agents/
+.claude/
+.codegraph/
+.mcp.json
+CLAUDE.md

@@ -113,4 +113,29 @@ const server = app.listen(PORT, () => {
   console.log(`LibreOne API started on port ${PORT}.`);
 });
 
+/**
+ * Drains in-flight requests on shutdown.
+ *
+ * ECS sends SIGTERM when draining a task. Without an explicit listener Node takes the
+ * default action and terminates abruptly, cutting off in-flight responses. Worse, when
+ * the process is PID 1 the kernel delivers no signal at all unless a handler is
+ * registered, so the container sits idle for the whole stop timeout and is then SIGKILLed.
+ */
+function shutdown(signal: NodeJS.Signals) {
+  console.log(`Received ${signal}, closing HTTP server.`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+  // A stuck keep-alive connection must not hold the task open past the ECS grace period.
+  setTimeout(() => {
+    console.error('Drain timed out after 10s, forcing exit.');
+    process.exit(1);
+  }, 10_000).unref();
+}
+
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => shutdown(signal));
+}
+
 export { server };
