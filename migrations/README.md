@@ -20,3 +20,4 @@ and production databases.
 | File | Applied to dev | Applied to staging | Applied to prod |
 | --- | --- | --- | --- |
 | `0001_users_search_indexes.sql` | | | |
+| `0002_api_user_password_write_permission.sql` | | | |

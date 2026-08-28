@@ -786,6 +786,107 @@
                 }
             }
         },
+        "/users/{uuid}/password-change-direct": {
+            "post": {
+                "summary": "Set a user's password on behalf of an administrator, without requiring the user's current password. Requires the `users:write` and `user_passwords:write` API User permissions. All of the target user's active sessions are destroyed, any outstanding password recovery tokens are revoked, and an audit note is recorded on the user.",
+                "operationId": "updateUserPasswordDirect",
+                "tags": [
+                    "users"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "User UUID"
+                    },
+                    {
+                        "in": "header",
+                        "name": "X-User-ID",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "UUID of the administrator performing the reset. Recorded as the author of the audit note."
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "new_password"
+                                ],
+                                "properties": {
+                                    "new_password": {
+                                        "type": "string",
+                                        "description": "The new password. Must score at least 3 on the zxcvbn strength scale."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "uuid": {
+                                        "type": "string"
+                                    },
+                                    "sessions_invalidated": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: the password does not meet complexity requirements, the X-User-ID header is missing or unknown, or the user is linked to an external identity provider",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden: the actor is not an API User, lacks the required permissions, or the target user is a developer account",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/{uuid}/email-change-direct": {
             "post": {
                 "summary": "Change a user's email directly without validation or verification. Intended for API actors with sufficent permissions.",
@@ -1134,6 +1235,10 @@
                         "required": true
                     },
                     "services_write": {
+                        "type": "boolean",
+                        "required": true
+                    },
+                    "user_passwords_write": {
                         "type": "boolean",
                         "required": true
                     },

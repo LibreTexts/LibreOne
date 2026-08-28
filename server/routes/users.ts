@@ -192,6 +192,16 @@ usersRouter.route('/:uuid/password-change').post(
   catchInternal((req, res) => controller.updateUserPassword(req, res)),
 );
 
+usersRouter.route('/:uuid/password-change-direct').post(
+  verifyAPIAuthentication,
+  ensureActorIsAPIUser,
+  ensureAPIUserHasPermission(['users:write', 'user_passwords:write']),
+  extract_X_User_ID,
+  validate(UserValidator.uuidParamSchema, 'params'),
+  validate(UserValidator.updateUserPasswordDirectSchema, 'body'),
+  catchInternal((req, res) => controller.updateUserPasswordDirect(req, res)),
+);
+
 usersRouter.route('/:uuid/init-delete-account').post(
   verifyAPIAuthentication,
   ensureUserResourcePermission(true),

@@ -123,6 +123,10 @@ export const updateUserPasswordSchema = joi.object({
   new_password: passwordValidator,
 });
 
+export const updateUserPasswordDirectSchema = joi.object({
+  new_password: passwordValidator.required(),
+});
+
 export const updateUserVerificationRequestSchema = joi
   .object({
     bio_url: joi.string().uri().allow(""),

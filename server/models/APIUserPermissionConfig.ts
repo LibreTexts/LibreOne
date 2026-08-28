@@ -74,6 +74,9 @@ export class APIUserPermissionConfig extends Model {
   declare services_write: boolean;
 
   @Column(DataType.BOOLEAN)
+  declare user_passwords_write: boolean;
+
+  @Column(DataType.BOOLEAN)
   declare users_read: boolean;
 
   @Column(DataType.BOOLEAN)

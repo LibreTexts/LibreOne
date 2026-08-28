@@ -114,6 +114,10 @@ export type UpdateUserPasswordBody = {
   new_password: string;
 };
 
+export type UpdateUserPasswordDirectBody = {
+  new_password: string;
+};
+
 export type UpdateUserVerificationRequestBody = {
   bio_url?: string;
   addtl_info?: string;

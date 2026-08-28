@@ -15,6 +15,7 @@ import {
   Language,
   Organization,
   OrganizationSystem,
+  ResetPasswordToken,
   User,
   UserApplication,
   UserOrganization,
@@ -34,6 +35,7 @@ import type {
   UpdateUserEmailBody,
   UpdateUserOrganizationAdminRoleBody,
   UpdateUserPasswordBody,
+  UpdateUserPasswordDirectBody,
   UpdateUserVerificationRequestBody,
   UserApplicationIDParams,
   UserOrganizationIDParams,
@@ -1201,6 +1203,75 @@ export class UserController {
     return res.send({
       data: {
         uuid: foundUser.uuid,
+      },
+    });
+  }
+
+  /**
+   * Directly sets a User's password on behalf of an administrator, without requiring the
+   * user's current password. Intended for use by API actors with elevated permissions only.
+   *
+   * Refuses developer accounts and accounts linked to an external identity provider. All of
+   * the target's active sessions are destroyed so that a session established under the old
+   * password cannot outlive the reset.
+   *
+   * @param req - Incoming API request.
+   * @param res - Outgoing API response.
+   * @returns The fulfilled API response.
+   */
+  public async updateUserPasswordDirect(req: Request, res: Response): Promise<Response> {
+    const { uuid } = req.params as UserUUIDParams;
+    const { new_password } = req.body as UpdateUserPasswordDirectBody;
+    const actingUserID = req.XUserID;
+
+    // unscoped() because the default User scope excludes `password`
+    const foundUser = await User.unscoped().findOne({ where: { uuid } });
+    if (!foundUser) {
+      return errors.notFound(res);
+    }
+
+    if (foundUser.is_developer) {
+      return errors.forbidden(res, 'Password changes for developer accounts are not permitted through this endpoint.');
+    }
+
+    if (foundUser.external_idp || foundUser.external_subject_id) {
+      return errors.badRequest(res, 'User is linked to an external identity provider. Password changes are not supported for these accounts.');
+    }
+
+    // UserNote.created_by_id is a non-null foreign key, so verify the acting admin exists
+    // before writing the password, rather than failing the audit note afterwards.
+    const actingUser = await User.findOne({ where: { uuid: actingUserID } });
+    if (!actingUser) {
+      return errors.badRequest(res, 'The user specified in the X-User-ID header was not found.');
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await foundUser.update({ password: hashed, last_password_change: new Date() });
+
+    await Session.destroy({ where: { user_id: uuid } });
+
+    // Outstanding self-service recovery links stay valid for an hour and are only cleared when
+    // used or expired (AuthController.sendResetPasswordLink / resetPassword). Left in place, one
+    // could overwrite the password an administrator just set.
+    await ResetPasswordToken.destroy({ where: { uuid } });
+
+    // The password change is already committed; a failed audit note must not fail the request.
+    try {
+      await UserNote.create({
+        user_id: uuid,
+        content: 'Password was reset by an administrator via the LibreOne API.',
+        created_by_id: actingUserID,
+        updated_by_id: actingUserID,
+      });
+    } catch (e) {
+      console.warn(`Error writing password reset audit note for user "${uuid}":`);
+      console.warn(e);
+    }
+
+    return res.send({
+      data: {
+        uuid: foundUser.uuid,
+        sessions_invalidated: true,
       },
     });
   }

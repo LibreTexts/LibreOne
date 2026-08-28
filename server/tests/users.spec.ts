@@ -18,8 +18,11 @@ import {
   EmailVerification,
   Organization,
   OrganizationSystem,
+  ResetPasswordToken,
+  Session,
   User,
   UserApplication,
+  UserNote,
   UserOrganization,
   VerificationRequest,
 } from '../models';
@@ -36,6 +39,9 @@ describe('Users', async () => {
   let mainAPIUserUsername: string;
   let mainAPIUserHashedPassword: string;
   const mainAPIUserPassword = 'test-password';
+  let passwordResetAPIUser: APIUser;
+  let passwordResetAPIUserUsername: string;
+  const passwordResetAPIUserPassword = 'test-password';
 
   before(async () => {
     [application1, application2] = await Application.bulkCreate([
@@ -59,9 +65,24 @@ describe('Users', async () => {
       users_read: true,
       users_write: true,
     });
+
+    // Identical to mainAPIUser, plus the permission that gates admin password resets.
+    passwordResetAPIUser = await APIUser.create({
+      username: 'apiuser-passwordreset',
+      password: await bcrypt.hash(passwordResetAPIUserPassword, 10),
+    });
+    passwordResetAPIUserUsername = passwordResetAPIUser.get('username');
+    await APIUserPermissionConfig.create({
+      api_user_id: passwordResetAPIUser.id,
+      users_read: true,
+      users_write: true,
+      user_passwords_write: true,
+    });
   });
   afterEach(async () => {
     await destroyTestSessions();
+    await UserNote.destroy({ where: {} });
+    await ResetPasswordToken.destroy({ where: {} });
     await UserOrganization.destroy({ where: {} });
     await User.destroy({ where: {} });
     await Organization.destroy({ where: {} });
@@ -69,6 +90,8 @@ describe('Users', async () => {
   });
   after(async () => {
     await destroyTestSessions();
+    await UserNote.destroy({ where: {} });
+    await ResetPasswordToken.destroy({ where: {} });
     await VerificationRequest.destroy({ where: { } });
     await AccessRequest.destroy({ where: {} });
     await APIUser.destroy({ where: {} });
@@ -1419,6 +1442,333 @@ describe('Users', async () => {
       expect(_.pick(error, ['status', 'code'])).to.deep.equal({
         status: '400',
         code: 'bad_request',
+      });
+    });
+    it('should allow API User with user_passwords:write to reset a password', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+      const originalChangedAt = user1.last_password_change;
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.sessions_invalidated).to.be.true;
+
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(updated?.password).to.be.a('string');
+      expect(await bcrypt.compare('ThisIsANewSuperStrongPassword!', updated!.password!)).to.be.true;
+      expect(updated?.last_password_change).to.not.equal(originalChangedAt);
+    });
+    it('should destroy the target user active sessions on password reset', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+      await createSessionCookiesForTest(user1.uuid);
+      expect(await Session.count({ where: { user_id: user1.uuid } })).to.be.greaterThan(0);
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(await Session.count({ where: { user_id: user1.uuid } })).to.equal(0);
+    });
+    it('should revoke outstanding password reset tokens on password reset', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+      const user2 = await User.create({
+        uuid: uuidv4(),
+        email: 'info2@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+      const expires_at = Math.floor((new Date().getTime() + (60 * 60 * 1000)) / 1000);
+      await ResetPasswordToken.create({ token: 'a'.repeat(64), uuid: user1.uuid, expires_at });
+      await ResetPasswordToken.create({ token: 'b'.repeat(64), uuid: user1.uuid, expires_at });
+      await ResetPasswordToken.create({ token: 'c'.repeat(64), uuid: user2.uuid, expires_at });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(await ResetPasswordToken.count({ where: { uuid: user1.uuid } })).to.equal(0);
+      // Other users' tokens must be untouched.
+      expect(await ResetPasswordToken.count({ where: { uuid: user2.uuid } })).to.equal(1);
+    });
+    it('should not allow a revoked reset token to overwrite an admin-set password', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+      const token = 'd'.repeat(64);
+      await ResetPasswordToken.create({
+        token,
+        uuid: user1.uuid,
+        expires_at: Math.floor((new Date().getTime() + (60 * 60 * 1000)) / 1000),
+      });
+
+      const resetRes = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+      expect(resetRes.status).to.equal(200);
+
+      const replayRes = await request(server)
+        .post('/api/v1/auth/passwordrecovery/complete')
+        .send({ token, password: 'AttackerControlledPassword!99' });
+      expect(replayRes.status).to.equal(400);
+
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsANewSuperStrongPassword!', updated!.password!)).to.be.true;
+      expect(await bcrypt.compare('AttackerControlledPassword!99', updated!.password!)).to.be.false;
+    });
+    it('should record an audit note attributed to the acting admin on password reset', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      const notes = await UserNote.findAll({ where: { user_id: user1.uuid } });
+      expect(notes).to.have.length(1);
+      expect(notes[0].created_by_id).to.equal(admin.uuid);
+      expect(notes[0].content).to.contain('administrator');
+    });
+    it('should not allow API User without user_passwords:write to reset a password', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(403);
+      const error = response.body?.errors[0];
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '403',
+        code: 'forbidden',
+      });
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should not allow a logged-in user to reset their own password directly', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', user1.uuid)
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(403);
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should not allow a password reset for a developer account', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+        is_developer: true,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(403);
+      const error = response.body?.errors[0];
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '403',
+        code: 'forbidden',
+      });
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should not allow a password reset for an external IdP user', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+        external_idp: 'google',
+        external_subject_id: 'google-subject-1',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const error = response.body?.errors[0];
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '400',
+        code: 'bad_request',
+      });
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should reject a weak password on direct reset', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'password123' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should reject a direct reset with no new_password', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({})
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should reject a direct reset with no X-User-ID header', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should reject a direct reset with an unknown X-User-ID', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        password: await bcrypt.hash('ThisIsASuperStrongPassword!', 10),
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', uuidv4())
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const updated = await User.unscoped().findOne({ where: { uuid: user1.uuid } });
+      expect(await bcrypt.compare('ThisIsASuperStrongPassword!', updated!.password!)).to.be.true;
+    });
+    it('should return not found for a direct reset on an unknown user', async () => {
+      const admin = await User.create({
+        uuid: uuidv4(),
+        email: 'admin@libretexts.org',
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${uuidv4()}/password-change-direct`)
+        .send({ new_password: 'ThisIsANewSuperStrongPassword!' })
+        .set('X-User-ID', admin.uuid)
+        .auth(passwordResetAPIUserUsername, passwordResetAPIUserPassword);
+
+      expect(response.status).to.equal(404);
+      const error = response.body?.errors[0];
+      expect(_.pick(error, ['status', 'code'])).to.deep.equal({
+        status: '404',
+        code: 'not_found',
       });
     });
     it('should prevent updating verification status by user', async () => {
