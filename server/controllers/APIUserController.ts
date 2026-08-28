@@ -29,6 +29,7 @@ export const API_USERS_PERMISSIONS = [
   'organization_systems:write',
   'services:read',
   'services:write',
+  'user_passwords:write',
   'users:read',
   'users:write',
   'verification_requests:read',
