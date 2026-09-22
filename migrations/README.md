@@ -21,3 +21,4 @@ and production databases.
 | --- | --- | --- | --- |
 | `0001_users_search_indexes.sql` | | | |
 | `0002_api_user_password_write_permission.sql` | | | |
+| `0003_normalize_email_case.sql` | | | |

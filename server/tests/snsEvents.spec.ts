@@ -155,6 +155,28 @@ describe('SNS Event Webhook', () => {
     expect(ledger[0].email_event_id).to.equal(events[0].id);
   });
 
+  it('attaches a bounce to the user when SES reports a different casing', async () => {
+    const user = await User.create({
+      uuid: uuidv4(),
+      email: 'bouncer@example.com',
+      mktg_email_opt_in: true,
+    });
+    const res = await request(server)
+      .post(WEBHOOK_PATH)
+      .set('Content-Type', 'application/json')
+      .send(envelope({ message: bouncePayload({ email: 'Bouncer@Example.COM' }) }));
+    expect(res.status).to.equal(200);
+    expect(res.body.processed).to.equal(1);
+
+    const events = await EmailEvent.findAll();
+    expect(events).to.have.length(1);
+    expect(events[0].email).to.equal('bouncer@example.com');
+    expect(events[0].user_uuid).to.equal(user.uuid);
+
+    const reloaded = await User.findOne({ where: { uuid: user.uuid } });
+    expect(reloaded?.email_deliverability_status).to.equal('SUPPRESSED');
+  });
+
   it('records a complaint and suppresses the user', async () => {
     const user = await User.create({
       uuid: uuidv4(),

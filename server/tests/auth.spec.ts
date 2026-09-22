@@ -69,6 +69,43 @@ describe('Authentication and Authorization', async () => {
       await emailVerify1?.destroy();
       await user1?.destroy();
     });
+    it('should register and verify a mixed-case address in canonical form', async () => {
+      const response = await request(server)
+        .post('/api/v1/auth/register')
+        .send({ email: '  Info.User@LibreTexts.ORG ', password: 'ThisIsASuperStrongPassword!' });
+
+      expect(response.status).to.equal(201);
+      const uuid = response.body?.data?.uuid;
+      expect(uuid).to.exist;
+
+      const user1 = await User.unscoped().findOne({ where: { uuid } });
+      expect(user1?.get('email')).to.equal('info.user@libretexts.org');
+
+      const emailVerify1 = await EmailVerification.findOne({ where: { user_id: uuid } });
+      expect(emailVerify1?.get('email')).to.equal('info.user@libretexts.org');
+
+      // The address the user types on the verification screen need not match the casing
+      // they typed on the registration screen.
+      const verifyResponse = await request(server)
+        .post('/api/v1/auth/verify-email')
+        .send({ email: 'INFO.USER@libretexts.org', code: emailVerify1?.get('code') });
+
+      expect(verifyResponse.status).to.equal(200);
+      expect(verifyResponse.body?.data).to.deep.equal({ uuid });
+
+      await user1?.destroy();
+    });
+    it('should error on existing user differing only by case', async () => {
+      await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const response = await request(server)
+        .post('/api/v1/auth/register')
+        .send({ email: 'Info@LibreTexts.ORG', password: 'ThisIsASuperStrongPassword!' });
+
+      expect(response.status).to.equal(409);
+    });
     it('should error on existing user', async () => {
       const user1 = await User.create({
         uuid: uuidv4(),
@@ -217,6 +254,22 @@ describe('Authentication and Authorization', async () => {
       const foundToken = await ResetPasswordToken.findOne({ where: { uuid: user1.uuid } });
       expect(foundToken).to.exist;
       
+      await foundToken?.destroy();
+    });
+    it('should send reset link when the address differs only by case', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+
+      const response = await request(server)
+        .post('/api/v1/auth/passwordrecovery')
+        .send({ email: 'Info@LibreTexts.ORG' });
+
+      expect(response.status).to.equal(200);
+      const foundToken = await ResetPasswordToken.findOne({ where: { uuid: user1.uuid } });
+      expect(foundToken).to.exist;
+
       await foundToken?.destroy();
     });
     it('should complete password reset', async () => {

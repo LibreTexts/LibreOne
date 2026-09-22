@@ -88,6 +88,7 @@
   import ThemedButton from '../ThemedButton.vue';
   import { useI18n } from 'vue-i18n';
   import joi from 'joi';
+  import { normalizeEmail } from '../../email';
   const props = defineProps<{
     user?: Record<string, string>;
   }>();
@@ -124,6 +125,9 @@
       e.preventDefault();
       newEmailError.value = '';
       if (!props.user || !props.user.uuid) return;
+      // Canonicalize before validating so the verification step and the confirmation
+      // message use the address the change request was filed under.
+      newEmail.value = normalizeEmail(newEmail.value);
       if (!newEmail.value || !isValidEmail(newEmail.value)) {
         newEmailError.value = t('security.newemailinvalid');
         return;
