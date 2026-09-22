@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BeforeValidate,
   BelongsTo,
   Column,
   CreatedAt,
@@ -12,6 +13,7 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 import { User } from './User';
+import { normalizeEmail } from '../../email';
 
 export type EmailEventType = 'HARD_BOUNCE' | 'SOFT_BOUNCE' | 'COMPLAINT';
 
@@ -29,6 +31,17 @@ export type EmailEventType = 'HARD_BOUNCE' | 'SOFT_BOUNCE' | 'COMPLAINT';
   tableName: 'email_events',
 })
 export class EmailEvent extends Model {
+  /**
+   * Guarantees the canonical form reaches storage no matter which code path wrote the
+   * record. Query predicates are normalized separately at their call sites.
+   */
+  @BeforeValidate
+  static normalizeEmailAddress(instance: EmailEvent) {
+    if (typeof instance.email === 'string') {
+      instance.email = normalizeEmail(instance.email);
+    }
+  }
+
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.BIGINT)

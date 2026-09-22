@@ -24,7 +24,7 @@ import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { emailTemplates } from '../emails/templates';
 import { DEFAULT_AVATAR, UUID_V4_REGEX } from './UserController';
-import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getPrettyDefaultAccessString, getProductionURL } from '../helpers';
+import { DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, getPrettyDefaultAccessString, getProductionURL, normalizeEmail } from '../helpers';
 import errors from '../errors';
 import type { CookieOptions, Request, Response } from 'express';
 import type {
@@ -415,12 +415,14 @@ export class AuthController {
       .map((l) => l.get('main_url'));
     const foundLib = userLibs?.find((u) => u === `https://${source}`);
 
+    const principalEmail = normalizeEmail(principal.attributes?.email);
+
     const payload = {
       first_name: principal.attributes?.first_name ?? principal.attributes?.given_name,
       last_name: principal.attributes?.last_name ?? principal.attributes?.family_name,
-      email: principal.attributes?.email,
+      email: principalEmail || undefined,
       picture: principal.attributes?.picture,
-      educational: /(?<=.*?)@.*?\.edu/.test(principal.attributes?.email),
+      educational: /(?<=.*?)@.*?\.edu/.test(principalEmail),
     };
 
     console.log(`CAS Bridge authentication successful for user ${resolvedUUID} (${foundUser.get('email')})`);
@@ -772,7 +774,7 @@ export class AuthController {
         }
       };
 
-      return email;
+      return email ? normalizeEmail(email) : null;
     };
 
     const email = getEmailFromPayload(body.clientName, payload);
@@ -892,7 +894,10 @@ export class AuthController {
       }
       return 'external_subject_id';
     };
-    const attrMatch = { [getAttrMatchKey(username)]: username };
+    const attrMatchKey = getAttrMatchKey(username);
+    const attrMatch = {
+      [attrMatchKey]: attrMatchKey === 'email' ? normalizeEmail(username) : username,
+    };
 
     const foundUser = await User.findOne({
       where: attrMatch,
@@ -1264,7 +1269,7 @@ export class AuthController {
           where: {
             [Op.or]: [
               { uuid: userID },
-              { email: userID }
+              { email: normalizeEmail(userID) }
             ]
           },
           attributes: ['uuid']

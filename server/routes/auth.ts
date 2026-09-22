@@ -58,6 +58,7 @@ authRouter.route('/cas-interrupt-check').get(
   verifyAPIAuthentication,
   ensureActorIsAPIUser,
   ensureAPIUserHasPermission(['users:read']),
+  validate(AuthValidator.checkCASInterruptQuerySchema, 'query'),
   catchInternal((req, res) => controller.checkCASInterrupt(req, res)),
 );
 

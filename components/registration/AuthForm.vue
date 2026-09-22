@@ -181,6 +181,7 @@
   import { Heading, Input, Button } from '@libretexts/davis-vue';
   import PasswordStrengthMeter from '@components/PasswordStrengthMeter.vue';
   import { getPasswordStrength } from '@renderer/utils/auth';
+  import { normalizeEmail } from '../../email';
 
   defineProps<{
     loginURL: string;
@@ -233,6 +234,9 @@
   async function submitForm(e: Event) {
     e.preventDefault();
     resetFormErrors();
+    // Canonicalize before validating so the address shown on the verification step is
+    // the one the account was actually created with.
+    email.value = normalizeEmail(email.value);
     if (!validateForm()) return;
     loading.value = true;
     try {
