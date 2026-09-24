@@ -105,7 +105,12 @@ export class EventSubscriberController {
   ): Promise<EventSubscriber[]> {
     try {
       const columnName = this.getColumnName(event);
-      const eventSubscribers = await EventSubscriber.findAll({
+      // unscoped: the DefaultScope on this model excludes signing_key, and
+      // signAndSend needs it to sign deliveries. Without this the key reads back
+      // as undefined and jose signs HS256 with zero bytes, producing tokens no
+      // subscriber can verify. Safe to unscope here because the only caller is
+      // EventSubscriberEmitter, so the key never reaches an API response.
+      const eventSubscribers = await EventSubscriber.unscoped().findAll({
         include: [
           {
             model: EventSubscriberEventConfig,
