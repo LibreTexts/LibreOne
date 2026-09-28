@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import errors from './errors';
 import type { Application } from './types/applications';
+import { normalizeEmail } from '../email';
+
+export { normalizeEmail };
 
 type APIFunction = (request: Request, response: Response, next: NextFunction) => Response | void;
 type AsyncAPIFunction = (request: Request, response: Response, next: NextFunction) => Promise<Response | void>;

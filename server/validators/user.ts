@@ -4,7 +4,7 @@ import {
   applicationTypeValidator,
 } from "./applications";
 import { orgIDValidator } from "./organizations";
-import { passwordValidator, timeZoneValidator } from "./shared";
+import { emailValidator, passwordValidator, principalUsernameValidator, timeZoneValidator } from "./shared";
 import { UserOrganizationAdminRoleEnum } from "../controllers/PermissionsController";
 
 const uuidValidator = joi.string().uuid({ version: "uuidv4" }).required();
@@ -50,7 +50,7 @@ export const createUserVerificationRequestSchema = joi
   });
 
 export const createUserEmailChangeRequestSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
 });
 
 export const disableUserSchema = joi.object({
@@ -79,14 +79,8 @@ export const getMultipleUserOrganizationsSchema = joi.object({
 });
 
 export const resolvePrincipalAttributesSchema = joi.object({
-  username: joi
-    .alternatives()
-    .try(
-      joi.string().email().message("Invalid email address"),
-      joi.string().uuid().message("Invalid UUID")
-    )
-    .required(),
-});
+  username: principalUsernameValidator.required(),
+}).unknown(true);
 
 export const updateUserSchema = joi.object({
   first_name: joi.string().min(1).max(100).trim(),
@@ -103,11 +97,11 @@ export const updateUserSchema = joi.object({
 
 export const updateUserEmailSchema = joi.object({
   code: joi.number().integer().min(100000).max(999999).required(),
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
 });
 
 export const updateUserEmailDirectSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
   remove_external_auth: joi.boolean().default(false),
 });
 

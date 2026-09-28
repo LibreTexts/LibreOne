@@ -52,7 +52,7 @@ import { AuthController } from './AuthController';
 import { DeleteAccountRequest } from '@server/models/DeleteAccountRequest';
 import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import { UserNote } from '../models/UserNote';
-import { generateSecureRandomString } from '@server/helpers';
+import { generateSecureRandomString, normalizeEmail } from '@server/helpers';
 import type { ApplicationLaunchpadVisibility } from '@server/types/applications';
 
 export const DEFAULT_AVATAR = 'https://cdn.libretexts.net/DefaultImages/avatar.png';
@@ -107,12 +107,17 @@ function buildUserSearchCriteria(query: string): { match: string; relevance: str
   const exact = sequelize.escape(query);
   const prefixOf = (value: string) => sequelize.escape(`${escapeLikePattern(value)}%`);
   const containsOf = (value: string) => sequelize.escape(`%${escapeLikePattern(value)}%`);
+  // Addresses are stored in canonical form, so anything compared against `email` is
+  // normalized first. Name and UUID matching keeps the raw input.
+  const emailExact = sequelize.escape(normalizeEmail(query));
+  const emailPrefixOf = (value: string) => prefixOf(normalizeEmail(value));
+  const emailContainsOf = (value: string) => containsOf(normalizeEmail(value));
   const fullName = 'CONCAT(`User`.`first_name`, \' \', `User`.`last_name`)';
 
-  const exactClause = `(\`User\`.\`email\` = ${exact} OR \`User\`.\`uuid\` = ${exact})`;
+  const exactClause = `(\`User\`.\`email\` = ${emailExact} OR \`User\`.\`uuid\` = ${exact})`;
 
   const tokenClause = `(${tokens.map((token) => (
-    `(\`User\`.\`email\` LIKE ${containsOf(token)}`
+    `(\`User\`.\`email\` LIKE ${emailContainsOf(token)}`
     + ` OR \`User\`.\`first_name\` LIKE ${containsOf(token)}`
     + ` OR \`User\`.\`last_name\` LIKE ${containsOf(token)}`
     + ` OR \`User\`.\`uuid\` LIKE ${containsOf(token)})`
@@ -131,7 +136,7 @@ function buildUserSearchCriteria(query: string): { match: string; relevance: str
 
   const relevance = 'CASE'
     + ` WHEN ${exactClause} THEN 100`
-    + ` WHEN \`User\`.\`email\` LIKE ${prefixOf(query)} THEN 80`
+    + ` WHEN \`User\`.\`email\` LIKE ${emailPrefixOf(query)} THEN 80`
     + ` WHEN ${fullName} LIKE ${prefixOf(query)}${bothNamesClause} THEN 70`
     + ` WHEN ${anyNamePrefixClause} THEN 50`
     // Everything left matched somewhere inside a field rather than at its start.
@@ -837,7 +842,10 @@ export class UserController {
       }
       return 'external_subject_id';
     };
-    const attrMatch = { [getAttrMatchKey(username)]: username };
+    const attrMatchKey = getAttrMatchKey(username);
+    const attrMatch = {
+      [attrMatchKey]: attrMatchKey === 'email' ? normalizeEmail(username) : username,
+    };
 
     const foundUser = await User.findOne({
       where: {

@@ -79,6 +79,7 @@
   import { IconCircleArrowLeft } from '@tabler/icons-vue';
   import { Input, Button } from '@libretexts/davis-vue';
   import { usePageProps } from '@renderer/usePageProps';
+  import { normalizeEmail } from '../../email';
 
   const props = usePageProps<{
     source: string;
@@ -117,6 +118,9 @@
   async function submitForm(e: Event) {
     e.preventDefault();
     resetFormErrors();
+    // Canonicalize before validating so the confirmation screen echoes the address the
+    // reset link was actually sent to.
+    email.value = normalizeEmail(email.value);
     if (!validateForm()) return;
     loading.value = true;
     try {

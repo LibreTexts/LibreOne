@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BeforeValidate,
   BelongsTo,
   BelongsToMany,
   Column,
@@ -28,6 +29,7 @@ import { VerificationRequest } from './VerificationRequest';
 import { Session } from './Session';
 import { UserNote } from './UserNote';
 import { UserLicenseEntitlement } from './UserLicenseEntitlement';
+import { normalizeEmail } from '../../email';
 
 @DefaultScope(() => ({
   attributes: {
@@ -45,6 +47,17 @@ import { UserLicenseEntitlement } from './UserLicenseEntitlement';
   ],
 })
 export class User extends Model {
+  /**
+   * Guarantees the canonical form reaches storage no matter which code path wrote the
+   * record. Query predicates are normalized separately at their call sites.
+   */
+  @BeforeValidate
+  static normalizeEmailAddress(instance: User) {
+    if (typeof instance.email === 'string') {
+      instance.email = normalizeEmail(instance.email);
+    }
+  }
+
   @PrimaryKey
   @AllowNull(false)
   @Column(DataType.STRING)

@@ -1,5 +1,6 @@
 import {
   AllowNull,
+  BeforeValidate,
   Column,
   CreatedAt,
   DataType,
@@ -9,12 +10,24 @@ import {
   UpdatedAt,
 } from 'sequelize-typescript';
 import { User } from './User';
+import { normalizeEmail } from '../../email';
 
 @Table({
   timestamps: true,
   tableName: 'email_verifications',
 })
 export class EmailVerification extends Model {
+  /**
+   * Guarantees the canonical form reaches storage no matter which code path wrote the
+   * record. Query predicates are normalized separately at their call sites.
+   */
+  @BeforeValidate
+  static normalizeEmailAddress(instance: EmailVerification) {
+    if (typeof instance.email === 'string') {
+      instance.email = normalizeEmail(instance.email);
+    }
+  }
+
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.STRING)

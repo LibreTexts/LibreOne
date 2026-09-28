@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { EmailVerification } from '../models';
 import { MailController } from './MailController';
 import { emailTemplates } from '../emails/templates';
+import { normalizeEmail } from '../helpers';
 
 export class EmailVerificationController {
   static generateCode() {
@@ -14,7 +15,7 @@ export class EmailVerificationController {
 
     const verification = await EmailVerification.create({
       user_id: uuid,
-      email,
+      email: normalizeEmail(email),
       code: EmailVerificationController.generateCode(),
       expires_at: verifyExpiry,
     });
@@ -26,7 +27,7 @@ export class EmailVerificationController {
     const foundVerification = await EmailVerification.findOne({
       where: {
         [Op.and]: [
-          { email },
+          { email: normalizeEmail(email) },
           { code },
         ],
       },

@@ -1,8 +1,8 @@
 import joi from 'joi';
-import { passwordValidator, timeZoneValidator } from './shared';
+import { emailValidator, passwordValidator, principalUsernameValidator, timeZoneValidator } from './shared';
 
 export const registerSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
   password: passwordValidator,
 });
 
@@ -56,7 +56,7 @@ export const externalProvisionUserSchema = joi.object({
 }).unknown(true);
 
 export const autoProvisionUserSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
   first_name: joi.string().min(1).max(100).trim().required(),
   last_name: joi.string().min(1).max(100).trim().required(),
   user_type: joi.string().valid('student', 'instructor').required(),
@@ -64,7 +64,7 @@ export const autoProvisionUserSchema = joi.object({
 });
 
 export const verifyEmailSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
   code: joi.number().integer().min(100000).max(999999).required(),
 });
 
@@ -84,7 +84,7 @@ export const completeRegistrationSchema = joi.object({
 });
 
 export const initResetPasswordSchema = joi.object({
-  email: joi.string().email().required(),
+  email: emailValidator.required(),
   redirectURI: joi.string().uri(),
 });
 
@@ -92,3 +92,9 @@ export const resetPasswordSchema = joi.object({
   token: joi.string().length(64).required(),
   password: passwordValidator,
 });
+
+export const checkCASInterruptQuerySchema = joi.object({
+  username: principalUsernameValidator.required(),
+  registeredService: joi.string(),
+  service: joi.string(),
+}).unknown(true);

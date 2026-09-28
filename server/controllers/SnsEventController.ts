@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 import errors from '@server/errors';
+import { normalizeEmail } from '@server/helpers';
 import { EmailEvent, type EmailEventType } from '@server/models/EmailEvent';
 import { User } from '@server/models/User';
 import { recordConsentChange } from '@server/services/marketingConsent';
@@ -180,7 +181,7 @@ export class SnsEventController {
 
       for (const rcpt of recipients) {
         try {
-          const email = rcpt.email.toLowerCase();
+          const email = normalizeEmail(rcpt.email);
           const user = await User.findOne({ where: { email } });
           
           /**

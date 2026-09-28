@@ -1,4 +1,5 @@
 import joi from 'joi';
+import { emailValidator } from './shared';
 
 const uuidValidator = joi.string().uuid({ version: "uuidv4" });
 
@@ -14,7 +15,7 @@ export const applicationLicenseIdSchema = joi.object({
 export const generateAccessCodeSchema = joi.object({
     stripe_price_id: joi.string().optional().not().empty(),
     application_license_id: uuidValidator.optional(),
-    email: joi.string().email().required(),
+    email: emailValidator.required(),
 }).xor('stripe_price_id', 'application_license_id');
 
 export const bulkGenerateAccessCodesSchema = joi.object({

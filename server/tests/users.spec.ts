@@ -889,6 +889,27 @@ describe('Users', async () => {
       await org1.destroy();
       await orgSystem1.destroy();
     });
+    it('should resolve CAS principal attributes when the username differs only by case', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        first_name: 'Info',
+        last_name: 'LibreTexts',
+        disabled: false,
+        expired: false,
+        user_type: 'instructor',
+        verify_status: 'not_attempted',
+      });
+
+      const response = await request(server)
+        .get('/api/v1/users/principal-attributes')
+        .query({ username: '  Info@LibreTexts.ORG ' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(response.body.uuid).to.equal(user1.uuid);
+      expect(response.body.email).to.equal('info@libretexts.org');
+    });
   });
 
   describe('UPDATE', () => {
@@ -1143,6 +1164,68 @@ describe('Users', async () => {
         status: '400',
         code: 'bad_request',
       });
+    });
+    it('should store a verified email change in canonical form', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      const emailVerify1 = await new EmailVerificationController().createVerification(
+        user1.uuid,
+        'Info+New@LibreTexts.ORG',
+      );
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/verify-email-change`)
+        .send({ code: emailVerify1, email: 'INFO+new@libretexts.org' })
+        .set('Cookie', await createSessionCookiesForTest(user1.uuid));
+
+      expect(response.status).to.equal(200);
+      const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
+      expect(updatedUser?.get('email')).to.equal('info+new@libretexts.org');
+    });
+    it('should reject a direct email change that collides on case alone', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+      await User.create({
+        uuid: uuidv4(),
+        email: 'taken@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/email-change-direct`)
+        .send({ email: 'Taken@LibreTexts.ORG' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(400);
+      const unchanged = await User.findOne({ where: { uuid: user1.uuid } });
+      expect(unchanged?.get('email')).to.equal('info@libretexts.org');
+    });
+    it('should store a direct email change in canonical form', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+        disabled: false,
+        expired: false,
+      });
+
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/email-change-direct`)
+        .send({ email: '  Info.User@LibreTexts.ORG ' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.email).to.equal('info.user@libretexts.org');
+      const updatedUser = await User.findOne({ where: { uuid: user1.uuid } });
+      expect(updatedUser?.get('email')).to.equal('info.user@libretexts.org');
     });
     it('should add user to existing organization', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
