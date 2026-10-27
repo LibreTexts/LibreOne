@@ -7,7 +7,7 @@ import Joi from 'joi';
 import { randomBytes } from 'crypto';
 import { Op } from 'sequelize';
 import { server } from '..';
-import { Application, EmailVerification, ResetPasswordToken, User, UserApplication } from '../models';
+import { Application, EmailVerification, MarketingConsentEvent, Organization, ResetPasswordToken, User, UserApplication, UserOrganization } from '../models';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
 import { createSessionCookiesForTest, destroyTestSessions, testAppData } from './test-helpers';
 
@@ -24,13 +24,19 @@ describe('Authentication and Authorization', async () => {
 
   afterEach(async () => {
     await destroyTestSessions();
+    await MarketingConsentEvent.destroy({ where: {} });
+    await UserOrganization.destroy({ where: {} });
+    await EmailVerification.destroy({ where: {} });
     await User.destroy({ where: {} });
+    await Organization.destroy({ where: { name: 'Option B College' } });
   });
 
   after(async () => {
     await destroyTestSessions();
     await Application.destroy({ where: {} });
+    await MarketingConsentEvent.destroy({ where: {} });
     await EmailVerification.destroy({ where: {} });
+    await UserOrganization.destroy({ where: {} });
     await User.destroy({ where: {} });
     if (server?.listening) {
       server.close();
@@ -68,6 +74,80 @@ describe('Authentication and Authorization', async () => {
       expect(emailVerify1?.get('code')).to.be.greaterThan(99999);
       await emailVerify1?.destroy();
       await user1?.destroy();
+    });
+    it('should report whether an email is available', async () => {
+      const open = await request(server)
+        .post('/api/v1/auth/check-email')
+        .send({ email: 'new-person@libretexts.org' });
+      expect(open.status).to.equal(200);
+      expect(open.body?.data?.available).to.equal(true);
+
+      await User.create({
+        uuid: uuidv4(),
+        email: 'new-person@libretexts.org',
+      });
+      const taken = await request(server)
+        .post('/api/v1/auth/check-email')
+        .send({ email: 'new-person@libretexts.org' });
+      expect(taken.status).to.equal(200);
+      expect(taken.body?.data?.available).to.equal(false);
+    });
+    it('should register a user with the full profile', async () => {
+      const org = await Organization.create({ name: 'Option B College' });
+      const response = await request(server)
+        .post('/api/v1/auth/register')
+        .send({
+          email: 'jordan@libretexts.org',
+          password: 'ThisIsASuperStrongPassword!',
+          first_name: 'Jordan',
+          last_name: 'Turner',
+          user_type: 'instructor',
+          lang: 'en-US',
+          time_zone: 'America/Los_Angeles',
+          mktg_email_opt_in: true,
+          organization_id: org.id,
+        });
+
+      expect(response.status).to.equal(201);
+      const uuid = response.body?.data?.uuid;
+      const user = await User.findOne({ where: { uuid } });
+      expect(user?.get('first_name')).to.equal('Jordan');
+      expect(user?.get('last_name')).to.equal('Turner');
+      expect(user?.get('user_type')).to.equal('instructor');
+      expect(user?.get('lang')).to.equal('en-US');
+      expect(user?.get('time_zone')).to.equal('America/Los_Angeles');
+      expect(user?.get('mktg_email_opt_in')).to.equal(true);
+      expect(user?.get('disabled')).to.equal(true);
+      const membership = await UserOrganization.findOne({ where: { user_id: uuid, organization_id: org.id } });
+      expect(membership).to.exist;
+    });
+    it('should rate limit verification resends', async () => {
+      await request(server)
+        .post('/api/v1/auth/register')
+        .send({ email: 'info@libretexts.org', password: 'ThisIsASuperStrongPassword!' });
+
+      const response = await request(server)
+        .post('/api/v1/auth/resend-verification')
+        .send({ email: 'info@libretexts.org' });
+
+      expect(response.status).to.equal(429);
+      expect(response.get('Retry-After')).to.exist;
+    });
+    it('should change the email on an unverified registration', async () => {
+      await request(server)
+        .post('/api/v1/auth/register')
+        .send({ email: 'info@libretexts.org', password: 'ThisIsASuperStrongPassword!' });
+
+      const response = await request(server)
+        .post('/api/v1/auth/registration-email')
+        .send({ email: 'info@libretexts.org', new_email: 'jordan@libretexts.org' });
+
+      expect(response.status).to.equal(200);
+      expect(response.body?.data?.email).to.equal('jordan@libretexts.org');
+      const user = await User.findOne({ where: { email: 'jordan@libretexts.org' } });
+      expect(user).to.exist;
+      const verification = await EmailVerification.findOne({ where: { email: 'jordan@libretexts.org' } });
+      expect(verification).to.exist;
     });
     it('should error on existing user', async () => {
       const user1 = await User.create({

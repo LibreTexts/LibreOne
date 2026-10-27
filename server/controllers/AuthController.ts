@@ -19,7 +19,8 @@ import { URLSearchParams } from 'url';
 import { Agent } from 'https';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { GetParametersByPathCommand, SSMClient } from '@aws-sdk/client-ssm';
-import { Application, ResetPasswordToken, sequelize, Session, User, UserApplication } from '../models';
+import { Application, Language, Organization, ResetPasswordToken, sequelize, Session, User, UserApplication, UserOrganization, EmailVerification } from '../models';
+import { recordConsentChange } from '../services/marketingConsent';
 import { EmailVerificationController } from './EmailVerificationController';
 import { MailController } from './MailController';
 import { emailTemplates } from '../emails/templates';
@@ -29,6 +30,9 @@ import errors from '../errors';
 import type { CookieOptions, Request, Response } from 'express';
 import type {
   RegisterBody,
+  CheckEmailBody,
+  ResendVerificationBody,
+  ChangeRegistrationEmailBody,
   VerifyEmailBody,
   CompleteLoginQuery,
   InitLoginQuery,
@@ -48,6 +52,7 @@ import { EventSubscriberEmitter } from '@server/events/EventSubscriberEmitter';
 import { AppLicenseController } from './AppLicenseController';
 
 const SESSION_SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
+const VERIFICATION_RESEND_COOLDOWN_MS = 60_000;
 const SESSION_DOMAIN = getProductionURL();
 const COOKIE_DOMAIN = SESSION_DOMAIN.replace('https://', '');
 const SESSION_DEFAULT_EXPIRY_MINUTES = 7 * 24 * 60; // 7 days
@@ -478,25 +483,58 @@ export class AuthController {
    * @param res - Outgoing API response.
    * @returns The fulfilled API response.
    */
+  public async checkEmail(req: Request, res: Response): Promise<Response> {
+    const { email } = req.body as CheckEmailBody;
+    const existing = await User.findOne({ where: { email } });
+    return res.send({
+      data: {
+        available: !existing,
+      },
+    });
+  }
+
   public async register(req: Request, res: Response): Promise<Response> {
     try {
       const props = req.body as RegisterBody;
       const ip = req.get('x-forwarded-for') || req.socket.remoteAddress || '';
 
-      const verificationController = new EmailVerificationController();
-      const mailSender = new MailController();
-      if (!mailSender.isReady()) {
-        throw new Error('No mail sender available to issue email verification!');
+      if (props.lang) {
+        const foundLanguage = await Language.findOne({ where: { tag: props.lang } });
+        if (!foundLanguage) {
+          return errors.badRequest(res, 'Unsupported language');
+        }
+      }
+
+      let organizationId: number | null = null;
+      if (props.organization_id) {
+        const foundOrg = await Organization.findByPk(props.organization_id);
+        if (!foundOrg) {
+          return errors.notFound(res, 'Organization not found');
+        }
+        organizationId = foundOrg.id;
+      } else if (props.use_default_organization) {
+        const foundOrg = await Organization.findOne({ where: { is_default: true } });
+        if (!foundOrg) {
+          return errors.notFound(res, 'Default organization not found');
+        }
+        organizationId = foundOrg.id;
+      }
+
+      const existing = await User.findOne({ where: { email: props.email } });
+      if (existing) {
+        return errors.conflict(res);
       }
 
       const hashed = await bcrypt.hash(props.password, 10);
-
       const newUser = await User.create({
         uuid: uuidv4(),
         email: props.email,
         password: hashed,
-        first_name: DEFAULT_FIRST_NAME,
-        last_name: DEFAULT_LAST_NAME,
+        first_name: props.first_name?.trim() || DEFAULT_FIRST_NAME,
+        last_name: props.last_name?.trim() || DEFAULT_LAST_NAME,
+        ...(props.user_type && { user_type: props.user_type }),
+        ...(props.lang && { lang: props.lang }),
+        ...(props.time_zone && { time_zone: props.time_zone }),
         disabled: true,
         expired: false,
         legacy: false,
@@ -504,21 +542,25 @@ export class AuthController {
         verify_status: 'not_attempted',
         registration_type: 'self',
       });
-      const verifyCode = await verificationController.createVerification(
-        newUser.get('uuid'),
-        props.email,
-      );
 
-      // Send email verification
-      const emailRes = await verificationController.sendEmailVerificationMessage(
-        mailSender,
-        props.email,
-        verifyCode,
-      );
-      mailSender.destroy();
-      if (!emailRes) {
-        throw new Error('Unable to send email verification!');
+      if (organizationId) {
+        await UserOrganization.create({
+          user_id: newUser.uuid,
+          organization_id: organizationId,
+        });
       }
+
+      if (props.mktg_email_opt_in) {
+        await recordConsentChange({
+          user: newUser,
+          newValue: true,
+          source: 'REGISTRATION',
+          reason: 'INITIAL_REGISTRATION',
+          actorUserUuid: newUser.uuid,
+        });
+      }
+
+      await this.issueVerificationEmail(newUser.uuid, props.email);
 
       const resourceURL = `${getProductionURL()}/api/v1/users/${newUser.get('uuid')}`;
       return res.status(201).set('Location', resourceURL).send({
@@ -531,6 +573,100 @@ export class AuthController {
         return errors.conflict(res);
       }
       throw e;
+    }
+  }
+
+  /**
+   * Sends another registration code for an account that has not been verified yet.
+   * Limited to one send per minute for that account.
+   */
+  public async resendVerification(req: Request, res: Response): Promise<Response> {
+    const { email } = req.body as ResendVerificationBody;
+    const foundUser = await User.findOne({ where: { email } });
+    if (!foundUser || foundUser.registration_complete || !foundUser.disabled) {
+      return errors.badRequest(res);
+    }
+
+    const retryAfter = await this.verificationRetryAfterSeconds(foundUser.uuid);
+    if (retryAfter > 0) {
+      return errors.tooManyRequests(res, retryAfter, 'Please wait before requesting another code.');
+    }
+
+    await this.issueVerificationEmail(foundUser.uuid, foundUser.email);
+    return res.send({
+      data: {
+        email: foundUser.email,
+        retry_after: VERIFICATION_RESEND_COOLDOWN_MS / 1000,
+      },
+    });
+  }
+
+  /**
+   * Corrects the email on an unverified registration and sends a new code.
+   * Only accounts that have not finished registration can use this.
+   */
+  public async changeRegistrationEmail(req: Request, res: Response): Promise<Response> {
+    const { email, new_email: newEmail } = req.body as ChangeRegistrationEmailBody;
+    if (email.toLowerCase() === newEmail.toLowerCase()) {
+      return errors.badRequest(res, 'Enter a different email address.');
+    }
+
+    const foundUser = await User.findOne({ where: { email } });
+    if (!foundUser || foundUser.registration_complete || !foundUser.disabled) {
+      return errors.badRequest(res);
+    }
+
+    const taken = await User.findOne({ where: { email: newEmail } });
+    if (taken) {
+      return errors.conflict(res);
+    }
+
+    try {
+      foundUser.email = newEmail;
+      await foundUser.save();
+      await this.issueVerificationEmail(foundUser.uuid, newEmail);
+    } catch (e) {
+      if (e instanceof UniqueConstraintError) {
+        return errors.conflict(res);
+      }
+      throw e;
+    }
+
+    return res.send({
+      data: {
+        email: newEmail,
+      },
+    });
+  }
+
+  private async verificationRetryAfterSeconds(userId: string): Promise<number> {
+    const latest = await EmailVerification.findOne({
+      where: { user_id: userId },
+      order: [['created_at', 'DESC']],
+    });
+    if (!latest?.created_at) {
+      return 0;
+    }
+    const elapsed = Date.now() - new Date(latest.created_at).getTime();
+    const remaining = VERIFICATION_RESEND_COOLDOWN_MS - elapsed;
+    return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
+  }
+
+  private async issueVerificationEmail(uuid: string, email: string): Promise<void> {
+    const verificationController = new EmailVerificationController();
+    const mailSender = new MailController();
+    if (!mailSender.isReady()) {
+      throw new Error('No mail sender available to issue email verification!');
+    }
+    const verifyCode = await verificationController.createVerification(uuid, email);
+    const emailRes = await verificationController.sendEmailVerificationMessage(
+      mailSender,
+      email,
+      verifyCode,
+    );
+    mailSender.destroy();
+    if (!emailRes) {
+      throw new Error('Unable to send email verification!');
     }
   }
 

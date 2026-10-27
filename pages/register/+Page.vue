@@ -1,97 +1,117 @@
 <template>
-  <div
-    class="bg-zinc-100 grid grid-flow-col justify-items-center items-center min-h-screen py-10"
+  <RegistrationShell
+    v-if="stage !== 'verify'"
+    :headline="stage === 'account' ? $t('register.brand_headline') : $t('register.almost_done', { name: account.firstName })"
+    :supporting="stage === 'account' ? $t('register.brand_supporting') : $t('register.brand_step2')"
+    :footer="stage === 'account' ? $t('register.brand_footer') : $t('register.signed_up_as', { email: account.email })"
   >
-    <div class="w-11/12 md:w-3/4">
-      <img
-        src="@renderer/libretexts_logo.png"
-        alt="LibreTexts"
-        class="max-w-xs my-0 mx-auto"
-      />
-      <div
-        class="bg-white p-6 mt-6 shadow-md shadow-gray-400 rounded-md overflow-hidden"
-      >
-        <Transition
-          mode="out-in"
-          enter-from-class="motion-safe:translate-x-full"
-          enter-to-class="motion-safe:translate-x-0"
-          leave-from-class="motion-safe:translate-x-0"
-          leave-to-class="motion-safe:-translate-x-full"
-          enter-active-class="motion-safe:transition-transform motion-safe:ease-out motion-safe:duration-500"
-          leave-active-class="motion-safe:transition-transform motion-safe:ease-in motion-safe:duration-300"
-        >
-          <component
-            :is="stage"
-            v-bind="componentProps"
-            v-on="componentEvents"
-          />
-        </Transition>
-      </div>
-    </div>
-  </div>
+    <AccountStep
+      v-if="stage === 'account'"
+      :login-url="props.loginURL || ''"
+      :google-register-url="props.googleRegisterURL || ''"
+      :microsoft-register-url="props.microsoftRegisterURL || ''"
+      :initial-first-name="account.firstName"
+      :initial-last-name="account.lastName"
+      :initial-email="account.email"
+      :email-taken="emailTaken"
+      @continue="onContinue"
+    />
+    <ProfileStep
+      v-else
+      show-back
+      :submitting="creating"
+      :unknown-error="createError"
+      @back="onBack"
+      @submit="onCreate"
+    />
+  </RegistrationShell>
+  <VerifyEmail
+    v-else
+    :email="account.email"
+    @email-changed="account.email = $event"
+  />
 </template>
 
 <script lang="ts" setup>
-import {
-  computed,
-  defineAsyncComponent,
-  onMounted,
-  ref,
-  shallowRef,
-} from "vue";
-import AuthForm from "@components/registration/AuthForm.vue";
-import { usePageContext } from "@renderer/usePageContext";
-import { usePageProps } from "@renderer/usePageProps";
-const VerifyEmail = defineAsyncComponent(
-  () => import("@components/registration/VerifyEmail.vue")
-);
+  import { onMounted, reactive, ref } from 'vue';
+  import { AxiosError } from 'axios';
+  import { useAxios } from '@renderer/useAxios';
+  import { usePageProps } from '@renderer/usePageProps';
+  import AccountStep from '@components/registration/AccountStep.vue';
+  import ProfileStep from '@components/registration/ProfileStep.vue';
+  import RegistrationShell from '@components/registration/RegistrationShell.vue';
+  import VerifyEmail from '@components/registration/VerifyEmail.vue';
+  import type { RegistrationAccount, RegistrationProfile } from '@components/registration/types';
 
-const props = usePageProps<{
-  loginURL: string;
-  recoveryURL: string;
-  googleRegisterURL: string;
-  microsoftRegisterURL: string;
-  serviceURL?: string;
-}>();
+  const props = usePageProps<{
+    loginURL: string;
+    recoveryURL: string;
+    googleRegisterURL: string;
+    microsoftRegisterURL: string;
+    serviceURL?: string;
+  }>();
 
-const stage = shallowRef(AuthForm);
-const email = ref("");
+  const axios = useAxios();
+  const stage = ref<'account' | 'profile' | 'verify'>('account');
+  const creating = ref(false);
+  const createError = ref(false);
+  const emailTaken = ref(false);
+  const account = reactive<RegistrationAccount>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
 
-onMounted(() => {
-  if (props.serviceURL) {
-    // Set a cookie to remember the service URL
-    document.cookie = `post_register_service_url=${props.serviceURL}; path=/; SameSite=Strict`;
+  onMounted(() => {
+    if (props.serviceURL) {
+      document.cookie = `post_register_service_url=${props.serviceURL}; path=/; SameSite=Strict`;
+    }
+  });
+
+  function onContinue(next: RegistrationAccount) {
+    account.firstName = next.firstName;
+    account.lastName = next.lastName;
+    account.email = next.email;
+    account.password = next.password;
+    emailTaken.value = false;
+    stage.value = 'profile';
   }
-});
 
-const componentProps = computed(() => {
-  switch (stage.value) {
-    case VerifyEmail: {
-      return { email: email.value };
-    }
-    default: {
-      return { ...props };
+  function onBack() {
+    account.password = '';
+    stage.value = 'account';
+  }
+
+  async function onCreate(profile: RegistrationProfile) {
+    creating.value = true;
+    createError.value = false;
+    try {
+      await axios.post('/auth/register', {
+        email: account.email,
+        password: account.password,
+        first_name: account.firstName,
+        last_name: account.lastName,
+        user_type: profile.userType,
+        lang: profile.lang,
+        time_zone: profile.timeZone,
+        mktg_email_opt_in: profile.marketingOptIn,
+        ...(profile.organizationId
+          ? { organization_id: profile.organizationId }
+          : { use_default_organization: true }),
+      });
+      account.password = '';
+      creating.value = false;
+      stage.value = 'verify';
+    } catch (error) {
+      creating.value = false;
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        emailTaken.value = true;
+        account.password = '';
+        stage.value = 'account';
+        return;
+      }
+      createError.value = true;
     }
   }
-});
-const componentEvents = computed(() => {
-  switch (stage.value) {
-    case VerifyEmail: {
-      return {};
-    }
-    default: {
-      return { register: handleInitialRegistrationComplete };
-    }
-  }
-});
-
-/**
- * Advances the page to the Verify Email stage upon receiving the 'register' event.
- *
- * @param resEmail - The user's email passed with the event.
- */
-function handleInitialRegistrationComplete(resEmail: string) {
-  email.value = resEmail;
-  stage.value = VerifyEmail;
-}
 </script>

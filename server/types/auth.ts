@@ -11,6 +11,27 @@ export type TokenAuthenticationVerificationResult = {
 export type RegisterBody = {
   email: string;
   password: string;
+  first_name?: string;
+  last_name?: string;
+  user_type?: 'student' | 'instructor';
+  lang?: string;
+  time_zone?: string;
+  mktg_email_opt_in?: boolean;
+  organization_id?: number;
+  use_default_organization?: boolean;
+};
+
+export type CheckEmailBody = {
+  email: string;
+};
+
+export type ResendVerificationBody = {
+  email: string;
+};
+
+export type ChangeRegistrationEmailBody = {
+  email: string;
+  new_email: string;
 };
 
 export type VerifyEmailBody = {

@@ -4,6 +4,27 @@ import { passwordValidator, timeZoneValidator } from './shared';
 export const registerSchema = joi.object({
   email: joi.string().email().required(),
   password: passwordValidator,
+  first_name: joi.string().trim().min(1).max(100),
+  last_name: joi.string().trim().min(1).max(100),
+  user_type: joi.string().valid('student', 'instructor'),
+  lang: joi.string().trim().min(2).max(35),
+  time_zone: timeZoneValidator,
+  mktg_email_opt_in: joi.boolean(),
+  organization_id: joi.number().integer(),
+  use_default_organization: joi.boolean(),
+});
+
+export const checkEmailSchema = joi.object({
+  email: joi.string().email().required(),
+});
+
+export const resendVerificationSchema = joi.object({
+  email: joi.string().email().required(),
+});
+
+export const changeRegistrationEmailSchema = joi.object({
+  email: joi.string().email().required(),
+  new_email: joi.string().email().required(),
 });
 
 export const externalProvisionUserSchema = joi.object({

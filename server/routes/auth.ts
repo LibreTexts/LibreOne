@@ -22,9 +22,24 @@ const CAS_BRIDGE_SERVER_URL = (_casPrefix.startsWith('https://') || _casPrefix.s
 const SELF_URL = `${_selfDomainSafe}/api/v1/auth/cas-bridge`;
 
 
+authRouter.route('/check-email').post(
+  validate(AuthValidator.checkEmailSchema, 'body'),
+  catchInternal((req, res) => controller.checkEmail(req, res)),
+);
+
 authRouter.route('/register').post(
   validate(AuthValidator.registerSchema, 'body'),
   catchInternal((req, res) => controller.register(req, res)),
+);
+
+authRouter.route('/resend-verification').post(
+  validate(AuthValidator.resendVerificationSchema, 'body'),
+  catchInternal((req, res) => controller.resendVerification(req, res)),
+);
+
+authRouter.route('/registration-email').post(
+  validate(AuthValidator.changeRegistrationEmailSchema, 'body'),
+  catchInternal((req, res) => controller.changeRegistrationEmail(req, res)),
 );
 
 authRouter.route('/verify-email').post(
