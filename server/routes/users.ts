@@ -213,7 +213,7 @@ usersRouter.route('/:uuid/notes')
   .get(
     verifyAPIAuthentication,
     ensureActorIsAPIUser,
-    ensureAPIUserHasPermission(['users:write']),
+    ensureAPIUserHasPermission(['users:read']),
     validate(UserValidator.uuidParamSchema, 'params'),
     validate(UserValidator.getUserNotesSchema, 'query'),
     catchInternal((req, res) => controller.getNotes(req, res)),

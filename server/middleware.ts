@@ -205,7 +205,8 @@ export async function ensureIsDeveloperUser(req: Request, res: Response, next: N
 
 /**
  * Extracts the X-User-ID header from the request and sets it on the request object. Does not verify the
- * authentication of the request, but does check that the request is from an API User.
+ * authentication of the X-User-ID itself, but does check that the request is from an API User and that
+ * the provided identifier belongs to a known user.
  * This middleware should ONLY be used following the `ensureActorIsAPIUser` middleware.
  *
  * @param req - Incoming API request.
@@ -231,6 +232,12 @@ export async function extract_X_User_ID(req: Request, res: Response, next: NextF
     const XUserID = req.headers['x-user-id'] as string;
      if (!XUserID) {
       return errors.badRequest(res, 'Missing required X-User-ID header');
+    }
+
+    const userController = new UserController();
+    const actingUser = await userController.getUserInternal(XUserID);
+    if (!actingUser) {
+      return errors.badRequest(res, 'X-User-ID does not correspond to a known user');
     }
 
     req.XUserID = XUserID;
