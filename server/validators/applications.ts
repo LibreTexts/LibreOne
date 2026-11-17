@@ -4,6 +4,8 @@ export const applicationIDValidator = joi.number().integer().required();
 
 export const applicationLaunchpadVisibilityValidator = joi.string().valid('none', 'students', 'instructors', 'verified_instructors', 'all');
 export const applicationTypeValidator = joi.string().valid('standalone', 'library');
+// Rendered as Launchpad hrefs, so block javascript: and other schemes. 255 matches the VARCHAR columns.
+export const applicationURLValidator = joi.string().uri({ scheme: ['http', 'https'] }).max(255);
 
 export const applicationIDParamSchema = joi.object({
   applicationID: applicationIDValidator,
@@ -12,7 +14,8 @@ export const applicationIDParamSchema = joi.object({
 export const createApplicationSchema = joi.object({
   name: joi.string().min(2).max(100).required(),
   app_type: applicationTypeValidator.required(),
-  main_url: joi.string().uri().required(),
+  main_url: applicationURLValidator.required(),
+  anon_url: applicationURLValidator.allow(null),
   cas_service_url: joi.string().uri().required(),
   launchpad_visibility: applicationLaunchpadVisibilityValidator.required(),
   hide_from_apps_api: joi.boolean().required(),
@@ -38,7 +41,8 @@ export const getAllApplicationsSchema = joi.object({
 export const updateApplicationSchema = joi.object({
   name: joi.string().min(2).max(100),
   app_type: applicationTypeValidator,
-  main_url: joi.string().uri(),
+  main_url: applicationURLValidator,
+  anon_url: applicationURLValidator.allow(null),
   cas_service_url: joi.string().uri(),
   launchpad_visibility: applicationLaunchpadVisibilityValidator,
   hide_from_apps_api: joi.boolean(),

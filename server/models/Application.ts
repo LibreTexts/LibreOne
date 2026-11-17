@@ -40,6 +40,10 @@ export class Application extends Model {
   @Column(DataType.STRING)
   declare main_url: string;
 
+  // Launchpad link for signed-out visitors, falls back to main_url.
+  @Column(DataType.STRING)
+  declare anon_url: string | null;
+
   @AllowNull(false)
   @Column(DataType.STRING)
   declare cas_service_url: string;

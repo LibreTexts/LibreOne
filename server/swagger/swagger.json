@@ -1286,6 +1286,11 @@
                         "type": "string",
                         "required": true
                     },
+                    "anon_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Launchpad link for signed-out visitors. Falls back to main_url when unset."
+                    },
                     "cas_service_url": {
                         "type": "string",
                         "required": true
