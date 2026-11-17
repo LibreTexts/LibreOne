@@ -3,6 +3,7 @@ export type Application = {
   name: string;
   app_type: ApplicationType;
   main_url: string;
+  anon_url?: string | null;
   cas_service_url: string;
   launchpad_visibility: ApplicationLaunchpadVisibility;
   hide_from_apps_api: boolean;

@@ -40,7 +40,7 @@
           v-for="app in apps
             .filter((app) => app.app_type === 'standalone')
             .sort((a, b) => a.name.localeCompare(b.name))"
-          :href="app.main_url"
+          :href="appURL(app)"
           :key="app.id ?? app.name"
         >
           <div class="app-item-icon-container">
@@ -94,7 +94,7 @@
           <a
             class="app-item-container"
             v-for="lib in libs"
-            :href="lib.main_url"
+            :href="appURL(lib)"
             :key="lib.id ?? lib.name"
           >
             <div class="app-item-icon-container">
@@ -169,6 +169,10 @@ const hasUnsupportedApps = computed(() =>
     return false;
   }, false),
 );
+
+function appURL(app: Application): string {
+  return (!props.authorized && app.anon_url) || app.main_url;
+}
 
 // User has edit access to a library if they
 function hasEditAccess(name: string): boolean {

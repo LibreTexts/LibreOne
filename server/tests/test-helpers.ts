@@ -42,6 +42,7 @@ export function testAppData(override?) {
     name: 'AppOne',
     app_type: 'standalone',
     main_url: 'https://libretexts.org',
+    anon_url: null,
     primary_color: '#127BC4',
     cas_service_url: 'https://libretexts.org/cas',
     hide_from_apps_api: false,

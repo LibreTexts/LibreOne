@@ -289,6 +289,32 @@ describe('Applications', async () => {
       
       expect(response.status).to.equal(400);
     });
+    it('should reject non-http(s) or oversized URLs on update', async () => {
+      const app1 = await Application.create(testAppData());
+
+      for (const field of ['main_url', 'anon_url']) {
+        for (const url of ['javascript:alert(1)', `https://libretexts.org/${'a'.repeat(250)}`]) {
+          const response = await request(server)
+            .patch(`/api/v1/applications/${app1.id}`)
+            .send({ [field]: url })
+            .auth(mainAPIUserUsername, mainAPIUserPassword);
+          expect(response.status).to.equal(400);
+        }
+      }
+    });
+    it('should save and clear anon_url', async () => {
+      const app1 = await Application.create(testAppData());
+
+      for (const anon_url of ['https://libretexts.org/welcome', null]) {
+        const response = await request(server)
+          .patch(`/api/v1/applications/${app1.id}`)
+          .send({ anon_url })
+          .auth(mainAPIUserUsername, mainAPIUserPassword);
+        expect(response.status).to.equal(200);
+        await app1.reload();
+        expect(app1.anon_url).to.equal(anon_url);
+      }
+    });
     it('should not allow updating to existing name', async () => {
       await Application.create(testAppData());
       const app2 = await Application.create(testAppData({ name: 'AppTwo' }));
