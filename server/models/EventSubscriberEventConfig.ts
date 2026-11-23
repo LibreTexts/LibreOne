@@ -54,6 +54,12 @@ export class EventSubscriberEventConfig extends Model {
   @Column(DataType.BOOLEAN)
   declare organization_system_deleted: boolean;
 
+  @Column(DataType.BOOLEAN)
+  declare user_app_license_updated: boolean;
+
+  @Column(DataType.BOOLEAN)
+  declare user_organization_admin_role_updated: boolean;
+
   @CreatedAt
   declare created_at: Date;
 

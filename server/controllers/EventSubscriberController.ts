@@ -21,7 +21,8 @@ export const EVENT_SUBSCRIBER_EVENTS = [
   "organization_system:created",
   "organization_system:updated",
   "organization_system:deleted",
-  "user_app_license:updated"
+  "user_app_license:updated",
+  "user_organization:admin_role_updated",
 ];
 
 export class EventSubscriberController {
@@ -321,6 +322,12 @@ export class EventSubscriberController {
           user,
           application_access
         }
+      case "user_organization:admin_role_updated":
+        return {
+          user_id: user.uuid,
+          organization_id: organization.id,
+          admin_role: "org_admin",
+        };
       default:
         throw new Error(`Unknown event type ${event}`);
     }

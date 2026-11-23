@@ -23,6 +23,11 @@ export type EventSubscriberEvents = {
     id: string;
   };
   "user_app_license:updated": UserLicenseResultSummary;
+  "user_organization:admin_role_updated": {
+    user_id: string;
+    organization_id: number;
+    admin_role: string | null;
+  };
 };
 
 export type SendTestEventBody = {

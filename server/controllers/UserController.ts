@@ -1159,8 +1159,16 @@ export class UserController {
       },
       defaults: { admin_role },
     });
+    const oldRole = created ? null : userOrg.get('admin_role');
     if (!created) {
       await userOrg.update({ admin_role });
+    }
+    if (oldRole !== admin_role) {
+      EventSubscriberEmitter.emit('user_organization:admin_role_updated', {
+        user_id: uuid,
+        organization_id: Number(orgID),
+        admin_role,
+      });
     }
 
     return res.send({
@@ -1415,7 +1423,15 @@ export class UserController {
       return errors.notFound(res);
     }
 
+    const oldRole = foundUserOrg.get('admin_role');
     await foundUserOrg.update({ admin_role: null });
+    if (oldRole) {
+      EventSubscriberEmitter.emit('user_organization:admin_role_updated', {
+        user_id: uuid,
+        organization_id: Number(orgID),
+        admin_role: null,
+      });
+    }
 
     return res.send({});
   }

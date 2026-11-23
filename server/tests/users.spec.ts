@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import _ from 'lodash';
 import { after, describe, it } from 'mocha';
 import { expect } from 'chai';
+import sinon from 'sinon';
 import { mockClient } from 'aws-sdk-client-mock';
 import request from 'supertest';
 import bcrypt from 'bcryptjs';
@@ -28,6 +29,7 @@ import {
 } from '../models';
 import { DEFAULT_AVATAR } from '../controllers/UserController';
 import { EmailVerificationController } from '../controllers/EmailVerificationController';
+import { EventSubscriberEmitter } from '../events/EventSubscriberEmitter';
 import { createSessionCookiesForTest, destroyTestSessions, testAppData } from './test-helpers';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -1268,14 +1270,40 @@ describe('Users', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id, admin_role: 'org_admin' });
 
+      const emitStub = sinon.stub(EventSubscriberEmitter, 'emit');
       const response = await request(server)
         .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
         .send({ admin_role: 'org_sys_admin' })
         .auth(mainAPIUserUsername, mainAPIUserPassword);
+      emitStub.restore();
       expect(response.status).to.equal(200);
+      expect(emitStub.calledOnceWithExactly('user_organization:admin_role_updated', {
+        user_id: user1.uuid,
+        organization_id: org1.id,
+        admin_role: 'org_sys_admin',
+      })).to.be.true;
 
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.equal('org_sys_admin');
+
+      await org1.destroy();
+    });
+    it('should not emit admin role event when role is unchanged', async () => {
+      const user1 = await User.create({
+        uuid: uuidv4(),
+        email: 'info@libretexts.org',
+      });
+      const org1 = await Organization.create({ name: 'LibreTexts' });
+      await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id, admin_role: 'org_admin' });
+
+      const emitStub = sinon.stub(EventSubscriberEmitter, 'emit');
+      const response = await request(server)
+        .post(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
+        .send({ admin_role: 'org_admin' })
+        .auth(mainAPIUserUsername, mainAPIUserPassword);
+      emitStub.restore();
+      expect(response.status).to.equal(200);
+      expect(emitStub.called).to.be.false;
 
       await org1.destroy();
     });
@@ -1940,10 +1968,17 @@ describe('Users', async () => {
       const org1 = await Organization.create({ name: 'LibreTexts' });
       await UserOrganization.create({ user_id: user1.uuid, organization_id: org1.id, admin_role: 'org_admin' });
 
+      const emitStub = sinon.stub(EventSubscriberEmitter, 'emit');
       const response = await request(server)
         .delete(`/api/v1/users/${user1.uuid}/organizations/${org1.id}/admin-role`)
         .auth(mainAPIUserUsername, mainAPIUserPassword);
+      emitStub.restore();
       expect(response.status).to.equal(200);
+      expect(emitStub.calledOnceWithExactly('user_organization:admin_role_updated', {
+        user_id: user1.uuid,
+        organization_id: org1.id,
+        admin_role: null,
+      })).to.be.true;
 
       const orgMembership = await UserOrganization.findOne({ where: { user_id: user1.uuid } });
       expect(orgMembership?.admin_role).to.be.null;
